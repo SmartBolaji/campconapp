@@ -1,8 +1,8 @@
-import 'package:paytmmatka/mainscreen.dart';
-import 'package:paytmmatka/model/user.dart';
+import 'package:campcon/mainscreen.dart';
+import 'package:campcon/model/user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:paytmmatka/services/task_data.dart';
+import 'package:campcon/services/task_data.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

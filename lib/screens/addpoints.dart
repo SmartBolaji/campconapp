@@ -1,8 +1,9 @@
 import 'package:iconly/iconly.dart';
-import 'package:paytmmatka/mainscreen.dart';
-import 'package:paytmmatka/model/user.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:flutter/material.dart';
+import 'package:campcon/screens/points.dart';
+import 'package:campcon/services/task_data.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AddPointsScreen extends StatefulWidget {
@@ -47,6 +48,9 @@ class _AddPointsScreenState extends State<AddPointsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Provider
+    final taskData = Provider.of<TaskData>(context);
+
     screenHeight = MediaQuery.of(context).size.height;
     screenWidth = MediaQuery.of(context).size.width;
 
@@ -76,6 +80,38 @@ class _AddPointsScreenState extends State<AddPointsScreen> {
                   color: Colors.white,
                 ),
               ),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    PageTransition(
+                      child: const PointsScreen(),
+                      type: PageTransitionType.rightToLeft,
+                      duration: const Duration(milliseconds: 500),
+                      reverseDuration: const Duration(milliseconds: 500),
+                    ),
+                  );
+                },
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Icon(
+                      IconlyBold.wallet,
+                      size: screenWidth / 15,
+                      color: Colors.blue.shade50,
+                    ),
+                    const SizedBox(
+                      width: 5,
+                    ),
+                    Text(taskData.points.toString(),
+                        style: TextStyle(
+                            fontFamily: 'Nexa Bold',
+                            fontSize: screenWidth / 22,
+                            color: Colors.white)),
+                  ],
+                ),
+              )
             ],
           ),
         ),
@@ -110,7 +146,6 @@ class _AddPointsScreenState extends State<AddPointsScreen> {
                       FocusScope.of(context).unfocus();
 
                       String id = pointController.text.trim();
-                      String password = pointController.text.trim();
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                           backgroundColor: Colors.blue.shade300,
                           content: Text(

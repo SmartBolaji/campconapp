@@ -7,10 +7,10 @@ import 'package:iconly/iconly.dart';
 import 'package:intl/intl.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:flutter/material.dart';
-import 'package:paytmmatka/screens/bids.dart';
-import 'package:paytmmatka/screens/points.dart';
-import 'package:paytmmatka/services/task_data.dart';
-import 'package:paytmmatka/widgets/alert.dart';
+import 'package:campcon/screens/bids.dart';
+import 'package:campcon/screens/points.dart';
+import 'package:campcon/services/task_data.dart';
+import 'package:campcon/widgets/alert.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -401,6 +401,8 @@ class _PlaySetUpScreenState extends State<PlaySetUpScreen> {
                             .doc(snap.docs[0].id)
                             .update({
                           'points': pts,
+                        }).then((_) {
+                          taskData.savePts(pts);
                         });
 
                         try {

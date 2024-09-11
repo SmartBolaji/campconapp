@@ -1,9 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:iconly/iconly.dart';
-import 'package:paytmmatka/screens/addpoints.dart';
-import 'package:paytmmatka/screens/transact.dart';
-import 'package:paytmmatka/screens/wthpoints.dart';
-import 'package:paytmmatka/services/task_data.dart';
+import 'package:campcon/screens/addpoints.dart';
+import 'package:campcon/screens/transact.dart';
+import 'package:campcon/screens/wthpoints.dart';
+import 'package:campcon/services/task_data.dart';
 import 'package:provider/provider.dart';
 
 class PointsScreen extends StatelessWidget {
@@ -63,8 +64,43 @@ class PointsScreen extends StatelessWidget {
           children: [
             // customField(screenWidth, screenHeight, taskData.name,
             //     Icons.account_circle, null, null, false, true, null),
-            customField(screenWidth, screenHeight, taskData.points.toString(),
-                IconlyBold.wallet, null, null, false, true, null),
+            customField(
+                screenWidth,
+                screenHeight,
+                taskData.points.toString(),
+                IconlyBold.wallet,
+                Icons.refresh_outlined,
+                null,
+                false,
+                true,
+                null, () async {
+              // get the current mobileid
+              QuerySnapshot snap = await FirebaseFirestore.instance
+                  .collection('Users')
+                  .where('id', isEqualTo: taskData.id)
+                  .get();
+
+              // Retreive the point value and assign the value
+              double pts = snap.docs[0]['points'];
+
+              // Update the local storage
+              taskData.savePts(pts);
+
+              // Alert
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  backgroundColor: Colors.blue.shade300,
+                  content: Text(
+                    'Success!',
+                    style: TextStyle(
+                      fontFamily: 'Nexa Light',
+                      fontSize: screenWidth / 30,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              );
+            }),
             onTapButton(
                 screenWidth, screenHeight, 'Add Fund', Colors.grey.shade800,
                 () {
@@ -132,7 +168,8 @@ class PointsScreen extends StatelessWidget {
       TextEditingController? controller,
       bool obscure,
       bool readOnly,
-      Function(String)? onChanged) {
+      Function(String)? onChanged,
+      Function onTap) {
     return Container(
       width: screenWidth,
       margin: const EdgeInsets.only(bottom: 12),
@@ -188,16 +225,16 @@ class PointsScreen extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                           color: Colors.black)
                       : null,
-                  // suffixIcon: GestureDetector(
-                  //   onTap: () {
-                  //     onTap();
-                  //   },
-                  //   child: Icon(
-                  //     suffixicon,
-                  //     color: Colors.grey.shade600,
-                  //     size: screenWidth / 15,
-                  //   ),
-                  // ),
+                  suffixIcon: GestureDetector(
+                    onTap: () {
+                      onTap();
+                    },
+                    child: Icon(
+                      suffixicon,
+                      color: Colors.grey.shade600,
+                      size: screenWidth / 15,
+                    ),
+                  ),
                 ),
                 maxLines: 1,
                 obscureText: obscure,

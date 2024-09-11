@@ -216,6 +216,15 @@ class TaskData extends ChangeNotifier {
     notifyListeners();
   }
 
+
+   // save pts to shared preferences
+  void savePts(double newPts) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    points = newPts;
+    prefs.setDouble('points', newPts);
+    notifyListeners();
+  }
+
   // load logs value from shared preferences
   void loadLogs() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();

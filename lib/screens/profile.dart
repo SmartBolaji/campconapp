@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
-import 'package:paytmmatka/mainscreen.dart';
-import 'package:paytmmatka/screens/chg_pass.dart';
-import 'package:paytmmatka/services/task_data.dart';
+import 'package:campcon/mainscreen.dart';
+import 'package:campcon/screens/chg_pass.dart';
+import 'package:campcon/services/task_data.dart';
 import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatelessWidget {

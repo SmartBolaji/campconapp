@@ -1,11 +1,12 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:campcon/mainscreen.dart';
+import 'package:campcon/services/task_data.dart';
+import 'package:campcon/setpass.dart';
+import 'package:flutter/widgets.dart';
 import 'package:page_transition/page_transition.dart';
-import 'package:paytmmatka/mainscreen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:paytmmatka/services/task_data.dart';
-import 'package:paytmmatka/widgets/phoneotp.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
@@ -17,26 +18,17 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen> {
   TextEditingController idController = TextEditingController();
   TextEditingController passController = TextEditingController();
-  TextEditingController nameController = TextEditingController();
-  TextEditingController mpinController = TextEditingController();
-
-  final _auth = FirebaseAuth.instance;
 
   double screenHeight = 0.0;
   double screenWidth = 0.0;
 
-  Color primary = Colors.blue.shade300;
+  Color primary = const Color(0xFF2c2221);
   bool pass = true;
-  bool mpass = true;
   bool circular = false;
+  late SharedPreferences sharedPreferences;
 
-  // Valid variables
   int _id = 0;
   String _password = '';
-  String _name = '';
-  double _points = 9.0;
-  int _mPin = 0;
-  String _verifyid = '';
 
   @override
   Widget build(BuildContext context) {
@@ -46,335 +38,205 @@ class _SignUpScreenState extends State<SignUpScreen> {
     screenHeight = MediaQuery.of(context).size.height;
     screenWidth = MediaQuery.of(context).size.width;
 
-    return SafeArea(
-      child: Scaffold(
-        body: SingleChildScrollView(
+    return Scaffold(
+      backgroundColor: Colors.grey.shade100,
+      body: SafeArea(
+        child: SingleChildScrollView(
           child: Column(
-            // crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                height: screenHeight / 2.5,
-                width: screenWidth,
-                decoration: const BoxDecoration(
-                    color: Colors.black,
-                    borderRadius:
-                        BorderRadius.only(bottomRight: Radius.circular(70))),
-                child: Center(
-                    child: Image.asset(
-                  'assets/images/logo.jpg',
-                  width: screenWidth / 3,
-                  height: screenHeight / 3,
-                )),
+              Padding(
+                padding: EdgeInsets.only(
+                    top: screenHeight / 30, bottom: 20, right: 20, left: 20),
+                child: LinearProgressIndicator(
+                  borderRadius: BorderRadius.circular(20),
+                  value: 0.25, // Current progress
+                  backgroundColor: Colors.grey.shade300,
+                  color: Colors.grey.shade900, // Progress color
+                  minHeight: 5.0, // Thickness of the line
+                ),
               ),
               Container(
-                  margin: EdgeInsets.only(
-                      top: screenHeight / 15, bottom: screenHeight / 20),
-                  child: Text(
-                    'Register!',
-                    style: TextStyle(
-                        fontSize: screenWidth / 18, fontFamily: 'Nexa Bold'),
-                  )),
-              Container(
-                  alignment: Alignment.centerLeft,
-                  margin: EdgeInsets.symmetric(horizontal: screenWidth / 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      customField('Full Name', Icons.person, false, null,
-                          nameController, false, (String name) {
-                        setState(() {
-                          _name = name;
-                        });
-                      }, () {}),
-                      customField('Mobile Number', Icons.phone_android, false,
-                          Icons.quiz, idController, false, (String id) {
-                        setState(() {
-                          _id = int.parse(id);
-                        });
-                      }, () {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            backgroundColor: Colors.blue.shade300,
-                            content: Text(
-                              'Please include your country code before your mobile number, e.g. +919530196562.',
+                decoration: const BoxDecoration(color: Colors.white),
+                margin: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      margin: EdgeInsets.only(
+                          top: screenHeight / 30, bottom: screenHeight / 160),
+                      child: Image.asset(
+                        'assets/images/logo2.png',
+                        width: screenWidth / 3,
+                        height: screenHeight / 9,
+                      ),
+                    ),
+                    Container(
+                      margin: EdgeInsets.symmetric(
+                          horizontal: screenWidth / 12,
+                          vertical: screenHeight / 60),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              'Hey! Create your account on Campcon.',
                               style: TextStyle(
-                                fontFamily: 'Nexa Bold',
-                                fontSize: screenWidth / 30,
-                                color: Colors.white,
-                              ),
-                            )));
-                      }),
-                      customField(
-                        'Password',
-                        Icons.password,
-                        false,
-                        pass ? Icons.visibility_off : Icons.visibility,
-                        passController,
-                        pass,
-                        (String pass) {
-                          setState(() {
-                            _password = pass;
-                          });
-                        },
-                        () {
-                          setState(
-                            () {
-                              pass = !pass;
-                            },
-                          );
-                        },
+                                  fontFamily: 'Trebuchet',
+                                  fontSize: screenWidth / 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey.shade600,
+                                  letterSpacing: 0),
+                            ),
+                          ),
+                        ],
                       ),
-                      customField(
-                        'MPin',
-                        Icons.pin,
-                        true,
-                        mpass ? Icons.visibility_off : Icons.visibility,
-                        mpinController,
-                        mpass,
-                        (String mpin) {
-                          setState(() {
-                            _mPin = int.parse(mpin);
-                          });
-                        },
-                        () {
-                          setState(
-                            () {
-                              mpass = !mpass;
-                            },
-                          );
-                        },
-                      ),
-                      GestureDetector(
-                        onTap: () async {
-                          // Keypad closes
-                          FocusScope.of(context).unfocus();
-
-                          // Start rolling
-                          setState(() {
-                            circular = true;
-                          });
-
-                          if (_name == '') {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                backgroundColor: Colors.blue.shade300,
-                                content: Text(
-                                  'Enter a valid name and try again!',
-                                  style: TextStyle(
-                                    fontFamily: 'Nexa Light',
-                                    fontSize: screenWidth / 30,
-                                    color: Colors.white,
-                                  ),
-                                )));
-
-                            // Stop rolling
-                            setState(() {
-                              circular = false;
-                            });
-                          } else if (_id == 0) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                backgroundColor: Colors.blue.shade300,
-                                content: Text(
-                                  'Mobile number is empty, make changes and try again!',
-                                  style: TextStyle(
-                                    fontFamily: 'Nexa Light',
-                                    fontSize: screenWidth / 30,
-                                    color: Colors.white,
+                    ),
+                    Container(
+                        alignment: Alignment.centerLeft,
+                        margin:
+                            EdgeInsets.symmetric(horizontal: screenWidth / 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            customField(
+                              'NAME',
+                              Icons.alternate_email,
+                              null,
+                              idController,
+                              false,
+                              (String id) {
+                                // setState(() {
+                                //   _id = int.parse(id);
+                                // });
+                              },
+                              () {},
+                            ),
+                            customField(
+                              'EMAIL',
+                              Icons.alternate_email,
+                              null,
+                              idController,
+                              false,
+                              (String id) {
+                                // setState(() {
+                                //   _id = int.parse(id);
+                                // });
+                              },
+                              () {},
+                            ),
+                            const SizedBox(
+                              height: 10,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: actionButton(
+                                    context,
+                                    taskData,
+                                    magHeight: screenHeight / 100,
+                                    bgColor: Colors.grey.shade800,
+                                    bdColor: Colors.grey.shade800,
+                                    txtColor: Colors.white,
+                                    txt: 'Next',
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        PageTransition(
+                                          child: const PassScreen(),
+                                          type: PageTransitionType.rightToLeft,
+                                          duration:
+                                              const Duration(milliseconds: 500),
+                                          reverseDuration:
+                                              const Duration(milliseconds: 500),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ),
-                              ),
-                            );
-
-                            // Stop rolling
-                            setState(() {
-                              circular = false;
-                            });
-                          } else if (_password == '') {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                backgroundColor: Colors.blue.shade300,
-                                content: Text(
-                                  'Password is empty, make changes and try again!',
-                                  style: TextStyle(
-                                    fontFamily: 'Nexa Light',
-                                    fontSize: screenWidth / 30,
-                                    color: Colors.white,
-                                  ),
-                                )));
-
-                            // Stop rolling
-                            setState(() {
-                              circular = false;
-                            });
-                          } else {
-                            await _auth.verifyPhoneNumber(
-                              phoneNumber: idController.text.trim(),
-                              verificationCompleted: (credential) async {
-                                // await _auth.signInWithCredential(credential);
-                              },
-                              verificationFailed: (e) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    backgroundColor: Colors.blue.shade300,
-                                    content: Text(
-                                      e.message.toString(),
-                                      style: TextStyle(
-                                        fontFamily: 'Nexa Light',
-                                        fontSize: screenWidth / 30,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                              codeSent: (verifyId, forceResend) {
-                                setState(() {
-                                  _verifyid = verifyId;
-                                });
-                              },
-                              codeAutoRetrievalTimeout: (e) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    backgroundColor: Colors.blue.shade300,
-                                    content: Text(
-                                      e.toString(),
-                                      style: TextStyle(
-                                        fontFamily: 'Nexa Light',
-                                        fontSize: screenWidth / 30,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
-
-                            QuerySnapshot snap = await FirebaseFirestore
-                                .instance
-                                .collection('Users')
-                                .where('id', isEqualTo: _id)
-                                .get();
-
-                            try {
-                              if (snap.docs.isEmpty) {
-                                Navigator.push(
-                                  context,
-                                  PageTransition(
-                                    child: PhoneOtpScreen(
-                                      verifyId: _verifyid,
-                                      id: _id,
-                                      pass: _password,
-                                      mpin: _mPin,
-                                      name: _name,
-                                      points: _points,
-                                    ),
-                                    type: PageTransitionType.leftToRight,
-                                    duration: const Duration(milliseconds: 500),
-                                    reverseDuration:
-                                        const Duration(milliseconds: 500),
-                                  ),
-                                );
-
-                                // Stop rolling
-                                setState(() {
-                                  circular = false;
-                                });
-                              } else {
-                                ScaffoldMessenger.of(context)
-                                    .showSnackBar(SnackBar(
-                                        backgroundColor: Colors.blue.shade300,
-                                        content: Text(
-                                          'Account already exist in our database!',
-                                          style: TextStyle(
-                                            fontFamily: 'Nexa Light',
-                                            fontSize: screenWidth / 30,
-                                            color: Colors.white,
-                                          ),
-                                        )));
-                              }
-                            } catch (e) {
-                              String error = '';
-
-                              if (e.toString() ==
-                                  'RangeError (index): Invalid value: Valid value range is empty: 0') {
-                                setState(() {
-                                  error =
-                                      'This is an existing account, make changes and try again!';
-                                });
-                              } else {
-                                setState(() {
-                                  error = 'Error occurred!';
-                                });
-                              }
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(SnackBar(
-                                      backgroundColor: Colors.blue.shade300,
-                                      content: Text(
-                                        error,
-                                        style: TextStyle(
-                                          fontFamily: 'Nexa Light',
-                                          fontSize: screenWidth / 30,
-                                          color: Colors.white,
-                                        ),
-                                      )));
-
-                              // Stop rolling
-                              setState(() {
-                                circular = false;
-                              });
-                            }
-                          }
+                              ],
+                            ),
+                            // SizedBox(
+                            //   height: screenHeight / 20,
+                            // ),
+                          ],
+                        )),
+                    Container(
+                      margin: EdgeInsets.symmetric(
+                          horizontal: screenWidth / 12,
+                          vertical: screenHeight / 25),
+                      child: GestureDetector(
+                        onTap: () {
+                          // Navigate to next screen or home screen
+                          Navigator.pop(context);
                         },
-                        child: Container(
-                          height: 60,
-                          width: screenWidth,
-                          margin: EdgeInsets.only(top: screenHeight / 40),
-                          decoration: BoxDecoration(
-                            color: primary,
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(30)),
-                          ),
-                          child: Center(
-                            child: circular
-                                ? Transform.scale(
-                                    scale: 0.5,
-                                    child: const CircularProgressIndicator(
-                                        color: Colors.white))
-                                : Text(
-                                    'Register Now',
-                                    style: TextStyle(
-                                        fontFamily: 'Nexa Bold',
-                                        fontSize: screenWidth / 26,
-                                        color: Colors.white,
-                                        letterSpacing: 2),
-                                  ),
-                          ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.arrow_back_ios,
+                              size: screenWidth / 29,
+                              color: primary,
+                            ),
+                            const SizedBox(
+                              width: 5,
+                            ),
+                            Text(
+                              'Back',
+                              style: TextStyle(
+                                  fontSize: screenWidth / 25,
+                                  fontFamily: 'Trebuchet',
+                                  fontWeight: FontWeight.bold,
+                                  color: primary),
+                            ),
+                          ],
                         ),
                       ),
-                      SizedBox(
-                        height: screenHeight / 50,
-                      ),
-                      Center(
-                        child: GestureDetector(
-                          onTap: () {
-                            Navigator.pop(context);
-                          },
-                          child: Text(
-                            'Login Now',
-                            style: TextStyle(
-                                fontFamily: 'Nexa Bold',
-                                fontSize: screenWidth / 30,
-                                color: Colors.blue.shade300,
-                                letterSpacing: 2),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        height: screenHeight / 20,
-                      ),
-                    ],
-                  ))
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  GestureDetector actionButton(BuildContext context, TaskData taskData,
+      {required double magHeight,
+      required Color bgColor,
+      required Color bdColor,
+      required txtColor,
+      required String txt,
+      required Function onTap}) {
+    return GestureDetector(
+      onTap: () {
+        onTap();
+      },
+      child: Container(
+        height: screenHeight / 14,
+        width: screenWidth / 3,
+        // margin: EdgeInsets.only(top: magHeight),
+        decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: const BorderRadius.all(Radius.circular(5)),
+            border: Border.all(width: 2, color: bdColor)),
+        child: Center(
+          child: circular
+              ? Transform.scale(
+                  scale: 0.5, child: CircularProgressIndicator(color: txtColor))
+              : Text(
+                  txt,
+                  style: TextStyle(
+                      fontFamily: 'Trebuchet',
+                      fontSize: screenWidth / 25,
+                      fontWeight: FontWeight.bold,
+                      color: txtColor,
+                      letterSpacing: 0),
+                ),
         ),
       ),
     );
@@ -401,8 +263,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
           title,
           style: TextStyle(
               fontSize: screenWidth / 30,
-              fontFamily: 'Nexa Bold',
-              color: Colors.blue.shade300),
+              fontFamily: 'Trebuchet',
+              color: primary),
         ),
       ),
     );
@@ -411,7 +273,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget customField(
       String hint,
       IconData icon,
-      bool numOnly,
       IconData? suffixicon,
       TextEditingController controller,
       bool obscure,
@@ -420,52 +281,42 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Container(
       width: screenWidth,
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.all(Radius.circular(12)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black26,
-              blurRadius: 10,
-              offset: Offset(2, 2),
-            )
-          ]),
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        border: Border(
+          bottom: BorderSide(width: 1, color: Colors.grey.shade400),
+        ),
+      ),
       child: Row(
         children: [
-          SizedBox(
-            width: screenWidth / 6,
-            child: Icon(
-              icon,
-              color: primary,
-              size: screenWidth / 15,
-            ),
-          ),
+          // SizedBox(
+          //   width: screenWidth / 20,
+          // ),
           Expanded(
             child: Padding(
               padding: EdgeInsets.only(right: screenWidth / 30),
               child: TextFormField(
                 style: TextStyle(
-                    fontFamily: 'Nexa Light',
-                    fontSize: screenWidth / 25,
-                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Trebuchet',
+                    fontSize: screenWidth / 30,
+                    // fontWeight: FontWeight.bold,
                     color: Colors.black),
                 controller: controller,
                 onChanged: (value) {
                   onChanged(value);
                 },
                 enableSuggestions: false,
+                autofocus: true,
                 autocorrect: false,
-                keyboardType:
-                    numOnly ? TextInputType.number : TextInputType.text,
                 decoration: InputDecoration(
                   contentPadding:
-                      EdgeInsets.symmetric(vertical: screenHeight / 35),
+                      EdgeInsets.symmetric(vertical: screenHeight / 80),
                   border: InputBorder.none,
                   hintText: hint,
                   hintStyle: TextStyle(
-                      fontFamily: 'Nexa Light',
-                      fontSize: screenWidth / 25,
-                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Trebuchet',
+                      fontSize: screenWidth / 30,
+                      // fontWeight: FontWeight.bold,
                       color: Colors.black),
                   suffixIcon: GestureDetector(
                     onTap: () {
@@ -474,7 +325,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     child: Icon(
                       suffixicon,
                       color: Colors.grey.shade600,
-                      size: screenWidth / 15,
+                      size: screenWidth / 20,
                     ),
                   ),
                 ),

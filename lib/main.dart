@@ -1,12 +1,12 @@
-import 'package:paytmmatka/firebase_options.dart';
-import 'package:paytmmatka/mainscreen.dart';
+import 'package:campcon/firebase_options.dart';
+import 'package:campcon/mainscreen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:paytmmatka/loginscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:month_year_picker/month_year_picker.dart';
-import 'package:paytmmatka/services/task_data.dart';
+import 'package:campcon/onboarding.dart';
+import 'package:campcon/services/task_data.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
       create: (context) => TaskData(),
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Paytm Matka',
+        title: 'CampCon',
         theme: ThemeData(
           timePickerTheme: const TimePickerThemeData(
             helpTextStyle:
@@ -111,6 +111,6 @@ class _AuthCheckState extends State<AuthCheck> {
     }
     return MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: userAvailable ? const MainScreen() : const LoginScreen());
+        home: userAvailable ? const MainScreen() : OnboardingScreen());
   }
 }

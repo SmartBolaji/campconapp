@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:paytmmatka/widgets/edit_games.dart';
+import 'package:campcon/widgets/edit_games.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class GamesScreen extends StatefulWidget {
@@ -43,7 +43,7 @@ class _GamesScreenState extends State<GamesScreen> {
 
   List<String> gameList = [
     'Choose Game',
-    'Starlne',
+    'Starline',
     'Mumbai',
   ];
 
@@ -264,9 +264,9 @@ class _GamesScreenState extends State<GamesScreen> {
                           'mrkopen': _mrkOpenTime,
                           'mrkclose': _mrkCloseTime,
                           'created': DateTime.now(),
-                          'digit': 0,
-                          'openpana': 0,
-                          'closepana': 0,
+                          'digit': 1000,
+                          'openpana': 1000,
+                          'closepana': 1000,
                           'updated': DateTime.now(),
                           'status': 'Active',
                         }).then(

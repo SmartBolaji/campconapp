@@ -4,10 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
-import 'package:paytmmatka/mainscreen.dart';
-import 'package:paytmmatka/services/task_data.dart';
+import 'package:campcon/mainscreen.dart';
+import 'package:campcon/services/task_data.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class PhoneOtpScreen extends StatefulWidget {
   final String verifyId;
@@ -156,7 +155,7 @@ class _PhoneOtpScreenState extends State<PhoneOtpScreen> {
                               'paytm': 0,
                               'phonepe': 0,
                               'points': widget.points,
-                              'verified': false,
+                              // 'verified': false,
                             }).then((_) {
                               taskData.saveLogs(widget.id, widget.name,
                                   widget.points, taskData.mpin);

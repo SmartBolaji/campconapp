@@ -1,8 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:paytmmatka/services/task_data.dart';
+import 'package:campcon/services/task_data.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class AdminSettings extends StatefulWidget {
   const AdminSettings({
@@ -17,11 +16,11 @@ class _AdminSettingsState extends State<AdminSettings> {
   // Late variables
   late TextEditingController adminController;
   late TextEditingController alertController;
-  // late TextEditingController acnController;
-  // late TextEditingController ifscController;
-  // late TextEditingController paytmController;
-  // late TextEditingController phonePeController;
-  // late TextEditingController gPayController;
+  late TextEditingController whatsNoController;
+  late TextEditingController whatsLinkController;
+  late TextEditingController callNoController;
+  late TextEditingController howToPlayController;
+  late TextEditingController paytmController;
   // late SharedPreferences sharedPreferences;
 
   double screenHeight = 0.0;
@@ -38,12 +37,11 @@ class _AdminSettingsState extends State<AdminSettings> {
     super.initState();
     adminController = TextEditingController();
     alertController = TextEditingController();
-    // acnController = TextEditingController();
-    // ifscController = TextEditingController();
-    // paytmController = TextEditingController();
-    // phonePeController = TextEditingController();
-    // gPayController = TextEditingController();
-
+    whatsNoController = TextEditingController();
+    whatsLinkController = TextEditingController();
+    callNoController = TextEditingController();
+    howToPlayController = TextEditingController();
+    paytmController = TextEditingController();
     fetchDataFuture = fetchData();
   }
 
@@ -55,19 +53,19 @@ class _AdminSettingsState extends State<AdminSettings> {
       setState(() {
         adminController.text = snap.docs[0]['adminid'].toString();
         alertController.text = snap.docs[0]['alertmsg'] ?? '';
-        // acnController.text = snap.docs[0]['acctno'].toString();
-        // ifscController.text = snap.docs[0]['ifsc'].toString();
-        // paytmController.text = snap.docs[0]['paytm'].toString();
-        // phonePeController.text = snap.docs[0]['phonepe'].toString();
-        // gPayController.text = snap.docs[0]['gpay'].toString();
+        whatsNoController.text = snap.docs[0]['whatsno'].toString();
+        whatsLinkController.text = snap.docs[0]['whatslink'].toString();
+        callNoController.text = snap.docs[0]['callno'].toString();
+        howToPlayController.text = snap.docs[0]['howtoplay'].toString();
+        paytmController.text = 'Coming soon!';
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Provider
-    final taskData = Provider.of<TaskData>(context);
+    // // Provider
+    // final taskData = Provider.of<TaskData>(context);
 
     screenHeight = MediaQuery.of(context).size.height;
     screenWidth = MediaQuery.of(context).size.width;
@@ -120,16 +118,38 @@ class _AdminSettingsState extends State<AdminSettings> {
                       false, false, (value) {}),
                   customField('Message', null, null, alertController, false,
                       false, false, (value) {}),
-                  // customField('Account Number', null, null, acnController,
-                  //     false, false, true, (value) {}),
-                  // customField('IFSC Code', null, null, ifscController, false,
-                  //     false, true, (value) {}),
-                  // customField('PayTm Number', null, null, paytmController,
-                  //     false, false, true, (value) {}),
-                  // customField('PhonePe Number', null, null, phonePeController,
-                  //     false, false, true, (value) {}),
-                  // customField('Google Pay Number', null, null, gPayController,
-                  //     false, false, true, (value) {}),
+                  customField('How To Play (Link)', null, null,
+                      howToPlayController, false, false, true, (value) {}),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 15, bottom: 10),
+                    child: Text(
+                      'Contact',
+                      style: TextStyle(
+                          fontFamily: 'Nexa Bold',
+                          fontSize: screenWidth / 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black),
+                    ),
+                  ),
+                  customField('WhatsApp No (Digit)', null, null,
+                      whatsNoController, false, false, true, (value) {}),
+                  customField('WhatsApp No (Link)', null, null,
+                      whatsLinkController, false, false, true, (value) {}),
+                  customField('Phone (Digit)', null, null, callNoController,
+                      false, false, true, (value) {}),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 15, bottom: 10),
+                    child: Text(
+                      'Payment API',
+                      style: TextStyle(
+                          fontFamily: 'Nexa Bold',
+                          fontSize: screenWidth / 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black),
+                    ),
+                  ),
+                  customField('PayTM (Merchant Id)', null, null,
+                      paytmController, false, false, true, (value) {}),
                   Container(
                     width: screenWidth,
                     padding: const EdgeInsets.all(15),
@@ -173,13 +193,10 @@ class _AdminSettingsState extends State<AdminSettings> {
                             .update({
                           'adminid': int.parse(adminController.text.trim()),
                           'alertmsg': alertController.text.trim(),
-                          // 'acctno': acnController.text.trim() != ''
-                          //     ? int.parse(acnController.text.trim())
-                          //     : 0,
-                          // 'ifsc': int.parse(ifscController.text.trim()),
-                          // 'paytm': int.parse(paytmController.text.trim()),
-                          // 'phonepe': int.parse(phonePeController.text.trim()),
-                          // 'gpay': int.parse(gPayController.text.trim()),
+                          'whatsno': whatsNoController.text.trim(),
+                          'whatslink': whatsLinkController.text.trim(),
+                          'callno': callNoController.text.trim(),
+                          'howtoplay': howToPlayController.text.trim(),
                         }).then(
                           (_) {
                             ScaffoldMessenger.of(context).showSnackBar(

@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:paytmmatka/widgets/reward_users.dart';
+import 'package:campcon/widgets/reward_users.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ResultsScreen extends StatefulWidget {

@@ -2,11 +2,13 @@
 import 'dart:math';
 
 import 'package:iconly/iconly.dart';
-import 'package:paytmmatka/mainscreen.dart';
-import 'package:paytmmatka/model/user.dart';
+import 'package:page_transition/page_transition.dart';
+import 'package:campcon/mainscreen.dart';
+import 'package:campcon/model/user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:paytmmatka/services/task_data.dart';
+import 'package:campcon/screens/points.dart';
+import 'package:campcon/services/task_data.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -62,7 +64,7 @@ class _WthPointsScreenState extends State<WthPointsScreen> {
   Widget build(BuildContext context) {
     // Provider
     final taskData = Provider.of<TaskData>(context);
-    
+
     screenHeight = MediaQuery.of(context).size.height;
     screenWidth = MediaQuery.of(context).size.width;
     txnid = genUniqueCode(11);
@@ -93,6 +95,38 @@ class _WthPointsScreenState extends State<WthPointsScreen> {
                   color: Colors.white,
                 ),
               ),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    PageTransition(
+                      child: const PointsScreen(),
+                      type: PageTransitionType.rightToLeft,
+                      duration: const Duration(milliseconds: 500),
+                      reverseDuration: const Duration(milliseconds: 500),
+                    ),
+                  );
+                },
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Icon(
+                      IconlyBold.wallet,
+                      size: screenWidth / 15,
+                      color: Colors.blue.shade50,
+                    ),
+                    const SizedBox(
+                      width: 5,
+                    ),
+                    Text(taskData.points.toString(),
+                        style: TextStyle(
+                            fontFamily: 'Nexa Bold',
+                            fontSize: screenWidth / 22,
+                            color: Colors.white)),
+                  ],
+                ),
+              )
             ],
           ),
         ),
@@ -120,8 +154,8 @@ class _WthPointsScreenState extends State<WthPointsScreen> {
                       select0 = sel;
                     });
                   }),
-                  customField('MPin', null, null, mPinController, true, false,
-                      (value) {}),
+                  // customField('MPin', null, null, mPinController, true, false,
+                  //     (value) {}),
                   GestureDetector(
                     onTap: () async {
                       // Keypad closes
@@ -151,25 +185,29 @@ class _WthPointsScreenState extends State<WthPointsScreen> {
                         setState(() {
                           circular = false;
                         });
-                      } else if (taskData.mpin !=
-                          int.parse(mPinController.text.trim())) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            backgroundColor: Colors.blue.shade300,
-                            content: Text(
-                              'Wrong mpin, try again!',
-                              style: TextStyle(
-                                fontFamily: 'Nexa Light',
-                                fontSize: screenWidth / 30,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        );
-                        setState(() {
-                          circular = false;
-                        });
-                      } else {
+                      }
+
+                      // else if (taskData.mpin !=
+                      //     int.parse(mPinController.text.trim())) {
+                      //   ScaffoldMessenger.of(context).showSnackBar(
+                      //     SnackBar(
+                      //       backgroundColor: Colors.blue.shade300,
+                      //       content: Text(
+                      //         'Wrong mpin, try again!',
+                      //         style: TextStyle(
+                      //           fontFamily: 'Nexa Light',
+                      //           fontSize: screenWidth / 30,
+                      //           color: Colors.white,
+                      //         ),
+                      //       ),
+                      //     ),
+                      //   );
+                      //   setState(() {
+                      //     circular = false;
+                      //   });
+                      // }
+
+                      else {
                         // get the current mobileid
                         QuerySnapshot snap = await FirebaseFirestore.instance
                             .collection('Users')
@@ -186,6 +224,8 @@ class _WthPointsScreenState extends State<WthPointsScreen> {
                             .doc(snap.docs[0].id)
                             .update({
                           'points': pts,
+                        }).then((_) {
+                          taskData.savePts(pts);
                         });
 
                         try {

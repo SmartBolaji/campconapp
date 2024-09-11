@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:fluttericon/font_awesome5_icons.dart';
 import 'package:fluttericon/rpg_awesome_icons.dart';
 import 'package:page_transition/page_transition.dart';
-import 'package:paytmmatka/mainscreen.dart';
-import 'package:paytmmatka/screens/play_setup.dart';
-import 'package:paytmmatka/widgets/play_option_tile.dart';
+import 'package:campcon/mainscreen.dart';
+import 'package:campcon/screens/play_setup.dart';
+import 'package:campcon/widgets/play_option_tile.dart';
 
 class PlayScreen extends StatefulWidget {
   final String mainTitle;
