@@ -1,16 +1,12 @@
-import 'package:campcon/screens/addpoints.dart';
 import 'package:campcon/screens/camplist.dart';
+import 'package:campcon/screens/clubs.dart';
 import 'package:campcon/screens/events.dart';
 import 'package:campcon/screens/homepage.dart';
 import 'package:campcon/screens/lighttracker.dart';
 import 'package:campcon/screens/search.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:fluttericon/rpg_awesome_icons.dart';
 import 'package:iconly/iconly.dart';
-import 'package:page_transition/page_transition.dart';
-import 'package:campcon/admin/admin_panel.dart';
 import 'package:flutter/material.dart';
-import 'package:campcon/screens/points.dart';
 import 'package:campcon/services/task_data.dart';
 import 'package:campcon/widgets/drawer_widget.dart';
 import 'package:provider/provider.dart';
@@ -49,7 +45,7 @@ class _MainScreenState extends State<MainScreen> {
     const HomeScreen(),
     const SearchScreen(),
     const EventScreen(),
-    const AddPointsScreen(),
+    const ClubsScreen(),
     const LightScreen(),
     const ChecklistScreen(),
   ];
@@ -148,26 +144,26 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
         backgroundColor: Colors.grey.shade100,
         // Start of the Floating Action Button
-        floatingActionButton: taskData.id == adminId
-            ? FloatingActionButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    PageTransition(
-                      child: const AdminPanelScreen(),
-                      type: PageTransitionType.bottomToTop,
-                      duration: const Duration(milliseconds: 1000),
-                      reverseDuration: const Duration(milliseconds: 500),
-                    ),
-                  );
-                },
-                backgroundColor: Colors.blue.shade300,
-                child: Icon(
-                  Icons.vpn_key,
-                  color: Colors.white,
-                  size: screenWidth / 25,
-                ))
-            : null,
+        // floatingActionButton: taskData.id == adminId
+        //     ? FloatingActionButton(
+        //         onPressed: () {
+        //           Navigator.push(
+        //             context,
+        //             PageTransition(
+        //               child: const AdminPanelScreen(),
+        //               type: PageTransitionType.bottomToTop,
+        //               duration: const Duration(milliseconds: 1000),
+        //               reverseDuration: const Duration(milliseconds: 500),
+        //             ),
+        //           );
+        //         },
+        //         backgroundColor: Colors.blue.shade300,
+        //         child: Icon(
+        //           Icons.vpn_key,
+        //           color: Colors.white,
+        //           size: screenWidth / 25,
+        //         ))
+        //     : null,
         // End of Floating Action Button
         bottomNavigationBar: BottomNavigationBar(
           unselectedItemColor: Colors.grey.shade800,

@@ -1,8 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:campcon/services/task_data.dart';
-import 'package:provider/provider.dart';
-
 class AdminSettings extends StatefulWidget {
   const AdminSettings({
     Key? key,

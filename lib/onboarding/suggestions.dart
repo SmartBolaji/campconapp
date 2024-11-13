@@ -1,6 +1,6 @@
 import 'package:campcon/mainscreen.dart';
 import 'package:campcon/services/task_data.dart';
-import 'package:campcon/signupscreen.dart';
+import 'package:campcon/widgets/usersuggest.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -8,27 +8,22 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SuggestScreen extends StatefulWidget {
-  const SuggestScreen({Key? key}) : super(key: key);
+  final QuerySnapshot? snap;
+  final int? currentSize;
+
+  const SuggestScreen({Key? key, this.snap, this.currentSize})
+      : super(key: key);
 
   @override
   State<SuggestScreen> createState() => _SuggestScreenState();
 }
 
 class _SuggestScreenState extends State<SuggestScreen> {
-  TextEditingController idController = TextEditingController();
-  TextEditingController passController = TextEditingController();
-
   double screenHeight = 0.0;
   double screenWidth = 0.0;
 
   Color primary = const Color(0xFF2c2221);
-  bool pass = true;
-  bool circular = false;
   late SharedPreferences sharedPreferences;
-
-  int _id = 0;
-  String _password = '';
-  String _warn = 'This username is available!';
 
   @override
   Widget build(BuildContext context) {
@@ -127,17 +122,31 @@ class _SuggestScreenState extends State<SuggestScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        suggestMethod(
-                            assetImage: 'assets/images/social.jpeg',
-                            user: 'University of Ibadan',
-                            userAt: '@unibadan'),
-                        const SizedBox(
-                          height: 3,
+                        ListView(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          padding: const EdgeInsets.all(0),
+                          children: List.generate(
+                            widget.currentSize!,
+                            (index) {
+                              final doc = widget.snap!.docs[index];
+                              String name = doc.get('name');
+                              String userAt = '@${doc.get('userId')}';
+                              String bio = doc.get('bio');
+                              String uid = doc.get('uid');
+
+                              return UserSuggestion(
+                                screenWidth: screenWidth,
+                                screenHeight: screenHeight,
+                                assetImage: 'assets/images/social.jpeg',
+                                user: name,
+                                userAt: userAt,
+                                userBio: bio,
+                                userId: uid,
+                              );
+                            },
+                          ),
                         ),
-                        suggestMethod(
-                            assetImage: 'assets/images/social.jpeg',
-                            user: 'Student Union of UI',
-                            userAt: '@unionstudent'),
                         const SizedBox(
                           height: 3,
                         ),
@@ -194,86 +203,8 @@ class _SuggestScreenState extends State<SuggestScreen> {
     );
   }
 
-  Container suggestMethod(
-      {required String assetImage,
-      required String user,
-      required String userAt}) {
-    return Container(
-      padding: const EdgeInsets.only(
-        top: 10,
-        bottom: 10,
-        left: 0,
-        right: 0,
-      ),
-      // decoration: BoxDecoration(
-      //   borderRadius: BorderRadius.circular(10), // Circular border radius
-      //   border: Border.all(color: Colors.grey.shade300), // Grey border
-      // ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Image.asset(
-              assetImage,
-              width: 30,
-              height: 30,
-            ),
-          ),
-          const SizedBox(width: 10), // Space between avatar and name
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  user, // Replace with the actual person's name
-                  style: TextStyle(
-                      fontFamily: 'Trebuchet',
-                      fontSize: screenWidth / 30,
-                      fontWeight: FontWeight.bold
-                      // fontWeight: FontWeight.bold,
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(
-                  height: 2,
-                ),
-                Text(
-                  userAt, // Replace with the actual person's name
-                  style: TextStyle(
-                    fontFamily: 'Trebuchet',
-                    fontSize: screenWidth / 40,
-                    // fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.grey.shade800, // Background color of the button
-              borderRadius: BorderRadius.circular(20), // Rounded corners
-            ),
-            padding: const EdgeInsets.symmetric(
-                horizontal: 12, vertical: 8), // Button padding
-            child: Text(
-              'Follow',
-              style: TextStyle(
-                fontFamily: 'Trebuchet',
-                color: Colors.white,
-                fontSize: screenWidth / 40,
-                // fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  GestureDetector actionButton(BuildContext context, TaskData taskData,
+  GestureDetector actionButton(
+      BuildContext context, TaskData taskData, bool circular,
       {required double magHeight,
       required Color bgColor,
       required Color bdColor,
@@ -306,109 +237,6 @@ class _SuggestScreenState extends State<SuggestScreen> {
                       letterSpacing: 0),
                 ),
         ),
-      ),
-    );
-  }
-
-  Widget fieldTitle(String title) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Text(
-        title,
-        style: TextStyle(fontSize: screenWidth / 26, fontFamily: 'Nexa Bold'),
-      ),
-    );
-  }
-
-  Widget fgtPass(String title, {required Function onTap}) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: GestureDetector(
-        onTap: () {
-          onTap();
-        },
-        child: Text(
-          title,
-          style: TextStyle(
-              fontSize: screenWidth / 30,
-              fontFamily: 'Trebuchet',
-              color: primary),
-        ),
-      ),
-    );
-  }
-
-  Widget customField(
-      String hint,
-      IconData icon,
-      IconData? suffixicon,
-      TextEditingController controller,
-      bool obscure,
-      Function(String) onChanged,
-      Function onTap) {
-    return Container(
-      width: screenWidth,
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        border: Border(
-          bottom: BorderSide(width: 1, color: Colors.grey.shade400),
-        ),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            // width: screenWidth / 15,
-            child: Icon(
-              icon,
-              color: primary,
-              size: screenWidth / 20,
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                  right: screenWidth / 30, left: screenWidth / 50),
-              child: TextFormField(
-                style: TextStyle(
-                    fontFamily: 'Trebuchet',
-                    fontSize: screenWidth / 30,
-                    // fontWeight: FontWeight.bold,
-                    color: Colors.black),
-                controller: controller,
-                onChanged: (value) {
-                  onChanged(value);
-                },
-                enableSuggestions: false,
-                autofocus: true,
-                autocorrect: false,
-                decoration: InputDecoration(
-                  contentPadding:
-                      EdgeInsets.symmetric(vertical: screenHeight / 50),
-                  border: InputBorder.none,
-                  hintText: hint,
-                  hintStyle: TextStyle(
-                      fontFamily: 'Trebuchet',
-                      fontSize: screenWidth / 30,
-                      // fontWeight: FontWeight.bold,
-                      color: Colors.black),
-                  suffixIcon: GestureDetector(
-                    onTap: () {
-                      onTap();
-                    },
-                    child: Icon(
-                      suffixicon,
-                      color: Colors.grey.shade600,
-                      size: screenWidth / 20,
-                    ),
-                  ),
-                ),
-                maxLines: 1,
-                obscureText: obscure,
-              ),
-            ),
-          )
-        ],
       ),
     );
   }

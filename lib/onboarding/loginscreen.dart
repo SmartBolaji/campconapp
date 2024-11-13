@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:campcon/screens/fgt_pass.dart';
 import 'package:campcon/services/task_data.dart';
-import 'package:campcon/signupscreen.dart';
+import 'package:campcon/onboarding/signupscreen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -129,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     bgColor: Colors.grey.shade400,
                                     bdColor: Colors.grey.shade400,
                                     txtColor: Colors.grey.shade700,
-                                    txt: 'Login', onTap: () async {
+                                    txt: 'LOGIN', onTap: () async {
                                   // Keypad closes
                                   FocusScope.of(context).unfocus();
 
@@ -275,7 +275,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   bgColor: Colors.grey.shade800,
                                   bdColor: Colors.grey.shade800,
                                   txtColor: Colors.white,
-                                  txt: 'Signup',
+                                  txt: 'SIGNUP',
                                   onTap: () {
                                     Navigator.push(
                                       context,

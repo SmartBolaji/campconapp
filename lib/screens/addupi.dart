@@ -1,5 +1,3 @@
-import 'package:campcon/mainscreen.dart';
-import 'package:campcon/model/user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:campcon/services/task_data.dart';

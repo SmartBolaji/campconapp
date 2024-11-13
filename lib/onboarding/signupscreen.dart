@@ -1,9 +1,7 @@
-import 'package:campcon/mainscreen.dart';
 import 'package:campcon/services/task_data.dart';
-import 'package:campcon/setpass.dart';
-import 'package:flutter/widgets.dart';
-import 'package:page_transition/page_transition.dart';
+import 'package:campcon/onboarding/setpass.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,27 +14,27 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  TextEditingController idController = TextEditingController();
-  TextEditingController passController = TextEditingController();
-
-  double screenHeight = 0.0;
-  double screenWidth = 0.0;
-
-  Color primary = const Color(0xFF2c2221);
-  bool pass = true;
-  bool circular = false;
   late SharedPreferences sharedPreferences;
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
 
-  int _id = 0;
-  String _password = '';
+  @override
+  void dispose() {
+    // Dispose of the controller when the widget is removed from the widget tree.
+    emailController.dispose();
+    nameController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     // Provider
     final taskData = Provider.of<TaskData>(context);
+    // varibles
+    Color primary = const Color(0xFF2c2221);
 
-    screenHeight = MediaQuery.of(context).size.height;
-    screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+    double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
@@ -80,7 +78,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         children: [
                           Flexible(
                             child: Text(
-                              'Hey! Create your account on Campcon.',
+                              'Become a campster!',
                               style: TextStyle(
                                   fontFamily: 'Trebuchet',
                                   fontSize: screenWidth / 15,
@@ -100,29 +98,30 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             customField(
+                              screenHeight,
+                              screenWidth,
                               'NAME',
                               Icons.alternate_email,
                               null,
-                              idController,
+                              nameController,
+                              TextCapitalization.words,
                               false,
-                              (String id) {
-                                // setState(() {
-                                //   _id = int.parse(id);
-                                // });
+                              (String name) {
+                                // name = _name;
+                                // print('show: $name');
                               },
                               () {},
                             ),
                             customField(
+                              screenHeight,
+                              screenWidth,
                               'EMAIL',
                               Icons.alternate_email,
                               null,
-                              idController,
+                              emailController,
+                              TextCapitalization.sentences,
                               false,
-                              (String id) {
-                                // setState(() {
-                                //   _id = int.parse(id);
-                                // });
-                              },
+                              (String email) {},
                               () {},
                             ),
                             const SizedBox(
@@ -136,23 +135,117 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   child: actionButton(
                                     context,
                                     taskData,
+                                    screenHeight,
+                                    screenWidth,
+                                    taskData.circular,
                                     magHeight: screenHeight / 100,
                                     bgColor: Colors.grey.shade800,
                                     bdColor: Colors.grey.shade800,
                                     txtColor: Colors.white,
-                                    txt: 'Next',
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        PageTransition(
-                                          child: const PassScreen(),
-                                          type: PageTransitionType.rightToLeft,
-                                          duration:
-                                              const Duration(milliseconds: 500),
-                                          reverseDuration:
-                                              const Duration(milliseconds: 500),
-                                        ),
-                                      );
+                                    txt: 'NEXT',
+                                    onTap: () async {
+                                      // start rolling
+                                      taskData.updateCircle(context, true);
+
+                                      try {
+                                        // Convert the email to lowercase for a case-insensitive query
+                                        String emailInput = emailController.text
+                                            .trim()
+                                            .toLowerCase();
+
+                                        QuerySnapshot snap =
+                                            await FirebaseFirestore
+                                                .instance
+                                                .collection('users')
+                                                .where('email',
+                                                    isEqualTo: emailInput)
+                                                .get();
+
+                                        if (nameController.text.isEmpty ||
+                                            emailController.text.isEmpty) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              backgroundColor:
+                                                  Colors.grey.shade800,
+                                              content: Text(
+                                                'Please enter a valid name and email.',
+                                                style: TextStyle(
+                                                  fontFamily: 'Trebuchet',
+                                                  fontSize: screenWidth / 30,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          );
+
+                                          // stop rolling
+                                          taskData.updateCircle(context, false);
+                                        } else if (snap.docs.isNotEmpty) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              backgroundColor:
+                                                  Colors.grey.shade800,
+                                              content: Text(
+                                                'This account already exists in our record, use a different email and try again!',
+                                                style: TextStyle(
+                                                  fontFamily: 'Trebuchet',
+                                                  fontSize: screenWidth / 30,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          );
+
+                                          // stop rolling
+                                          taskData.updateCircle(context, false);
+                                        } else {
+                                          // stop rolling
+                                          taskData.updateCircle(context, false);
+
+                                          // Save the email in lowercase to ensure consistency
+                                          taskData.updateSign(
+                                            context,
+                                            taskData.uid,
+                                            nameController.text.trim(),
+                                            taskData.userid,
+                                            emailInput, // Store the lowercase email
+                                            taskData.pass,
+                                          );
+
+                                          Navigator.push(
+                                            context,
+                                            PageTransition(
+                                              child: const PassScreen(),
+                                              type: PageTransitionType
+                                                  .rightToLeft,
+                                              duration: const Duration(
+                                                  milliseconds: 500),
+                                              reverseDuration: const Duration(
+                                                  milliseconds: 500),
+                                            ),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        taskData.updateCircle(context, false);
+
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            backgroundColor:
+                                                Colors.grey.shade800,
+                                            content: Text(
+                                              'An error occurred: ${e.toString()}',
+                                              style: TextStyle(
+                                                fontFamily: 'Trebuchet',
+                                                fontSize: screenWidth / 30,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      }
                                     },
                                   ),
                                 ),
@@ -206,6 +299,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   GestureDetector actionButton(BuildContext context, TaskData taskData,
+      double screenHeight, double screenWidth, bool circular,
       {required double magHeight,
       required Color bgColor,
       required Color bdColor,
@@ -242,39 +336,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Widget fieldTitle(String title) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Text(
-        title,
-        style: TextStyle(fontSize: screenWidth / 26, fontFamily: 'Nexa Bold'),
-      ),
-    );
-  }
-
-  Widget fgtPass(String title, {required Function onTap}) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: GestureDetector(
-        onTap: () {
-          onTap();
-        },
-        child: Text(
-          title,
-          style: TextStyle(
-              fontSize: screenWidth / 30,
-              fontFamily: 'Trebuchet',
-              color: primary),
-        ),
-      ),
-    );
-  }
-
   Widget customField(
+      double screenHeight,
+      double screenWidth,
       String hint,
       IconData icon,
       IconData? suffixicon,
       TextEditingController controller,
+      TextCapitalization type,
       bool obscure,
       Function(String) onChanged,
       Function onTap) {
@@ -282,10 +351,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
       width: screenWidth,
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.transparent,
+        color: Colors.grey.shade100,
         border: Border(
           bottom: BorderSide(width: 1, color: Colors.grey.shade400),
         ),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
@@ -294,7 +364,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           // ),
           Expanded(
             child: Padding(
-              padding: EdgeInsets.only(right: screenWidth / 30),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
               child: TextFormField(
                 style: TextStyle(
                     fontFamily: 'Trebuchet',
@@ -302,15 +372,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     // fontWeight: FontWeight.bold,
                     color: Colors.black),
                 controller: controller,
+                textCapitalization: type,
                 onChanged: (value) {
                   onChanged(value);
                 },
-                enableSuggestions: false,
+                enableSuggestions: true,
                 autofocus: true,
                 autocorrect: false,
                 decoration: InputDecoration(
                   contentPadding:
-                      EdgeInsets.symmetric(vertical: screenHeight / 80),
+                      EdgeInsets.symmetric(vertical: screenHeight / 50),
                   border: InputBorder.none,
                   hintText: hint,
                   hintStyle: TextStyle(

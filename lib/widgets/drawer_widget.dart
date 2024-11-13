@@ -3,7 +3,7 @@ import 'package:fluttericon/font_awesome5_icons.dart';
 import 'package:fluttericon/font_awesome_icons.dart';
 import 'package:iconly/iconly.dart';
 import 'package:page_transition/page_transition.dart';
-import 'package:campcon/loginscreen.dart';
+import 'package:campcon/onboarding/loginscreen.dart';
 import 'package:campcon/screens/addpoints.dart';
 import 'package:campcon/screens/addupi.dart';
 import 'package:campcon/screens/bids.dart';

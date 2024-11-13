@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:month_year_picker/month_year_picker.dart';
 import 'package:campcon/services/task_data.dart';
-import 'package:campcon/widgets/edit_trans.dart';
 import 'package:campcon/widgets/edit_users.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';

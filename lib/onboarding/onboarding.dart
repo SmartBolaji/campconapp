@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:page_transition/page_transition.dart';
-import 'package:campcon/loginscreen.dart';
+import 'package:campcon/onboarding/loginscreen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   @override

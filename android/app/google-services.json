@@ -1,26 +1,36 @@
 {
   "project_info": {
-    "project_number": "273504583231",
-    "project_id": "paytmmatka",
-    "storage_bucket": "paytmmatka.appspot.com"
+    "project_number": "987673267133",
+    "project_id": "campcon-806c3",
+    "storage_bucket": "campcon-806c3.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:273504583231:android:abd5fabcf254117042828a",
+        "mobilesdk_app_id": "1:987673267133:android:1d4711ff9add653566e0d4",
         "android_client_info": {
-          "package_name": "com.paytmmatka.myapp"
+          "package_name": "com.campcon.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "987673267133-7vqfdmn1m8ihnsig3i1a4r9usjin2i94.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyCIB3HfOaNb4k0WEMh5Auxbtx-qq2z0vAQ"
+          "current_key": "AIzaSyCcDgKr1TSbk3cOtbjW2u55uPdlG1v7csA"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "987673267133-7vqfdmn1m8ihnsig3i1a4r9usjin2i94.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

@@ -1,6 +1,6 @@
 import 'package:campcon/screens/points.dart';
 import 'package:campcon/widgets/posts.dart';
-import 'package:campcon/widgets/suggest.dart';
+import 'package:campcon/widgets/homesuggest.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:iconly/iconly.dart';
 import 'package:flutter/material.dart';

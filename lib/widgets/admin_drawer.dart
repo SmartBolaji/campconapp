@@ -10,7 +10,7 @@ import 'package:campcon/admin/results.dart';
 import 'package:campcon/admin/settings.dart';
 import 'package:campcon/admin/transt.dart';
 import 'package:campcon/admin/users.dart';
-import 'package:campcon/loginscreen.dart';
+import 'package:campcon/onboarding/loginscreen.dart';
 import 'package:campcon/screens/addpoints.dart';
 import 'package:campcon/screens/addupi.dart';
 import 'package:campcon/screens/bids.dart';
