@@ -103,17 +103,29 @@ class _LoginScreenState extends State<LoginScreen> {
                               children: [
                                 // fieldTitle('Password'),
                                 fgtPass('Forget Password?', onTap: () {
+                                  // Navigate to next screen or home screen
                                   Navigator.push(
                                     context,
                                     PageTransition(
-                                      child: const ForgetPassScreen(),
-                                      type: PageTransitionType.leftToRight,
+                                      child: const MainScreen(),
+                                      type: PageTransitionType.rightToLeft,
                                       duration:
                                           const Duration(milliseconds: 500),
                                       reverseDuration:
                                           const Duration(milliseconds: 500),
                                     ),
                                   );
+                                  // Navigator.push(
+                                  //   context,
+                                  //   PageTransition(
+                                  //     child: const ForgetPassScreen(),
+                                  //     type: PageTransitionType.leftToRight,
+                                  //     duration:
+                                  //         const Duration(milliseconds: 500),
+                                  //     reverseDuration:
+                                  //         const Duration(milliseconds: 500),
+                                  //   ),
+                                  // );
                                 })
                               ],
                             ),

@@ -1,7 +1,12 @@
+import 'package:campcon/screens/lighttracker.dart';
 import 'package:campcon/screens/points.dart';
+import 'package:campcon/screens/publish.dart';
 import 'package:campcon/widgets/posts.dart';
 import 'package:campcon/widgets/homesuggest.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/rendering.dart';
+import 'package:fluttericon/font_awesome5_icons.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:iconly/iconly.dart';
 import 'package:flutter/material.dart';
 import 'package:campcon/services/task_data.dart';
@@ -20,6 +25,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late Future<void> fetchDataFuture;
   final Uri _url = Uri.parse('https://flutter.dev');
+  final ScrollController _scrollController = ScrollController();
+  bool _isFabVisible = true;
 
   QuerySnapshot? _snap;
   QuerySnapshot? _snap1;
@@ -109,6 +116,33 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     loadSettingsData();
     fetchDataFuture = loadMrkData();
+
+    // Attach a listener to the ScrollController
+    _scrollController.addListener(
+      () {
+        if (_scrollController.position.userScrollDirection ==
+            ScrollDirection.reverse) {
+          if (_isFabVisible) {
+            setState(() {
+              _isFabVisible = false;
+            });
+          }
+        } else if (_scrollController.position.userScrollDirection ==
+            ScrollDirection.forward) {
+          if (!_isFabVisible) {
+            setState(() {
+              _isFabVisible = true;
+            });
+          }
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose(); // Dispose the controller
+    super.dispose();
   }
 
   @override
@@ -136,6 +170,31 @@ class _HomeScreenState extends State<HomeScreen> {
     screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
+      floatingActionButton: AnimatedOpacity(
+        duration: const Duration(milliseconds: 300),
+        opacity: _isFabVisible ? 1.0 : 0.0,
+        child: FloatingActionButton(
+          onPressed: () {
+            // Your action here
+            Navigator.push(
+              context,
+              PageTransition(
+                child: const PostPage(),
+                type: PageTransitionType.bottomToTop,
+                duration: const Duration(milliseconds: 500),
+                reverseDuration: const Duration(milliseconds: 500),
+              ),
+            );
+          },
+          backgroundColor: Colors.grey.shade800,
+          shape: const CircleBorder(),
+          child: const Icon(
+            Icons.add,
+            size: 30,
+            color: Colors.white,
+          ),
+        ),
+      ),
       backgroundColor: Colors.grey.shade50,
       body: Column(
         children: [
@@ -171,23 +230,37 @@ class _HomeScreenState extends State<HomeScreen> {
                       height: screenHeight / 9,
                     ),
                     GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          PageTransition(
-                            child: const PointsScreen(),
-                            type: PageTransitionType.rightToLeft,
-                            duration: const Duration(milliseconds: 500),
-                            reverseDuration: const Duration(milliseconds: 500),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            PageTransition(
+                              child: const LightScreen(),
+                              type: PageTransitionType.rightToLeft,
+                              duration: const Duration(milliseconds: 500),
+                              reverseDuration:
+                                  const Duration(milliseconds: 500),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFBA9E02)
+                                    .withOpacity(0.6), // Glow color
+                                blurRadius: 20, // How much the glow spreads
+                                spreadRadius:
+                                    3, // How much glow extends beyond the icon
+                              ),
+                            ],
                           ),
-                        );
-                      },
-                      child: Icon(
-                        IconlyBold.setting,
-                        size: screenWidth / 15,
-                        color: Colors.grey.shade800,
-                      ),
-                    )
+                          child: Icon(
+                            FontAwesomeIcons.lightbulb,
+                            size: screenWidth / 15,
+                            color: const Color(0xFFBA9E02), // Core icon color
+                          ),
+                        ))
                   ],
                 ),
               ),
@@ -195,9 +268,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   topButtons(
-                      onTap: () {}, text: 'Explore', onSelect: false, index: 0),
+                      onTap: () {}, text: 'Explore', onSelect: true, index: 0),
                   topButtons(
-                      onTap: () {}, text: 'Connects', onSelect: true, index: 0),
+                      onTap: () {},
+                      text: 'Connects',
+                      onSelect: false,
+                      index: 0),
                 ],
               ),
               Container(
@@ -215,6 +291,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           Expanded(
             child: ListView(
+              controller: _scrollController,
               padding: const EdgeInsets.only(
                 bottom: 20,
               ),
@@ -224,7 +301,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     userName: 'University of Ibadan',
                     userImageUrl: 'assets/images/social.jpeg',
                     content:
-                        "Learning how to optimize performance in Flutter apps. There's so much to discover! 📈 Any tips from fellow devs? #FlutterTips",
+                        "We would like to inform all students and staff that the University of Ibadan will hold its annual convocation ceremony from November 15-17. Graduating students are required to complete all necessary clearance procedures by November 10.",
                     time: '2h',
                     likesCount: 198,
                     repliesCount: 10,
@@ -234,112 +311,248 @@ class _HomeScreenState extends State<HomeScreen> {
                     onLike: () {},
                     onReply: () {},
                     onBookmark: () {},
+                    onShare: () {},
                     height: screenHeight,
                     width: screenWidth),
-
                 PostWidget(
                     userHandle: 'tech_guru',
                     userName: 'Tech Guru',
                     userImageUrl: 'assets/images/social.jpeg',
                     content:
-                        "Just finished building my first Flutter app! 🚀 It's amazing how quickly you can create beautiful UIs. Now onto integrating Firebase for real-time data. Any advice on managing state efficiently? #FlutterDev #Firebase",
+                        "Just finished building my first Flutter app! 🚀 \n\nIt's amazing how quickly you can create beautiful UIs. Now onto integrating Firebase for real-time data. Any advice on managing state efficiently? #FlutterDev #Firebase",
                     time: '1d',
                     likesCount: 320,
-                    repliesCount: 20,
+                    repliesCount: 0,
                     bookmarksCount: 7,
                     isLiked: false,
                     isBookmarked: false,
                     onLike: () {},
                     onReply: () {},
                     onBookmark: () {},
+                    onShare: () {},
                     height: screenHeight,
                     width: screenWidth),
-
+                PostWidget(
+                    userHandle: 'UIibadan',
+                    userName: 'University of Ibadan',
+                    userImageUrl: 'assets/images/social.jpeg',
+                    content:
+                        "We would like to inform all students and staff that the University of Ibadan will hold its annual convocation ceremony from November 15-17. Graduating students are required to complete all necessary clearance procedures by November 10.",
+                    time: '2h',
+                    likesCount: 198,
+                    repliesCount: 10,
+                    bookmarksCount: 5,
+                    isLiked: true,
+                    isBookmarked: true,
+                    onLike: () {},
+                    onReply: () {},
+                    onBookmark: () {},
+                    onShare: () {},
+                    height: screenHeight,
+                    width: screenWidth),
+                PostWidget(
+                    userHandle: 'tech_guru',
+                    userName: 'Tech Guru',
+                    userImageUrl: 'assets/images/social.jpeg',
+                    content:
+                        "Just finished building my first Flutter app! 🚀 \n\nIt's amazing how quickly you can create beautiful UIs. Now onto integrating Firebase for real-time data. Any advice on managing state efficiently? #FlutterDev #Firebase",
+                    time: '1d',
+                    likesCount: 320,
+                    repliesCount: 0,
+                    bookmarksCount: 7,
+                    isLiked: false,
+                    isBookmarked: false,
+                    onLike: () {},
+                    onReply: () {},
+                    onBookmark: () {},
+                    onShare: () {},
+                    height: screenHeight,
+                    width: screenWidth),
+                PostWidget(
+                    userHandle: 'UIibadan',
+                    userName: 'University of Ibadan',
+                    userImageUrl: 'assets/images/social.jpeg',
+                    content:
+                        "We would like to inform all students and staff that the University of Ibadan will hold its annual convocation ceremony from November 15-17. Graduating students are required to complete all necessary clearance procedures by November 10.",
+                    time: '2h',
+                    likesCount: 198,
+                    repliesCount: 10,
+                    bookmarksCount: 5,
+                    isLiked: true,
+                    isBookmarked: true,
+                    onLike: () {},
+                    onReply: () {},
+                    onBookmark: () {},
+                    onShare: () {},
+                    height: screenHeight,
+                    width: screenWidth),
+                PostWidget(
+                    userHandle: 'tech_guru',
+                    userName: 'Tech Guru',
+                    userImageUrl: 'assets/images/social.jpeg',
+                    content:
+                        "Just finished building my first Flutter app! 🚀 \n\nIt's amazing how quickly you can create beautiful UIs. Now onto integrating Firebase for real-time data. Any advice on managing state efficiently? #FlutterDev #Firebase",
+                    time: '1d',
+                    likesCount: 320,
+                    repliesCount: 0,
+                    bookmarksCount: 7,
+                    isLiked: false,
+                    isBookmarked: false,
+                    onLike: () {},
+                    onReply: () {},
+                    onBookmark: () {},
+                    onShare: () {},
+                    height: screenHeight,
+                    width: screenWidth),
+                PostWidget(
+                    userHandle: 'UIibadan',
+                    userName: 'University of Ibadan',
+                    userImageUrl: 'assets/images/social.jpeg',
+                    content:
+                        "We would like to inform all students and staff that the University of Ibadan will hold its annual convocation ceremony from November 15-17. Graduating students are required to complete all necessary clearance procedures by November 10.",
+                    time: '2h',
+                    likesCount: 198,
+                    repliesCount: 10,
+                    bookmarksCount: 5,
+                    isLiked: true,
+                    isBookmarked: true,
+                    onLike: () {},
+                    onReply: () {},
+                    onBookmark: () {},
+                    onShare: () {},
+                    height: screenHeight,
+                    width: screenWidth),
+                PostWidget(
+                    userHandle: 'tech_guru',
+                    userName: 'Tech Guru',
+                    userImageUrl: 'assets/images/social.jpeg',
+                    content:
+                        "Just finished building my first Flutter app! 🚀 \n\nIt's amazing how quickly you can create beautiful UIs. Now onto integrating Firebase for real-time data. Any advice on managing state efficiently? #FlutterDev #Firebase",
+                    time: '1d',
+                    likesCount: 320,
+                    repliesCount: 0,
+                    bookmarksCount: 7,
+                    isLiked: false,
+                    isBookmarked: false,
+                    onLike: () {},
+                    onReply: () {},
+                    onBookmark: () {},
+                    onShare: () {},
+                    height: screenHeight,
+                    width: screenWidth),
+                PostWidget(
+                    userHandle: 'UIibadan',
+                    userName: 'University of Ibadan',
+                    userImageUrl: 'assets/images/social.jpeg',
+                    content:
+                        "We would like to inform all students and staff that the University of Ibadan will hold its annual convocation ceremony from November 15-17. Graduating students are required to complete all necessary clearance procedures by November 10.",
+                    time: '2h',
+                    likesCount: 198,
+                    repliesCount: 10,
+                    bookmarksCount: 5,
+                    isLiked: true,
+                    isBookmarked: true,
+                    onLike: () {},
+                    onReply: () {},
+                    onBookmark: () {},
+                    onShare: () {},
+                    height: screenHeight,
+                    width: screenWidth),
+                PostWidget(
+                    userHandle: 'tech_guru',
+                    userName: 'Tech Guru',
+                    userImageUrl: 'assets/images/social.jpeg',
+                    content:
+                        "Just finished building my first Flutter app! 🚀 \n\nIt's amazing how quickly you can create beautiful UIs. Now onto integrating Firebase for real-time data. Any advice on managing state efficiently? #FlutterDev #Firebase",
+                    time: '1d',
+                    likesCount: 320,
+                    repliesCount: 0,
+                    bookmarksCount: 7,
+                    isLiked: false,
+                    isBookmarked: false,
+                    onLike: () {},
+                    onReply: () {},
+                    onBookmark: () {},
+                    onShare: () {},
+                    height: screenHeight,
+                    width: screenWidth),
+                PostWidget(
+                    userHandle: 'UIibadan',
+                    userName: 'University of Ibadan',
+                    userImageUrl: 'assets/images/social.jpeg',
+                    content:
+                        "We would like to inform all students and staff that the University of Ibadan will hold its annual convocation ceremony from November 15-17. Graduating students are required to complete all necessary clearance procedures by November 10.",
+                    time: '2h',
+                    likesCount: 198,
+                    repliesCount: 10,
+                    bookmarksCount: 5,
+                    isLiked: true,
+                    isBookmarked: true,
+                    onLike: () {},
+                    onReply: () {},
+                    onBookmark: () {},
+                    onShare: () {},
+                    height: screenHeight,
+                    width: screenWidth),
+                PostWidget(
+                    userHandle: 'tech_guru',
+                    userName: 'Tech Guru',
+                    userImageUrl: 'assets/images/social.jpeg',
+                    content:
+                        "Just finished building my first Flutter app! 🚀 \n\nIt's amazing how quickly you can create beautiful UIs. Now onto integrating Firebase for real-time data. Any advice on managing state efficiently? #FlutterDev #Firebase",
+                    time: '1d',
+                    likesCount: 320,
+                    repliesCount: 0,
+                    bookmarksCount: 7,
+                    isLiked: false,
+                    isBookmarked: false,
+                    onLike: () {},
+                    onReply: () {},
+                    onBookmark: () {},
+                    onShare: () {},
+                    height: screenHeight,
+                    width: screenWidth),
+                PostWidget(
+                    userHandle: 'UIibadan',
+                    userName: 'University of Ibadan',
+                    userImageUrl: 'assets/images/social.jpeg',
+                    content:
+                        "We would like to inform all students and staff that the University of Ibadan will hold its annual convocation ceremony from November 15-17. Graduating students are required to complete all necessary clearance procedures by November 10.",
+                    time: '2h',
+                    likesCount: 198,
+                    repliesCount: 10,
+                    bookmarksCount: 5,
+                    isLiked: true,
+                    isBookmarked: true,
+                    onLike: () {},
+                    onReply: () {},
+                    onBookmark: () {},
+                    onShare: () {},
+                    height: screenHeight,
+                    width: screenWidth),
+                PostWidget(
+                    userHandle: 'tech_guru',
+                    userName: 'Tech Guru',
+                    userImageUrl: 'assets/images/social.jpeg',
+                    content:
+                        "Just finished building my first Flutter app! 🚀 \n\nIt's amazing how quickly you can create beautiful UIs. Now onto integrating Firebase for real-time data. Any advice on managing state efficiently? #FlutterDev #Firebase",
+                    time: '1d',
+                    likesCount: 320,
+                    repliesCount: 0,
+                    bookmarksCount: 7,
+                    isLiked: false,
+                    isBookmarked: false,
+                    onLike: () {},
+                    onReply: () {},
+                    onBookmark: () {},
+                    onShare: () {},
+                    height: screenHeight,
+                    width: screenWidth),
                 SuggestionWidget(
                     suggestedUsers: mockUsers,
                     onConnect: (user) {},
                     height: screenHeight,
                     width: screenWidth)
-
-                // _snap == null
-                //     ? Padding(
-                //         padding: EdgeInsets.only(
-                //           top: screenHeight / 8,
-                //         ),
-                //         child: CircleAvatar(
-                //             backgroundColor: Colors.blue.shade400,
-                //             radius: 50,
-                //             child: const CircularProgressIndicator(
-                //                 color: Colors.white)),
-                //       )
-                //     : ListView(
-                //         shrinkWrap: true,
-                //         physics: const NeverScrollableScrollPhysics(),
-                //         children: List.generate(
-                //           currentSize,
-                //           (index) {
-                //             final doc = _snap!.docs[index];
-                //             String market = doc.get('mrkname');
-                //             String mrkSection = doc.get('mrksection');
-                //             String mrkOpen = doc.get('mrkopen');
-                //             String mrkClose = doc.get('mrkclose');
-                //             String mrkDigit = doc.get('digit').toString();
-                //             String mrkOpenPana = doc.get('openpana').toString();
-                //             String mrkClosePana =
-                //                 doc.get('closepana').toString();
-
-                //             return AllTile(
-                //               allTitle: market,
-                //               allsub1: 'Open $mrkOpen | Close $mrkClose',
-                //               allsub2: mrkDigit == '1000' ||
-                //                       mrkOpenPana == '1000' ||
-                //                       mrkClosePana == '1000'
-                //                   ? 'XXX-XX-XXX'
-                //                   : '$mrkOpenPana-$mrkDigit-$mrkClosePana',
-                //               allisChecked: mrkDigit == '1000' ||
-                //                       mrkOpenPana == '1000' ||
-                //                       mrkClosePana == '1000'
-                //                   ? false
-                //                   : true,
-                //               allonTapCallback: () {
-                //                 mrkDigit == '1000' ||
-                //                         mrkOpenPana == '1000' ||
-                //                         mrkClosePana == '1000'
-                //                     ? Navigator.push(
-                //                         context,
-                //                         PageTransition(
-                //                           child: PlayScreen(
-                //                             mainTitle: market,
-                //                             mainSection: mrkSection,
-                //                           ),
-                //                           type: PageTransitionType.bottomToTop,
-                //                           duration:
-                //                               const Duration(milliseconds: 500),
-                //                           reverseDuration:
-                //                               const Duration(milliseconds: 500),
-                //                         ),
-                //                       )
-                //                     : ScaffoldMessenger.of(context)
-                //                         .showSnackBar(
-                //                         SnackBar(
-                //                           backgroundColor: Colors.red,
-                //                           content: Text(
-                //                             'Market Close!',
-                //                             style: TextStyle(
-                //                               fontFamily: 'Nexa Light',
-                //                               fontSize: screenWidth / 30,
-                //                               color: Colors.white,
-                //                             ),
-                //                           ),
-                //                         ),
-                //                       );
-                //                 ;
-                //               },
-                //             );
-                //             // : const SizedBox();
-                //           },
-                //         ),
-                //       ),
               ],
             ),
           ),

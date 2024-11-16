@@ -9,7 +9,7 @@ final UniqueId idG = UniqueId();
 class TaskData extends ChangeNotifier {
   // Store connection state for each user ID
   final Map<String, bool> _connections = {};
-  // This function isConnected is meant to determine whether a specific user (identified by userId)
+  // This function isConnected is meant to determine whether a specific user (identified by uid)
   // is currently in the _connections map with a true value, indicating a "connected" status.
   bool isConnected(String uid) => _connections[uid] ?? false;
 
@@ -320,18 +320,43 @@ class TaskData extends ChangeNotifier {
   Future<void> connectToUser(String uid, String cUid) async {
     if (!_connections.containsKey(uid) || !_connections[uid]!) {
       try {
+        // Step 1: Add current user to the target user's 'connecting' subcollection
         await FirebaseFirestore.instance
             .collection('users')
             .doc(uid)
             .collection('connecting')
-            .doc(cUid) // Replace with the current user's ID
+            .doc(cUid) // The current user
             .set({
           'uid': cUid,
           'userRef': FirebaseFirestore.instance
               .collection('users')
-              .doc(cUid), // Reference to the connecting's user document
-
+              .doc(cUid), // Reference to the user's document
           'addedDate': FieldValue.serverTimestamp(),
+        });
+
+        // Step 2: Add target user to the current user's 'connects' subcollection
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(cUid)
+            .collection('connects')
+            .doc(uid) // The current user
+            .set({
+          'uid': uid,
+          'userRef': FirebaseFirestore.instance.collection('users').doc(uid),
+          'addedDate': FieldValue.serverTimestamp(),
+        });
+
+        // Step 3: Update the 'connecting' field in the targets user's document
+        // Incrementing the 'connecting' count by 1
+        await FirebaseFirestore.instance.collection('users').doc(uid).update({
+          'connecting':
+              FieldValue.increment(1), // Increment the connecting count
+        });
+
+        // Step 4: Update the 'connects' field in the current user's document
+        // Incrementing the 'connects' count by 1
+        await FirebaseFirestore.instance.collection('users').doc(cUid).update({
+          'connects': FieldValue.increment(1), // Increment the followers count
         });
 
         _connections[uid] = true;
@@ -345,15 +370,35 @@ class TaskData extends ChangeNotifier {
   // Disconnect from a user
   Future<void> disconnectFromUser(String uid, String cUid) async {
     try {
+      // Step 1: Remove current user from the target user's 'connecting' subcollection
       await FirebaseFirestore.instance
           .collection('users')
-          .doc(uid)
+          .doc(uid) // The target user
           .collection('connecting')
-          .doc(cUid) // Replace with the current user's ID
+          .doc(cUid) // The current user
           .delete();
 
+      // Step 2: Remove target user from the current user's 'connects' subcollection
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(cUid) // The current user
+          .collection('connects')
+          .doc(uid) // The target user
+          .delete();
+
+      // Step 3: Decrement the 'connecting' count in the target user's document
+      await FirebaseFirestore.instance.collection('users').doc(uid).update({
+        'connecting':
+            FieldValue.increment(-1), // Decrement the connecting count
+      });
+
+      // Step 4: Decrement the 'connects' count in the current user's document
+      await FirebaseFirestore.instance.collection('users').doc(cUid).update({
+        'followers': FieldValue.increment(-1), // Decrement the followers count
+      });
+
       _connections[uid] = false;
-      notifyListeners();
+      notifyListeners(); // Notify listeners about the update
     } catch (e) {
       print("Error disconnecting from user: $e");
     }

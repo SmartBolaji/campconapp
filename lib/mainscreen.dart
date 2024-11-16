@@ -5,6 +5,7 @@ import 'package:campcon/screens/homepage.dart';
 import 'package:campcon/screens/lighttracker.dart';
 import 'package:campcon/screens/search.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:iconly/iconly.dart';
 import 'package:flutter/material.dart';
 import 'package:campcon/services/task_data.dart';
@@ -45,9 +46,8 @@ class _MainScreenState extends State<MainScreen> {
     const HomeScreen(),
     const SearchScreen(),
     const EventScreen(),
-    const ClubsScreen(),
-    const LightScreen(),
     const ChecklistScreen(),
+    const ClubsScreen(),
   ];
 
   // Function to handle the bottom navigation bar tap
@@ -165,57 +165,35 @@ class _MainScreenState extends State<MainScreen> {
         //         ))
         //     : null,
         // End of Floating Action Button
-        bottomNavigationBar: BottomNavigationBar(
-          unselectedItemColor: Colors.grey.shade800,
-          selectedItemColor: const Color(0xFFBA9E02),
-          currentIndex: _currentIndex,
-          onTap: _onTap,
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(
-                IconlyLight.home,
-                size: 28,
-              ),
-              label: '',
+        bottomNavigationBar: Container(
+          margin: const EdgeInsets.only(top: 0),
+          color: Colors.grey.shade50,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            child: GNav(
+              textStyle: const TextStyle(fontFamily: 'Trebuchet', fontSize: 14),
+              backgroundColor: Colors.grey.shade50,
+              color: Colors.grey.shade900,
+              activeColor: Colors.black,
+              tabBackgroundColor: const Color(0xffd9d9d9),
+              gap: 3,
+              onTabChange: _onTap,
+              padding:
+                  const EdgeInsets.only(top: 6, bottom: 6, right: 11, left: 11),
+              tabs: const [
+                GButton(icon: IconlyLight.home, iconSize: 21, text: 'Home'),
+                GButton(icon: IconlyLight.search, iconSize: 21, text: 'Search'),
+                GButton(
+                    icon: IconlyLight.calendar, iconSize: 21, text: 'Event'),
+                GButton(
+                    icon: IconlyLight.tick_square,
+                    iconSize: 21,
+                    text: 'Camplist'),
+                GButton(
+                    icon: IconlyLight.more_square, iconSize: 25, text: 'More'),
+              ],
             ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                IconlyLight.search,
-                size: 28,
-              ),
-              label: '',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                IconlyLight.calendar,
-                size: 28,
-              ),
-              label: '',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                IconlyLight.user_1,
-                size: 28,
-              ),
-              label: '',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.lightbulb_circle_outlined,
-                size: 28,
-              ),
-              label: '',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                IconlyLight.tick_square,
-                size: 28,
-              ),
-              label: '',
-            ),
-          ],
+          ),
         ),
         drawer: const SafeArea(child: DrawerWidget()),
         body: _screens[_currentIndex]);

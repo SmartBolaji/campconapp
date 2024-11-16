@@ -108,7 +108,6 @@ class _UsernameScreenState extends State<UsernameScreen> {
       final snap = await FirebaseFirestore.instance
           .collection('users')
           .where('uid', isNotEqualTo: uid)
-          .where('type', whereIn: ['Official', 'Business', 'Individual'])
           .where('tags', arrayContainsAny: newTags)
           .orderBy(
               'typeOrder') // Order the documents by typeOrder (1 = Official, 2 = Business, 3 = Individual)
@@ -120,8 +119,9 @@ class _UsernameScreenState extends State<UsernameScreen> {
         _snap = await FirebaseFirestore.instance
             .collection('users')
             .where('uid', isNotEqualTo: uid)
-            .where('type', whereIn: ['Official', 'Business', 'Individual'])
             .where('tags', arrayContainsAny: newTags)
+            .orderBy(
+                'typeOrder') // Order the documents by typeOrder (1 = Official, 2 = Business, 3 = Individual)
             .limit(10)
             .get(const GetOptions(source: Source.cache));
       } else {

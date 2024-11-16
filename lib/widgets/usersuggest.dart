@@ -33,12 +33,10 @@ class UserSuggestion extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Image.asset(
+          CircleAvatar(
+            radius: 23,
+            backgroundImage: AssetImage(
               assetImage,
-              width: 30,
-              height: 30,
             ),
           ),
           const SizedBox(width: 10),
@@ -50,31 +48,37 @@ class UserSuggestion extends StatelessWidget {
                   user,
                   style: TextStyle(
                     fontFamily: 'Trebuchet',
-                    fontSize: screenWidth / 30,
+                    fontSize: screenWidth / 25,
                     fontWeight: FontWeight.bold,
                   ),
                   textAlign: TextAlign.left,
                 ),
-                const SizedBox(height: 2),
+                // const SizedBox(height: 2),
                 Text(
                   userAt,
                   style: TextStyle(
                     fontFamily: 'Trebuchet',
-                    fontSize: screenWidth / 40,
+                    color: Colors.grey.shade600,
+                    fontSize: screenWidth / 30,
                   ),
                   textAlign: TextAlign.left,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  userBio.length > 50
-                      ? '${userBio.substring(0, 50)}...'
-                      : userBio,
-                  style: TextStyle(
-                    fontFamily: 'Trebuchet',
-                    fontSize: screenWidth / 40,
-                  ),
-                  textAlign: TextAlign.left,
-                ),
+                if (userBio.isNotEmpty)
+                  Column(
+                    children: [
+                      const SizedBox(height: 2),
+                      Text(
+                        userBio.length > 50
+                            ? '${userBio.substring(0, 50)}...'
+                            : userBio,
+                        style: TextStyle(
+                            fontFamily: 'Trebuchet',
+                            fontSize: screenWidth / 30,
+                            fontWeight: FontWeight.w400),
+                        textAlign: TextAlign.left,
+                      ),
+                    ],
+                  )
               ],
             ),
           ),
@@ -89,18 +93,21 @@ class UserSuggestion extends StatelessWidget {
             },
             child: Container(
               decoration: BoxDecoration(
-                color: isConnected ? Colors.green : Colors.grey.shade800,
+                color: Colors.grey.shade800,
                 borderRadius: BorderRadius.circular(20),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Text(
-                isConnected ? 'Connected' : 'Connect',
-                style: TextStyle(
-                  fontFamily: 'Trebuchet',
-                  color: Colors.white,
-                  fontSize: screenWidth / 40,
-                ),
-              ),
+              child: isConnected
+                  ? Icon(Icons.done,
+                      color: Colors.white, size: screenWidth / 20)
+                  : Text(
+                      'Connect',
+                      style: TextStyle(
+                        fontFamily: 'Trebuchet',
+                        color: Colors.white,
+                        fontSize: screenWidth / 30,
+                      ),
+                    ),
             ),
           ),
         ],
