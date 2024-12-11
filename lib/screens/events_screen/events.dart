@@ -1,3 +1,4 @@
+import 'package:campcon/screens/events_screen/categ_event.dart';
 import 'package:campcon/screens/points.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -58,59 +59,58 @@ class _EventScreenState extends State<EventScreen> {
         padding: EdgeInsets.only(top: screenHeight / 16.8),
         child: CustomScrollView(
           slivers: [
+            // SliverToBoxAdapter(
+            //   child: Padding(
+            //     padding: EdgeInsets.only(
+            //       left: screenWidth / 20,
+            //       right: screenWidth / 20,
+            //     ),
+            //     child: Row(
+            //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //       children: [
+            //         GestureDetector(
+            //           onTap: () {
+            //             Navigator.push(
+            //               context,
+            //               PageTransition(
+            //                 child: const PointsScreen(),
+            //                 type: PageTransitionType.rightToLeft,
+            //                 duration: const Duration(milliseconds: 500),
+            //                 reverseDuration: const Duration(milliseconds: 500),
+            //               ),
+            //             );
+            //           },
+            //           child: Icon(
+            //             Icons.account_circle_outlined,
+            //             size: screenWidth / 15,
+            //             color: Colors.grey.shade800,
+            //           ),
+            //         ),
+            //         // GestureDetector(
+            //         //   onTap: () {
+            //         //     Navigator.push(
+            //         //       context,
+            //         //       PageTransition(
+            //         //         child: const PointsScreen(),
+            //         //         type: PageTransitionType.rightToLeft,
+            //         //         duration: const Duration(milliseconds: 500),
+            //         //         reverseDuration: const Duration(milliseconds: 500),
+            //         //       ),
+            //         //     );
+            //         //   },
+            //         //   child: Icon(
+            //         //     IconlyBold.setting,
+            //         //     size: screenWidth / 15,
+            //         //     color: Colors.grey.shade800,
+            //         //   ),
+            //         // )
+            //       ],
+            //     ),
+            //   ),
+            // ),
             SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.only(
-                  left: screenWidth / 20,
-                  right: screenWidth / 20,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          PageTransition(
-                            child: const PointsScreen(),
-                            type: PageTransitionType.rightToLeft,
-                            duration: const Duration(milliseconds: 500),
-                            reverseDuration: const Duration(milliseconds: 500),
-                          ),
-                        );
-                      },
-                      child: Icon(
-                        Icons.account_circle_outlined,
-                        size: screenWidth / 15,
-                        color: Colors.grey.shade800,
-                      ),
-                    ),
-                    // GestureDetector(
-                    //   onTap: () {
-                    //     Navigator.push(
-                    //       context,
-                    //       PageTransition(
-                    //         child: const PointsScreen(),
-                    //         type: PageTransitionType.rightToLeft,
-                    //         duration: const Duration(milliseconds: 500),
-                    //         reverseDuration: const Duration(milliseconds: 500),
-                    //       ),
-                    //     );
-                    //   },
-                    //   child: Icon(
-                    //     IconlyBold.setting,
-                    //     size: screenWidth / 15,
-                    //     color: Colors.grey.shade800,
-                    //   ),
-                    // )
-                  ],
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -128,6 +128,14 @@ class _EventScreenState extends State<EventScreen> {
                         ),
                         Row(
                           children: [
+                            GestureDetector(
+                              onTap: () {},
+                              child: const Icon(
+                                IconlyBroken.plus,
+                                size: 25,
+                              ),
+                            ),
+                            const SizedBox(width: 15),
                             GestureDetector(
                               onTap: () {},
                               child: const Icon(
@@ -152,61 +160,58 @@ class _EventScreenState extends State<EventScreen> {
                 ),
               ),
             ),
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: SliverRowHeaderDelegate(
-                child: Column(
-                  children: [
-                    Container(
-                      color: Colors.grey.shade50,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          topButtons(
-                              onTap: () {},
-                              text: 'Within Campus',
-                              icon: null,
-                              onSelect: true,
-                              index: 0),
-                          topButtons(
-                              onTap: () {},
-                              text: 'Outside Campus',
-                              icon: null,
-                              onSelect: false,
-                              index: 1),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.only(top: 0, bottom: 0),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(
-                            width: 1,
-                            color: Colors.grey.shade400,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            // SliverPersistentHeader(
+            //   pinned: true,
+            //   delegate: SliverRowHeaderDelegate(
+            //     child: const Column(
+            //       children: [
+            //         // Container(
+            //         //   color: Colors.grey.shade50,
+            //         //   padding: const EdgeInsets.symmetric(vertical: 10),
+            //         //   child: Row(
+            //         //     mainAxisAlignment: MainAxisAlignment.center,
+            //         //     children: [
+            //         //       topButtons(
+            //         //           onTap: () {},
+            //         //           text: 'Within Campus',
+            //         //           icon: null,
+            //         //           onSelect: true,
+            //         //           index: 0),
+            //         //       topButtons(
+            //         //           onTap: () {},
+            //         //           text: 'Outside Campus',
+            //         //           icon: null,
+            //         //           onSelect: false,
+            //         //           index: 1),
+            //         //     ],
+            //         //   ),
+            //         // ),
+            //         // Container(
+            //         //   margin: const EdgeInsets.only(top: 0, bottom: 0),
+            //         //   decoration: BoxDecoration(
+            //         //     border: Border(
+            //         //       bottom: BorderSide(
+            //         //         width: 1,
+            //         //         color: Colors.grey.shade400,
+            //         //       ),
+            //         //     ),
+            //         //   ),
+            //         // ),
+            //       ],
+            //     ),
+            //   ),
+            // ),
+            SliverToBoxAdapter(child: CategoriesWidget()),
             SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
                   return eventItem(
-                    title: events[index].title,
-                    date: events[index].date,
-                    reservations: events[index].reservations,
-                    isAttending: events[index].isAttending,
-                    imageUrl: events[index].imageUrl, // Added imageUrl
-                    onAttendPressed: (bool? value) {
-                      setState(() {
-                        events[index].isAttending = value ?? false;
-                      });
-                    },
+                    title: 'Phoenix Lounge',
+                    location: 'Palms Mall Shopping Complex, Ibadan',
+                    date: 'Nov 29 - 10 PM',
+                    imageUrl: 'assets/images/social.jpeg',
+                    reservations: 120,
+                    totalSeats: 200,
                   );
                 },
                 childCount: events.length,
@@ -335,135 +340,140 @@ class _EventScreenState extends State<EventScreen> {
 
   Widget eventItem({
     required String title,
+    required String location,
     required String date,
-    required int reservations,
-    required bool isAttending,
     required String imageUrl,
-    required Function(bool?) onAttendPressed,
+    required int reservations,
+    required int totalSeats,
   }) {
     return Container(
-      height: 150,
-      margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 15),
-      padding: const EdgeInsets.only(),
+      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border.all(width: 1, color: Colors.grey.shade200),
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.shade200,
-            blurRadius: 5,
-            spreadRadius: 2,
-            offset: const Offset(0, 2),
+            color: Colors.grey.withOpacity(0.3),
+            blurRadius: 6,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image section
+          // Image Section
           ClipRRect(
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(15),
-              bottomLeft: Radius.circular(15),
+              topRight: Radius.circular(15),
             ),
             child: Image.asset(
               imageUrl,
-              width: 100,
-              height: 150,
+              height: 120,
+              width: double.infinity,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 return Container(
-                  color: Colors.grey.shade200,
+                  height: 150,
+                  color: Colors.grey.shade300,
                   child: Icon(
-                    Icons.image_not_supported,
+                    Icons.broken_image,
+                    size: 50,
                     color: Colors.grey.shade600,
                   ),
                 );
               },
             ),
           ),
-          const SizedBox(width: 20),
-          // Text and button section
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 8, bottom: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: screenWidth / 23,
-                      fontFamily: 'Trebuchet',
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade800,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.fade,
+          const SizedBox(height: 10),
+
+          // Event Details Section
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Trebuchet',
+                    color: Colors.black,
                   ),
-                  const SizedBox(height: 15),
-                  Text(
-                    date,
-                    style: TextStyle(
-                      fontSize: screenWidth / 30,
-                      fontFamily: 'Trebuchet',
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  // Seat
-                  Container(
-                    margin: const EdgeInsets.only(top: 10),
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.shade400,
-                          blurRadius: 3,
-                          spreadRadius: 1,
-                          offset: const Offset(0, 1),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 5),
+
+                // Location
+                Row(
+                  children: [
+                    const Icon(Icons.location_on,
+                        color: Color(0xFF9c936b), size: 16),
+                    const SizedBox(width: 5),
+                    Expanded(
+                      child: Text(
+                        location,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                          fontFamily: 'Trebuchet',
                         ),
-                      ],
-                    ),
-                    child: Text(
-                      '10 / 200 seats',
-                      style: TextStyle(
-                        fontSize: screenWidth / 30,
-                        fontFamily: 'Trebuchet',
-                        color: Colors.grey.shade800,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                  ),
-                  // booking
-                  Container(
-                    margin: const EdgeInsets.only(top: 10),
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                    decoration: BoxDecoration(
-                      color: isAttending ? Colors.green : Colors.blue,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.shade400,
-                          blurRadius: 3,
-                          spreadRadius: 1,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      isAttending ? 'Attending' : 'Ticket',
-                      style: TextStyle(
-                        fontSize: screenWidth / 30,
+                  ],
+                ),
+                const SizedBox(height: 5),
+
+                // Date
+                Row(
+                  children: [
+                    const Icon(Icons.access_time,
+                        color: Color(0xFF9c936b), size: 16),
+                    const SizedBox(width: 5),
+                    Text(
+                      date,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
                         fontFamily: 'Trebuchet',
-                        color: Colors.grey.shade50,
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Seats Stats
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: const BoxDecoration(
+              color: Color(0xFF9c936b),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(15),
+                bottomRight: Radius.circular(15),
               ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  '$reservations / $totalSeats seats',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                    fontFamily: 'Trebuchet',
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

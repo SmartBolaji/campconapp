@@ -18,6 +18,10 @@ class TaskData extends ChangeNotifier {
   bool _normal = true;
   bool _darkMode = false;
   // int _snapSize = 0;
+  // snapshot
+  QuerySnapshot? _snapShot;
+  int _snapSize = 0;
+  late List<Map<String, dynamic>> _snapWithAuthors;
   // profile
   String _uid = '';
   String _name = '';
@@ -37,6 +41,7 @@ class TaskData extends ChangeNotifier {
   int _mpin = 0;
   // loading
   bool _circular = false;
+  bool _isLoading = true;
   String _month1 = DateFormat('MMMM').format(DateTime.now());
   String _month2 = DateFormat('MMMM').format(DateTime.now());
   String _month3 = DateFormat('MMMM').format(DateTime.now());
@@ -161,12 +166,32 @@ class TaskData extends ChangeNotifier {
   }
 
   // loading
-
   bool get circular => _circular;
   set circular(bool value) {
     _circular = value;
     notifyListeners();
   }
+
+  bool get isLoading => _isLoading;
+  set isLoading(bool value) {
+    _isLoading = value;
+    notifyListeners();
+  }
+
+  // snap
+  QuerySnapshot? get snapShot => _snapShot;
+  set snapShot(QuerySnapshot? value) {
+    _snapShot = value;
+    notifyListeners();
+  }
+
+  List<Map<String, dynamic>> get snapWithAuthors => _snapWithAuthors;
+  set snapWithAuthors(List<Map<String, dynamic>> value) {
+    _snapWithAuthors = value;
+    notifyListeners();
+  }
+
+  // others
 
   String get month1 => _month1;
   set month1(String value) {
@@ -211,6 +236,57 @@ class TaskData extends ChangeNotifier {
   }
 
   // Functions
+
+  // Method to fetch posts along with author data
+  Future<void> loadSnap(
+      {required List<dynamic> newTags, required int limit}) async {
+    try {
+      // Fetch posts matching the criteria
+      final snap = await FirebaseFirestore.instance
+          .collection('posts')
+          .where('postTags', arrayContainsAny: newTags)
+          .orderBy('addedDate', descending: true)
+          .limit(limit)
+          .get();
+
+      // Fallback to cache if no documents are found
+      if (snap.docs.isEmpty) {
+        _snapShot = await FirebaseFirestore.instance
+            .collection('posts')
+            .where('postTags', arrayContainsAny: newTags)
+            .orderBy('addedDate', descending: true)
+            .limit(limit)
+            .get(const GetOptions(source: Source.cache));
+      } else {
+        _snapShot = snap;
+      }
+
+      // Fetch author data in parallel
+      final List<Future<Map<String, dynamic>>> authorFetchTasks =
+          _snapShot!.docs.map((postDoc) async {
+        final authorRef = postDoc['author'] as DocumentReference;
+        final authorSnapshot = await authorRef.get();
+        return {
+          'post': postDoc.data(),
+          'author': authorSnapshot.exists ? authorSnapshot.data() : null,
+        };
+      }).toList();
+
+      // Combine posts with their authors
+      _snapWithAuthors = await Future.wait(authorFetchTasks);
+
+      // Limit the snap size to a maximum of 30
+      _snapSize = (_snapWithAuthors?.length ?? 0) > 30
+          ? 30
+          : _snapWithAuthors?.length ?? 0;
+    } catch (e) {
+      print('Error loading snap: $e');
+    } finally {
+      isLoading = false; // Data loading is complete
+    }
+
+    notifyListeners();
+  }
 
   // load darkmode value from shared preferences
   void loadShowDark() async {
@@ -278,41 +354,90 @@ class TaskData extends ChangeNotifier {
   }
 
   // sign up
-  void updateSign(context, String uid, String name, String userid, String email,
-      String pass) {
+  Future<void> updateSign(context, String uid, String name, String userid,
+      String email, String pass) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
     _uid = uid;
     _name = name;
     _userid = userid;
     _email = email;
     _pass = pass;
+    prefs.setString('uid', uid);
+    prefs.setString('name', name);
+    prefs.setString('userid', userid);
+    prefs.setString('email', email);
+    notifyListeners();
+  }
+
+  // log in
+  Future<void> updateLogin(
+      context, String uid, String name, String userid, String email) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    _uid = uid;
+    _name = name;
+    _userid = userid;
+    _email = email;
+    prefs.setString('uid', uid);
+    prefs.setString('name', name);
+    prefs.setString('userid', userid);
+    prefs.setString('email', email);
     notifyListeners();
   }
 
   // tags
-  void updateTags(BuildContext context, List<String> newTags) {
+  Future<void> updateTags(BuildContext context, List<dynamic> newTags) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
     // Add each new tag to the list if it doesn't already exist
     for (var tag in newTags) {
       if (!_tags.contains(tag)) {
-        _tags.add(tag);
+        _tags.add(tag!);
       }
     }
+    prefs.setStringList('tags', _tags);
     notifyListeners();
   }
 
   // school
-  void updateSchool(context, String? sch, String? level, String? dept,
-      String? faculty, String? loc) {
+  Future<void> updateSchool(context, String? sch, String? level, String? dept,
+      String? faculty, String? loc) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
     _sch = sch!;
     _level = level!;
     _dept = dept!;
     _faculty = faculty!;
     _loc = loc!;
+    prefs.setString('sch', sch);
+    prefs.setString('level', level);
+    prefs.setString('dept', dept);
+    prefs.setString('faculty', faculty);
+    prefs.setString('loc', loc);
+    notifyListeners();
+  }
+
+  // load logs value from shared preferences
+  Future<void> loadLogs() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    uid = prefs.getString('uid')!;
+    name = prefs.getString('name')!;
+    userid = prefs.getString('userid')!;
+    email = prefs.getString('email')!;
+    sch = prefs.getString('sch')!;
+    level = prefs.getString('level')!;
+    dept = prefs.getString('dept')!;
+    faculty = prefs.getString('faculty')!;
+    loc = prefs.getString('loc')!;
+    tags = prefs.getStringList('tags')!;
     notifyListeners();
   }
 
   // loading
   void updateCircle(context, bool roll) {
     _circular = roll;
+    notifyListeners();
+  }
+
+  void updateLoading(context, bool load) {
+    _isLoading = load;
     notifyListeners();
   }
 
@@ -435,16 +560,6 @@ class TaskData extends ChangeNotifier {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     points = newPts;
     prefs.setDouble('points', newPts);
-    notifyListeners();
-  }
-
-  // load logs value from shared preferences
-  void loadLogs() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    id = prefs.getInt('id')!;
-    name = prefs.getString('name')!;
-    points = prefs.getDouble('points')!;
-    mpin = prefs.getInt('mpin')!;
     notifyListeners();
   }
 

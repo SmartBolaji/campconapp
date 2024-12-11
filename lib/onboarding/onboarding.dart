@@ -12,11 +12,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   void initState() {
     super.initState();
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      statusBarColor: Colors.grey.shade100, // Set the status bar color
-      statusBarIconBrightness:
-          Brightness.dark, // For light text on dark background
-    ));
   }
 
   PageController _pageController = PageController();

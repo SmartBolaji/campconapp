@@ -1,17 +1,11 @@
-import 'package:campcon/screens/camplist.dart';
-import 'package:campcon/screens/clubs.dart';
-import 'package:campcon/screens/events.dart';
-import 'package:campcon/screens/homepage.dart';
-import 'package:campcon/screens/lighttracker.dart';
+import 'package:campcon/screens/camplist_screen/view_list.dart';
+import 'package:campcon/screens/events_screen/events.dart';
+import 'package:campcon/screens/initial_screen/homepage.dart';
 import 'package:campcon/screens/search.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:iconly/iconly.dart';
 import 'package:flutter/material.dart';
-import 'package:campcon/services/task_data.dart';
 import 'package:campcon/widgets/drawer_widget.dart';
-import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -21,23 +15,8 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  late Future<void> fetchDataFuture;
-  final Uri _url = Uri.parse('https://flutter.dev');
-
-  QuerySnapshot? _snap;
-  QuerySnapshot? _snap1;
   double screenHeight = 0.0;
   double screenWidth = 0.0;
-  int currentSize = 0;
-
-  // Variables (admin)
-  int adminId = 0;
-  String alertMsg = '';
-  String whatsNo = '';
-  String whatsLink = '';
-  String callNo = '';
-  String howToPlay = '';
-
   int _currentIndex = 0;
 
   // List of screens to navigate on tap
@@ -47,7 +26,7 @@ class _MainScreenState extends State<MainScreen> {
     const SearchScreen(),
     const EventScreen(),
     const ChecklistScreen(),
-    const ClubsScreen(),
+    // const ClubsScreen(),
   ];
 
   // Function to handle the bottom navigation bar tap
@@ -57,122 +36,22 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
-  // Functions
-  Future<void> _launchUrl({required String url}) async {
-    if (!await launchUrl(Uri.parse(url),
-        mode: LaunchMode.externalApplication)) {
-      throw Exception('Could not launch $_url');
-    }
-  }
-
-  // Method to load games data
-  Future<void> loadMrkData() async {
-    try {
-      final snap = await FirebaseFirestore.instance
-          .collection('Games')
-          .where('status', isEqualTo: 'Active')
-          .where('mrksection', isEqualTo: 'Mumbai')
-          .orderBy('created', descending: false)
-          .get();
-      if (snap.docs.isEmpty) {
-        _snap = await FirebaseFirestore.instance
-            .collection('Games')
-            .where('status', isEqualTo: 'Active')
-            .where('mrksection', isEqualTo: 'Mumbai')
-            .orderBy('created', descending: false)
-            .get(const GetOptions(source: Source.cache));
-      } else {
-        _snap = snap;
-      }
-      if (_snap!.size > 30) {
-        setState(() {
-          currentSize = 30; // Update to 20
-        });
-      } else {
-        setState(() {
-          currentSize = _snap!.size; // Update default
-        });
-      }
-    } catch (e) {
-      e.toString();
-    }
-  }
-
-  // load the app settings
-  Future<void> loadSettingsData() async {
-    try {
-      final snap =
-          await FirebaseFirestore.instance.collection('Settings').get();
-      if (snap.docs.isEmpty) {
-        _snap1 = await FirebaseFirestore.instance
-            .collection('Settings')
-            .get(const GetOptions(source: Source.cache));
-      } else {
-        _snap1 = snap;
-      }
-
-      if (_snap1!.docs[0].exists) {
-        final doc = _snap1!.docs[0];
-        adminId = doc.get('adminid');
-        alertMsg = doc.get('alertmsg');
-        whatsNo = doc.get('whatsno');
-        whatsLink = doc.get('whatslink');
-        callNo = doc.get('callno');
-        howToPlay = doc.get('howtoplay');
-      }
-      setState(() {});
-    } catch (e) {
-      e.toString();
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    loadSettingsData();
-    fetchDataFuture = loadMrkData();
-  }
-
   @override
   Widget build(BuildContext context) {
-    // Provider
-    final taskData = Provider.of<TaskData>(context);
-
     screenHeight = MediaQuery.of(context).size.height;
     screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
         backgroundColor: Colors.grey.shade100,
-        // Start of the Floating Action Button
-        // floatingActionButton: taskData.id == adminId
-        //     ? FloatingActionButton(
-        //         onPressed: () {
-        //           Navigator.push(
-        //             context,
-        //             PageTransition(
-        //               child: const AdminPanelScreen(),
-        //               type: PageTransitionType.bottomToTop,
-        //               duration: const Duration(milliseconds: 1000),
-        //               reverseDuration: const Duration(milliseconds: 500),
-        //             ),
-        //           );
-        //         },
-        //         backgroundColor: Colors.blue.shade300,
-        //         child: Icon(
-        //           Icons.vpn_key,
-        //           color: Colors.white,
-        //           size: screenWidth / 25,
-        //         ))
-        //     : null,
-        // End of Floating Action Button
         bottomNavigationBar: Container(
           margin: const EdgeInsets.only(top: 0),
-          color: Colors.grey.shade50,
+          color: Colors.grey.shade100,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
             child: GNav(
-              textStyle: const TextStyle(fontFamily: 'Trebuchet', fontSize: 14),
-              backgroundColor: Colors.grey.shade50,
+              textStyle:
+                  const TextStyle(fontFamily: 'Trebuchet', fontSize: 12.5),
+              backgroundColor: Colors.grey.shade100,
               color: Colors.grey.shade900,
               activeColor: Colors.black,
               tabBackgroundColor: const Color(0xffd9d9d9),
@@ -189,8 +68,8 @@ class _MainScreenState extends State<MainScreen> {
                     icon: IconlyLight.tick_square,
                     iconSize: 21,
                     text: 'Camplist'),
-                GButton(
-                    icon: IconlyLight.more_square, iconSize: 25, text: 'More'),
+                // GButton(
+                //     icon: IconlyLight.more_square, iconSize: 25, text: 'More'),
               ],
             ),
           ),

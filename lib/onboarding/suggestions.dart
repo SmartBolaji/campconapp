@@ -32,17 +32,26 @@ class SuggestScreen extends StatelessWidget {
                   top: screenHeight / 13, bottom: screenHeight / 80),
               margin: EdgeInsets.symmetric(horizontal: screenWidth / 16),
               child: GestureDetector(
-                onTap: () {
-                  // Navigate to next screen or home screen
-                  Navigator.push(
-                    context,
-                    PageTransition(
-                      child: const MainScreen(),
-                      type: PageTransitionType.rightToLeft,
-                      duration: const Duration(milliseconds: 500),
-                      reverseDuration: const Duration(milliseconds: 500),
-                    ),
-                  );
+                onTap: () async {
+                  // verify and navigate
+                  if (taskData.email.isNotEmpty) {
+                    // Load user content
+                    await taskData.loadSnap(newTags: taskData.tags, limit: 10);
+                    if (taskData.snapShot != null &&
+                        taskData.snapWithAuthors.isNotEmpty) {
+                      // Navigate to MainScreen
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        PageTransition(
+                          child: const MainScreen(),
+                          type: PageTransitionType.rightToLeft,
+                          duration: const Duration(milliseconds: 500),
+                          reverseDuration: const Duration(milliseconds: 500),
+                        ),
+                        (Route<dynamic> route) => false,
+                      );
+                    }
+                  }
                 },
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -139,23 +148,40 @@ class SuggestScreen extends StatelessWidget {
                     ),
                   ),
                   actionButton(
-                      screenHeight, screenWidth, context, taskData, false,
-                      magHeight: 20,
-                      bgColor: Colors.grey.shade800,
-                      bdColor: Colors.grey.shade800,
-                      txtColor: Colors.white,
-                      txt: 'Done', onTap: () {
-                    // Navigate to next screen or home screen
-                    Navigator.push(
-                      context,
-                      PageTransition(
-                        child: const MainScreen(),
-                        type: PageTransitionType.rightToLeft,
-                        duration: const Duration(milliseconds: 500),
-                        reverseDuration: const Duration(milliseconds: 500),
-                      ),
-                    );
-                  }),
+                    screenHeight,
+                    screenWidth,
+                    context,
+                    taskData,
+                    false,
+                    magHeight: 20,
+                    bgColor: Colors.grey.shade800,
+                    bdColor: Colors.grey.shade800,
+                    txtColor: Colors.white,
+                    txt: 'Done',
+                    onTap: () async {
+                      // verify and navigate
+                      if (taskData.email.isNotEmpty) {
+                        // Load user content
+                        await taskData.loadSnap(
+                            newTags: taskData.tags, limit: 10);
+                        if (taskData.snapShot != null &&
+                            taskData.snapWithAuthors.isNotEmpty) {
+                          // Navigate to MainScreen
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            PageTransition(
+                              child: const MainScreen(),
+                              type: PageTransitionType.rightToLeft,
+                              duration: const Duration(milliseconds: 500),
+                              reverseDuration:
+                                  const Duration(milliseconds: 500),
+                            ),
+                            (Route<dynamic> route) => false,
+                          );
+                        }
+                      }
+                    },
+                  ),
                   const SizedBox(
                     height: 20,
                   )

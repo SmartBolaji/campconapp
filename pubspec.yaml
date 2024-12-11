@@ -54,6 +54,9 @@ dependencies:
   firebase_auth: ^4.19.5
   google_fonts: ^6.2.1
   win32: ^5.8.0
+  timeago: ^3.7.0
+  table_calendar: ^3.1.2
+  flutter_feather_icons: ^2.0.0+1
   # share_plus: ^9.0.0
 
 dev_dependencies:

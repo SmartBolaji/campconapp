@@ -2,9 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:campcon/play.dart';
 import 'package:flutter/material.dart';
-import 'package:campcon/services/task_data.dart';
 import 'package:campcon/widgets/all_tile.dart';
-import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class PlayStarlineScreen extends StatefulWidget {

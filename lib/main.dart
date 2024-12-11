@@ -1,21 +1,30 @@
 import 'package:campcon/firebase_options.dart';
 import 'package:campcon/mainscreen.dart';
+import 'package:campcon/services/timeago.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:month_year_picker/month_year_picker.dart';
 import 'package:campcon/onboarding/onboarding.dart';
 import 'package:campcon/services/task_data.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
-Future main() async {
+Future<void> main() async {
+  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    statusBarColor: Colors.grey.shade100, // Set the status bar color
+    statusBarIconBrightness:
+        Brightness.dark, // For light text on dark background
+  ));
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   FirebaseFirestore.instance.settings = const Settings(
     persistenceEnabled: true,
   );
+  timeago.setLocaleMessages('short', ShortTimeAgo());
   runApp(const MyApp());
 }
 
@@ -23,15 +32,18 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) => ChangeNotifierProvider(
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
       create: (context) => TaskData(),
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'CampCon',
         theme: ThemeData(
           timePickerTheme: const TimePickerThemeData(
-            helpTextStyle:
-                TextStyle(fontFamily: 'Nexa Bold', color: Colors.blue),
+            helpTextStyle: TextStyle(
+              fontFamily: 'Nexa Bold',
+              color: Colors.blue,
+            ),
             hourMinuteTextStyle: TextStyle(
               fontFamily: 'Nexa Bold',
               fontSize: 40,
@@ -43,14 +55,14 @@ class MyApp extends StatelessWidget {
               fontFamily: 'Nexa Bold',
             ),
             cancelButtonStyle: ButtonStyle(
-              textStyle: MaterialStatePropertyAll(
+              textStyle: WidgetStatePropertyAll(
                 TextStyle(
                   fontFamily: 'Nexa Bold',
                 ),
               ),
             ),
             confirmButtonStyle: ButtonStyle(
-              textStyle: MaterialStatePropertyAll(
+              textStyle: WidgetStatePropertyAll(
                 TextStyle(
                   fontFamily: 'Nexa Bold',
                 ),
@@ -60,7 +72,9 @@ class MyApp extends StatelessWidget {
         ),
         home: const KeyboardVisibilityProvider(child: AuthCheck()),
         localizationsDelegates: const [MonthYearPickerLocalizations.delegate],
-      ));
+      ),
+    );
+  }
 }
 
 class AuthCheck extends StatefulWidget {
@@ -72,28 +86,43 @@ class AuthCheck extends StatefulWidget {
 
 class _AuthCheckState extends State<AuthCheck> {
   bool userAvailable = false;
+  bool isLoading = true; // Loading state for improved UI feedback
   late SharedPreferences sharedPreferences;
 
   @override
   void initState() {
     super.initState();
-    _getCurrentUser();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeUser();
+    });
   }
 
-  void _getCurrentUser() async {
-    sharedPreferences = await SharedPreferences.getInstance();
-    // Provider
-    final taskData = Provider.of<TaskData>(context, listen: false);
+  Future<void> _initializeUser() async {
     try {
-      if (sharedPreferences.getInt('id') != null) {
+      sharedPreferences = await SharedPreferences.getInstance();
+      final taskData = Provider.of<TaskData>(context, listen: false);
+
+      final uid = sharedPreferences.getString('uid');
+      if (uid != null) {
+        await taskData.loadLogs();
+        await taskData.loadSnap(newTags: taskData.tags, limit: 10);
+
         setState(() {
-          taskData.id = sharedPreferences.getInt('id')!;
           userAvailable = true;
+        });
+      } else {
+        setState(() {
+          userAvailable = false;
         });
       }
     } catch (e) {
+      debugPrint("Error initializing user: $e");
       setState(() {
         userAvailable = false;
+      });
+    } finally {
+      setState(() {
+        isLoading = false;
       });
     }
   }
@@ -102,15 +131,18 @@ class _AuthCheckState extends State<AuthCheck> {
   Widget build(BuildContext context) {
     // Provider
     final taskData = Provider.of<TaskData>(context);
-    try {
-      if (sharedPreferences.getInt('id') != null) {
-        taskData.loadLogs();
-      }
-    } catch (e) {
-      e.toString();
-    }
-    return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: userAvailable ? const MainScreen() : OnboardingScreen());
+
+    return Scaffold(
+      backgroundColor: Colors.grey.shade100,
+      body: isLoading
+          ? Center(
+              child: CircularProgressIndicator(
+                color: Colors.grey.shade800,
+              ),
+            )
+          : userAvailable && taskData.snapWithAuthors.isNotEmpty
+              ? const MainScreen()
+              : OnboardingScreen(),
+    );
   }
 }

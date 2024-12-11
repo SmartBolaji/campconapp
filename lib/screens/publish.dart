@@ -1,6 +1,7 @@
 import 'package:campcon/services/task_data.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:iconly/iconly.dart';
 import 'package:provider/provider.dart';
 
 class PostPage extends StatefulWidget {
@@ -24,6 +25,7 @@ class _PostPageState extends State<PostPage> {
       'author': userRef,
       'addedDate': FieldValue.serverTimestamp(),
       'likesCount': 0,
+      'dislikesCount': 0,
       'repliesCount': 0,
       'bookmarksCount': 0,
       'postTags': tags,
@@ -31,7 +33,7 @@ class _PostPageState extends State<PostPage> {
   }
 
   void _addTag() {
-    final tag = _tagController.text.trim();
+    final tag = _tagController.text.trim().toLowerCase();
     if (tag.isNotEmpty && !_tags.contains(tag)) {
       setState(() {
         _tags.add(tag);
@@ -69,33 +71,48 @@ class _PostPageState extends State<PostPage> {
         backgroundColor: Colors.white,
         elevation: 1,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.black),
+          icon: Icon(
+            IconlyLight.close_square,
+            size: 28,
+            color: Colors.grey.shade800,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'New Post',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Trebuchet',
-          ),
-        ),
+        // title: const Text(
+        //   'New Post',
+        //   style: TextStyle(
+        //     color: Colors.black,
+        //     fontSize: 22,
+        //     fontWeight: FontWeight.bold,
+        //     fontFamily: 'Trebuchet',
+        //   ),
+        // ),
         actions: [
           TextButton(
-            onPressed: () {
-              savePost(taskData.uid, contentController.text, _tags);
-              Navigator.pop(context);
-              // print("Post Tags: $_tags"); // For debugging
-            },
-            child: const Text(
-              'Post',
-              style: TextStyle(
-                color: Color(0xFFBA9E02),
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Trebuchet',
-              ),
-            ),
-          ),
+              onPressed: () {
+                _tags.addAll(taskData.tags);
+                savePost(taskData.uid, contentController.text, _tags);
+                Future.delayed(Duration(seconds: 2), () {
+                  taskData.loadSnap(newTags: taskData.tags, limit: 20);
+                });
+                Navigator.pop(context);
+                // print("Post Tags: $_tags"); // For debugging
+              },
+              child: Container(
+                padding: const EdgeInsets.only(
+                    top: 8, bottom: 8, left: 15, right: 15),
+                decoration: BoxDecoration(
+                    color: const Color(0xFFBA9E02),
+                    borderRadius: BorderRadius.circular(15)),
+                child: Text(
+                  'Post',
+                  style: TextStyle(
+                    color: Colors.grey.shade50,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Trebuchet',
+                  ),
+                ),
+              )),
         ],
       ),
       body: Column(

@@ -1,3 +1,5 @@
+import 'package:campcon/onboarding/role.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:campcon/mainscreen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -7,6 +9,7 @@ import 'package:campcon/services/task_data.dart';
 import 'package:campcon/onboarding/signupscreen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:win32/win32.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -16,6 +19,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
   TextEditingController idController = TextEditingController();
   TextEditingController passController = TextEditingController();
 
@@ -74,6 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               'EMAIL, OR USERNAME',
                               Icons.alternate_email,
                               null,
+                              TextCapitalization.sentences,
                               idController,
                               false,
                               (String id) {
@@ -87,6 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 'PASSWORD',
                                 Icons.password,
                                 pass ? Icons.visibility_off : Icons.visibility,
+                                TextCapitalization.words,
                                 passController,
                                 pass, (String pass) {
                               setState(() {
@@ -97,7 +103,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                 pass = !pass;
                               });
                             }),
-
                             Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
@@ -136,153 +141,232 @@ class _LoginScreenState extends State<LoginScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                actionButton(context, taskData,
-                                    magHeight: screenHeight / 40,
-                                    bgColor: Colors.grey.shade400,
-                                    bdColor: Colors.grey.shade400,
-                                    txtColor: Colors.grey.shade700,
-                                    txt: 'LOGIN', onTap: () async {
-                                  // Keypad closes
-                                  FocusScope.of(context).unfocus();
+                                actionButton(
+                                  context,
+                                  taskData,
+                                  taskData.circular,
+                                  magHeight: screenHeight / 40,
+                                  bgColor: Colors.grey.shade400,
+                                  bdColor: Colors.grey.shade400,
+                                  txtColor: Colors.grey.shade700,
+                                  txt: 'LOGIN',
+                                  onTap: () async {
+                                    // Close the keyboard
+                                    FocusScope.of(context).unfocus();
 
-                                  // Start rolling
-                                  setState(() {
-                                    circular = true;
-                                  });
+                                    // Start loading indicator
+                                    taskData.updateCircle(context, true);
 
-                                  if (_id == 0 && _password == '') {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                            backgroundColor:
-                                                Colors.blue.shade300,
-                                            content: Text(
-                                              'Enter a valid number and password and try again!',
-                                              style: TextStyle(
-                                                fontFamily: 'Nexa Light',
-                                                fontSize: screenWidth / 30,
-                                                color: Colors.white,
-                                              ),
-                                            )));
-                                    // Stop rolling
-                                    setState(() {
-                                      circular = false;
-                                    });
-                                  } else if (_id == 0) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                            backgroundColor:
-                                                Colors.blue.shade300,
-                                            content: Text(
-                                              'Mobile number is empty, try again!',
-                                              style: TextStyle(
-                                                fontFamily: 'Nexa Light',
-                                                fontSize: screenWidth / 30,
-                                                color: Colors.white,
-                                              ),
-                                            )));
-                                    // Stop rolling
-                                    setState(() {
-                                      circular = false;
-                                    });
-                                  } else if (_password == '') {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                            backgroundColor:
-                                                Colors.blue.shade300,
-                                            content: Text(
-                                              'Password is empty, make changes and try again!',
-                                              style: TextStyle(
-                                                fontFamily: 'Nexa Light',
-                                                fontSize: screenWidth / 30,
-                                                color: Colors.white,
-                                              ),
-                                            )));
-                                    // Stop rolling
-                                    setState(() {
-                                      circular = false;
-                                    });
-                                  } else {
                                     try {
-                                      QuerySnapshot snap =
-                                          await FirebaseFirestore.instance
-                                              .collection('Users')
-                                              .where('id', isEqualTo: _id)
-                                              .get();
+                                      // Get user input
+                                      String idInput = idController.text
+                                          .trim()
+                                          .toLowerCase();
+                                      String password =
+                                          passController.text.trim();
 
-                                      // Variables
-                                      String name = snap.docs[0]['name'];
-                                      double pts = snap.docs[0]['points'];
-                                      int mpin = snap.docs[0]['mpin'];
-
-                                      if (snap.docs[0].exists &&
-                                          _password == snap.docs[0]['pass']) {
-                                        taskData.saveLogs(_id, name, pts, mpin);
-                                        Navigator.pushReplacement(
-                                          context,
-                                          PageTransition(
-                                            child: const MainScreen(),
-                                            type:
-                                                PageTransitionType.rightToLeft,
-                                            duration: const Duration(
-                                                milliseconds: 500),
-                                            reverseDuration: const Duration(
-                                                milliseconds: 500),
+                                      // Validate input fields
+                                      if (idInput.isEmpty || password.isEmpty) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            backgroundColor:
+                                                Colors.grey.shade800,
+                                            content: Text(
+                                              'Please enter a valid username or email and try again.',
+                                              style: TextStyle(
+                                                fontFamily: 'Trebuchet',
+                                                fontSize: MediaQuery.of(context)
+                                                        .size
+                                                        .width /
+                                                    30,
+                                                color: Colors.white,
+                                              ),
+                                            ),
                                           ),
                                         );
-                                      } else {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(SnackBar(
-                                                backgroundColor:
-                                                    Colors.blue.shade300,
-                                                content: Text(
-                                                  'Password is not correct!',
-                                                  style: TextStyle(
-                                                    fontFamily: 'Nexa Light',
-                                                    fontSize: screenWidth / 30,
-                                                    color: Colors.white,
-                                                  ),
-                                                )));
-                                      }
-                                    } catch (e) {
-                                      print(e.toString());
-                                      String error = '';
 
-                                      if (e.toString() ==
-                                          'RangeError (index): Invalid value: Valid value range is empty: 0') {
-                                        setState(() {
-                                          error =
-                                              'Invalid account, does not exist!';
-                                        });
-                                      } else {
-                                        setState(() {
-                                          error = 'Error occurred!';
-                                        });
+                                        // Stop loading indicator
+                                        taskData.updateCircle(context, false);
+                                        return;
                                       }
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(SnackBar(
+
+                                      // Initialize variables
+                                      String? uid,
+                                          email,
+                                          userid,
+                                          name,
+                                          sch,
+                                          level,
+                                          dept,
+                                          faculty,
+                                          loc;
+                                      List<dynamic> tags = [];
+
+                                      // Determine if input is email or username
+                                      final isEmail = RegExp(
+                                              r"^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                                          .hasMatch(idInput);
+
+                                      if (isEmail) {
+                                        email = idInput; // Input is an email
+                                      } else {
+                                        // Fetch email associated with username
+                                        final querySnapshot =
+                                            await FirebaseFirestore.instance
+                                                .collection('users')
+                                                .where('userCheck',
+                                                    isEqualTo: idInput)
+                                                .limit(1)
+                                                .get();
+
+                                        if (querySnapshot.docs.isNotEmpty) {
+                                          email =
+                                              querySnapshot.docs.first['email'];
+                                        } else {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
                                               backgroundColor:
-                                                  Colors.blue.shade300,
+                                                  Colors.grey.shade800,
                                               content: Text(
-                                                error,
+                                                'Username not found.',
                                                 style: TextStyle(
                                                   fontFamily: 'Trebuchet',
-                                                  fontSize: screenWidth / 30,
+                                                  fontSize:
+                                                      MediaQuery.of(context)
+                                                              .size
+                                                              .width /
+                                                          30,
                                                   color: Colors.white,
                                                 ),
-                                              )));
+                                              ),
+                                            ),
+                                          );
+
+                                          // Stop loading indicator
+                                          taskData.updateCircle(context, false);
+                                          return;
+                                        }
+                                      }
+
+                                      // Authenticate user
+                                      if (email != null) {
+                                        try {
+                                          await FirebaseAuth.instance
+                                              .signInWithEmailAndPassword(
+                                            email: email,
+                                            password: password,
+                                          );
+
+                                          // Fetch user details from Firestore
+                                          final userSnapshot =
+                                              await FirebaseFirestore.instance
+                                                  .collection('users')
+                                                  .where('email',
+                                                      isEqualTo: email)
+                                                  .limit(1)
+                                                  .get();
+
+                                          if (userSnapshot.docs.isNotEmpty) {
+                                            var userDoc =
+                                                userSnapshot.docs.first;
+                                            email = userDoc['email'];
+                                            uid = userDoc['uid'];
+                                            userid = userDoc['userId'];
+                                            name = userDoc['name'];
+                                            sch = userDoc['sch'];
+                                            level = userDoc['level'];
+                                            dept = userDoc['dept'];
+                                            faculty = userDoc['faculty'];
+                                            loc = userDoc['hostel'];
+                                            tags = userDoc['tags'];
+
+                                            // Save data locally
+                                            taskData.updateLogin(context, uid!,
+                                                name!, userid!, email!);
+                                            taskData.updateSchool(context, sch,
+                                                level, dept, faculty, loc);
+                                            taskData.updateTags(context, tags);
+
+                                            // Load user content
+                                            await taskData.loadSnap(
+                                                newTags: tags, limit: 10);
+
+                                            if (taskData.snapShot != null &&
+                                                taskData.snapWithAuthors
+                                                    .isNotEmpty) {
+                                              // Navigate to MainScreen
+                                              Navigator.pushAndRemoveUntil(
+                                                context,
+                                                PageTransition(
+                                                  child: const MainScreen(),
+                                                  type: PageTransitionType
+                                                      .rightToLeft,
+                                                  duration: const Duration(
+                                                      milliseconds: 500),
+                                                  reverseDuration:
+                                                      const Duration(
+                                                          milliseconds: 500),
+                                                ),
+                                                (Route<dynamic> route) => false,
+                                              );
+                                            }
+                                          }
+                                        } catch (authError) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              backgroundColor:
+                                                  Colors.grey.shade800,
+                                              content: Text(
+                                                'Login failed: ${authError.toString()}',
+                                                style: TextStyle(
+                                                  fontFamily: 'Trebuchet',
+                                                  fontSize:
+                                                      MediaQuery.of(context)
+                                                              .size
+                                                              .width /
+                                                          30,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    } catch (e) {
+                                      // Handle general errors
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          backgroundColor: Colors.grey.shade800,
+                                          content: Text(
+                                            'An error occurred: ${e.toString()}',
+                                            style: TextStyle(
+                                              fontFamily: 'Trebuchet',
+                                              fontSize: MediaQuery.of(context)
+                                                      .size
+                                                      .width /
+                                                  30,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    } finally {
+                                      // Stop loading indicator
+                                      taskData.updateCircle(context, false);
                                     }
-                                    // Stop rolling
-                                    setState(() {
-                                      circular = false;
-                                    });
-                                  }
-                                }),
+                                  },
+                                ),
                                 const SizedBox(
                                   width: 5,
                                 ),
                                 actionButton(
                                   context,
                                   taskData,
+                                  circular,
                                   magHeight: screenHeight / 100,
                                   bgColor: Colors.grey.shade800,
                                   bdColor: Colors.grey.shade800,
@@ -292,7 +376,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     Navigator.push(
                                       context,
                                       PageTransition(
-                                        child: const SignUpScreen(),
+                                        child: const RoleScreen(),
                                         type: PageTransitionType.rightToLeft,
                                         duration:
                                             const Duration(milliseconds: 500),
@@ -319,7 +403,8 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  GestureDetector actionButton(BuildContext context, TaskData taskData,
+  GestureDetector actionButton(
+      BuildContext context, TaskData taskData, bool circular,
       {required double magHeight,
       required Color bgColor,
       required Color bdColor,
@@ -388,6 +473,7 @@ class _LoginScreenState extends State<LoginScreen> {
       String hint,
       IconData icon,
       IconData? suffixicon,
+      TextCapitalization type,
       TextEditingController controller,
       bool obscure,
       Function(String) onChanged,
@@ -419,9 +505,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 onChanged: (value) {
                   onChanged(value);
                 },
-                enableSuggestions: false,
+                enableSuggestions: true,
                 autofocus: true,
                 autocorrect: false,
+                textCapitalization: type,
                 decoration: InputDecoration(
                   contentPadding:
                       EdgeInsets.symmetric(vertical: screenHeight / 50),

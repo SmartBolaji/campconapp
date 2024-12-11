@@ -101,7 +101,7 @@ class _UsernameScreenState extends State<UsernameScreen> {
     return result.docs.isEmpty; // Username is available if no document found
   }
 
-// Method to load suggestions
+  // Method to load suggestions
   Future<void> loadData(
       {required List<String> newTags, required String uid}) async {
     try {
@@ -272,234 +272,230 @@ class _UsernameScreenState extends State<UsernameScreen> {
                               children: [
                                 Expanded(
                                   child: actionButton(
-                                      context, taskData, taskData.circular,
-                                      magHeight: screenHeight / 100,
-                                      bgColor: !_isUsernameAvailable
-                                          ? Colors.grey.shade300
-                                          : Colors.grey.shade800,
-                                      bdColor: !_isUsernameAvailable
-                                          ? Colors.grey.shade300
-                                          : Colors.grey.shade800,
-                                      txtColor: Colors.white,
-                                      txt: 'SIGNUP',
-                                      onTap: !_isUsernameAvailable &&
-                                              idController.text.isNotEmpty
-                                          ? () {}
-                                          : () async {
-                                              // Keypad closes
-                                              FocusScope.of(context).unfocus();
+                                    context,
+                                    taskData,
+                                    taskData.circular,
+                                    magHeight: screenHeight / 100,
+                                    bgColor: !_isUsernameAvailable
+                                        ? Colors.grey.shade300
+                                        : Colors.grey.shade800,
+                                    bdColor: !_isUsernameAvailable
+                                        ? Colors.grey.shade300
+                                        : Colors.grey.shade800,
+                                    txtColor: Colors.white,
+                                    txt: 'SIGNUP',
+                                    onTap: !_isUsernameAvailable &&
+                                            idController.text.isNotEmpty
+                                        ? () {}
+                                        : () async {
+                                            // Keypad closes
+                                            FocusScope.of(context).unfocus();
 
-                                              // start rolling
-                                              taskData.updateCircle(
-                                                  context, true);
+                                            // start rolling
+                                            taskData.updateCircle(
+                                                context, true);
 
-                                              try {
-                                                // Convert the email to remove the space
-                                                String idInput =
-                                                    idController.text.trim();
+                                            try {
+                                              // Convert the email to remove the space
+                                              String idInput =
+                                                  idController.text.trim();
 
-                                                // Convert the email to lowercase for a case-insensitive query
-                                                String idInputCheck =
-                                                    idController.text
-                                                        .trim()
-                                                        .toLowerCase();
+                                              // Convert the email to lowercase for a case-insensitive query
+                                              String idInputCheck = idController
+                                                  .text
+                                                  .trim()
+                                                  .toLowerCase();
 
-                                                QuerySnapshot snap =
-                                                    await FirebaseFirestore
-                                                        .instance
-                                                        .collection('users')
-                                                        .where('userCheck',
-                                                            isEqualTo:
-                                                                idInputCheck)
-                                                        .get();
+                                              QuerySnapshot snap =
+                                                  await FirebaseFirestore
+                                                      .instance
+                                                      .collection('users')
+                                                      .where('userCheck',
+                                                          isEqualTo:
+                                                              idInputCheck)
+                                                      .get();
 
-                                                // most of these checks are unimportant, as we already set measures
-                                                if (snap.docs.isNotEmpty) {
-                                                  ScaffoldMessenger.of(context)
-                                                      .showSnackBar(
-                                                    SnackBar(
-                                                      backgroundColor:
-                                                          Colors.grey.shade800,
-                                                      content: Text(
-                                                        'This username already exists in our record, use a different email and try again!',
-                                                        style: TextStyle(
-                                                          fontFamily:
-                                                              'Trebuchet',
-                                                          fontSize:
-                                                              screenWidth / 28,
-                                                          color: Colors.white,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  );
-                                                  // stop rolling
-                                                  taskData.updateCircle(
-                                                      context, false);
-                                                } else {
-                                                  // assign variable
-                                                  DateTime now = DateTime.now();
-                                                  String uid =
-                                                      'ab${now.millisecondsSinceEpoch}';
-
-                                                  // Save the values
-                                                  taskData.updateSign(
-                                                    context,
-                                                    uid,
-                                                    taskData.name,
-                                                    idInput,
-                                                    taskData.email,
-                                                    taskData.pass,
-                                                  );
-
-                                                  // variables
-                                                  List<String> tags = [
-                                                    taskData.sch.toLowerCase(),
-                                                    taskData.level
-                                                        .toLowerCase(),
-                                                    taskData.faculty
-                                                        .toLowerCase(),
-                                                    taskData.dept.toLowerCase(),
-                                                    taskData.loc.toLowerCase(),
-                                                    'campcon'
-                                                  ];
-
-                                                  List<String> coverImg = [];
-
-                                                  // save tags
-                                                  taskData.updateTags(
-                                                      context, tags);
-
-                                                  // fetch the _snap data using function
-                                                  await loadData(
-                                                      newTags: tags, uid: uid);
-
-                                                  try {
-                                                    // Create a new account using user's email and password
-                                                    // firebase_auth.UserCredential
-                                                    //     userCredential =
-                                                    await firebaseAuth
-                                                        .createUserWithEmailAndPassword(
-                                                            email:
-                                                                taskData.email,
-                                                            password:
-                                                                taskData.pass);
-
-                                                    // Save the username
-                                                    await FirebaseFirestore
-                                                        .instance
-                                                        .collection('users')
-                                                        .doc(uid)
-                                                        .set({
-                                                      'uid': uid,
-                                                      'name': taskData.name,
-                                                      'bio': '',
-                                                      'location': '',
-                                                      'url': '',
-                                                      'email': taskData.email,
-                                                      'sch': taskData.sch,
-                                                      'level': taskData.level,
-                                                      'faculty':
-                                                          taskData.faculty,
-                                                      'dept': taskData.dept,
-                                                      'hostel': taskData.loc,
-                                                      'userId': idInput,
-                                                      'userCheck': idInputCheck,
-                                                      'tags': tags,
-                                                      'coverImg': coverImg,
-                                                      'profileImg': '',
-                                                      'type':
-                                                          'Individual', // "Official", "Business", or "Individual"
-                                                      'typeOrder':
-                                                          3, // 1 for "Official", 2 for "Business", 3 for "Individual"
-                                                      'connects': 0,
-                                                      'connecting': 0,
-                                                      'createdAt': now,
-                                                    });
-
-                                                    if (_snap != null) {
-                                                      // stop rolling
-                                                      taskData.updateCircle(
-                                                          context, false);
-                                                    }
-
-                                                    if (_snap != null) {
-                                                      // navigate to suggestion page
-                                                      Navigator.push(
-                                                        context,
-                                                        PageTransition(
-                                                          child: SuggestScreen(
-                                                            snap: _snap,
-                                                            currentSize:
-                                                                _snapCount,
-                                                          ),
-                                                          type:
-                                                              PageTransitionType
-                                                                  .rightToLeft,
-                                                          duration:
-                                                              const Duration(
-                                                                  milliseconds:
-                                                                      500),
-                                                          reverseDuration:
-                                                              const Duration(
-                                                                  milliseconds:
-                                                                      500),
-                                                        ),
-                                                      );
-                                                    }
-                                                  } on FirebaseAuthException catch (e) {
-                                                    // stop rolling
-                                                    taskData.updateCircle(
-                                                        context, false);
-
-                                                    ScaffoldMessenger.of(
-                                                            context)
-                                                        .showSnackBar(
-                                                      SnackBar(
-                                                        backgroundColor: Colors
-                                                            .grey.shade800,
-                                                        content: Text(
-                                                          'An error occurred: ${e.toString()}',
-                                                          style: TextStyle(
-                                                            fontFamily:
-                                                                'Trebuchet',
-                                                            fontSize:
-                                                                screenWidth /
-                                                                    30,
-                                                            color: Colors.white,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    );
-                                                  }
-                                                }
-                                              } catch (e) {
-                                                taskData.updateCircle(
-                                                    context, false);
-
+                                              // most of these checks are unimportant, as we already set measures
+                                              if (snap.docs.isNotEmpty) {
                                                 ScaffoldMessenger.of(context)
                                                     .showSnackBar(
                                                   SnackBar(
                                                     backgroundColor:
                                                         Colors.grey.shade800,
                                                     content: Text(
-                                                      'An error occurred: ${e.toString()}',
+                                                      'This username already exists in our record, use a different email and try again!',
                                                       style: TextStyle(
                                                         fontFamily: 'Trebuchet',
                                                         fontSize:
-                                                            screenWidth / 30,
+                                                            screenWidth / 28,
                                                         color: Colors.white,
                                                       ),
                                                     ),
                                                   ),
                                                 );
+                                                // stop rolling
+                                                taskData.updateCircle(
+                                                    context, false);
+                                              } else {
+                                                // assign variable
+                                                DateTime now = DateTime.now();
+                                                String uid =
+                                                    'ab${now.millisecondsSinceEpoch}';
+
+                                                // Save the values
+                                                taskData.updateSign(
+                                                  context,
+                                                  uid,
+                                                  taskData.name,
+                                                  idInput,
+                                                  taskData.email,
+                                                  taskData.pass,
+                                                );
+
+                                                // variables
+                                                List<String> tags = [
+                                                  taskData.sch.toLowerCase(),
+                                                  taskData.level.toLowerCase(),
+                                                  taskData.faculty
+                                                      .toLowerCase(),
+                                                  taskData.dept.toLowerCase(),
+                                                  taskData.loc.toLowerCase(),
+                                                  'campcon'
+                                                ];
+
+                                                List<String> coverImg = [];
+
+                                                // save tags
+                                                taskData.updateTags(
+                                                    context, tags);
+
+                                                // fetch the _snap data using function
+                                                await loadData(
+                                                    newTags: tags, uid: uid);
+
+                                                try {
+                                                  // Create a new account using user's email and password
+                                                  // firebase_auth.UserCredential
+                                                  //     userCredential =
+                                                  await firebaseAuth
+                                                      .createUserWithEmailAndPassword(
+                                                          email: taskData.email,
+                                                          password:
+                                                              taskData.pass);
+
+                                                  // Save the username
+                                                  await FirebaseFirestore
+                                                      .instance
+                                                      .collection('users')
+                                                      .doc(uid)
+                                                      .set({
+                                                    'uid': uid,
+                                                    'name': taskData.name,
+                                                    'bio': '',
+                                                    'location': '',
+                                                    'url': '',
+                                                    'email': taskData.email,
+                                                    'sch': taskData.sch,
+                                                    'level': taskData.level,
+                                                    'faculty': taskData.faculty,
+                                                    'dept': taskData.dept,
+                                                    'hostel': taskData.loc,
+                                                    'userId': idInput,
+                                                    'userCheck': idInputCheck,
+                                                    'tags': tags,
+                                                    'coverImg': coverImg,
+                                                    'profileImg': '',
+                                                    'type':
+                                                        'Individual', // "Official", "Business", or "Individual"
+                                                    'typeOrder':
+                                                        3, // 1 for "Official", 2 for "Business", 3 for "Individual"
+                                                    'connects': 0,
+                                                    'connecting': 0,
+                                                    'createdAt': now,
+                                                  });
+
+                                                  if (_snap != null) {
+                                                    // stop rolling
+                                                    taskData.updateCircle(
+                                                        context, false);
+                                                  }
+
+                                                  if (_snap != null) {
+                                                    // navigate to suggestion page
+                                                    Navigator
+                                                        .pushAndRemoveUntil(
+                                                      context,
+                                                      PageTransition(
+                                                        child: SuggestScreen(
+                                                          snap: _snap,
+                                                          currentSize:
+                                                              _snapCount,
+                                                        ),
+                                                        type: PageTransitionType
+                                                            .rightToLeft,
+                                                        duration:
+                                                            const Duration(
+                                                                milliseconds:
+                                                                    500),
+                                                        reverseDuration:
+                                                            const Duration(
+                                                                milliseconds:
+                                                                    500),
+                                                      ),
+                                                      (Route<dynamic> route) =>
+                                                          false, // Removes all previous screens
+                                                    );
+                                                  }
+                                                } on FirebaseAuthException catch (e) {
+                                                  // stop rolling
+                                                  taskData.updateCircle(
+                                                      context, false);
+
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    SnackBar(
+                                                      backgroundColor:
+                                                          Colors.grey.shade800,
+                                                      content: Text(
+                                                        'An error occurred: ${e.toString()}',
+                                                        style: TextStyle(
+                                                          fontFamily:
+                                                              'Trebuchet',
+                                                          fontSize:
+                                                              screenWidth / 30,
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  );
+                                                }
                                               }
-                                            }),
+                                            } catch (e) {
+                                              taskData.updateCircle(
+                                                  context, false);
+
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                  backgroundColor:
+                                                      Colors.grey.shade800,
+                                                  content: Text(
+                                                    'An error occurred: ${e.toString()}',
+                                                    style: TextStyle(
+                                                      fontFamily: 'Trebuchet',
+                                                      fontSize:
+                                                          screenWidth / 30,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                              );
+                                            }
+                                          },
+                                  ),
                                 ),
                               ],
                             ),
-                            // SizedBox(
-                            //   height: screenHeight / 20,
-                            // ),
                           ],
                         )),
                     Container(
