@@ -2,6 +2,7 @@ import 'package:campcon/screens/light_screen/lighttracker.dart';
 import 'package:campcon/screens/initial_screen/story_carousel.dart';
 import 'package:campcon/screens/points.dart';
 import 'package:campcon/screens/publish.dart';
+import 'package:campcon/widgets/drawer_widget.dart';
 import 'package:campcon/widgets/posts.dart';
 import 'package:campcon/widgets/homesuggest.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -28,6 +29,21 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isFabVisible = true;
   double screenHeight = 0.0;
   double screenWidth = 0.0;
+
+  final storyImages = [
+    'assets/images/social.jpeg',
+    'assets/images/social.jpeg',
+    'assets/images/social.jpeg',
+    'assets/images/social.jpeg',
+    'assets/images/social.jpeg',
+    'assets/images/social.jpeg',
+    'assets/images/social.jpeg',
+    'assets/images/social.jpeg',
+    'assets/images/social.jpeg',
+    'assets/images/social.jpeg',
+    'assets/images/social.jpeg',
+    'assets/images/social.jpeg',
+  ];
 
   String formatRelativeTime(DateTime addedDate) {
     return timeago.format(addedDate, locale: 'short');
@@ -133,11 +149,17 @@ class _HomeScreenState extends State<HomeScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             GestureDetector(
-                              onTap: () =>
-                                  _navigateTo(context, const PointsScreen()),
-                              child: Icon(Icons.account_circle_outlined,
-                                  size: screenWidth / 15,
-                                  color: Colors.grey.shade800),
+                              onTap: () => Scaffold.of(context).openDrawer(),
+                              child: SizedBox(
+                                width: screenWidth / 14,
+                                height: screenWidth / 14,
+                                child: CircleAvatar(
+                                  backgroundImage:
+                                      AssetImage('assets/images/social.jpeg'),
+                                  backgroundColor:
+                                      Colors.transparent, // Optional
+                                ),
+                              ),
                             ),
                             Image.asset(
                               'assets/images/logo2.png',
@@ -152,7 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(Icons.lightbulb,
-                                    size: screenWidth / 15,
+                                    size: screenWidth / 14,
                                     color: Colors.yellow.shade700),
                               ),
                             ),
@@ -169,13 +191,13 @@ class _HomeScreenState extends State<HomeScreen> {
                               index: 0),
                           topButtons(
                               onTap: () {},
-                              text: 'Connects',
+                              text: 'Following',
                               onSelect: false,
                               index: 1),
                         ],
                       ),
                       Container(
-                        margin: const EdgeInsets.only(top: 5),
+                        // margin: const EdgeInsets.only(top: 5),
                         decoration: BoxDecoration(
                           border: Border(
                             bottom: BorderSide(
@@ -222,6 +244,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     onMore: () {},
                     height: screenHeight,
                     width: screenWidth,
+                    imageUrls: storyImages,
                   );
                 },
                 childCount: taskData.snapWithAuthors.length,
@@ -255,7 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
-              width: 2,
+              width: 3,
               color: onSelect ? const Color(0xFFBA9E02) : Colors.transparent,
             ),
           ),
@@ -297,10 +320,10 @@ class SliverRowHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  double get maxExtent => 100.0;
+  double get maxExtent => 98.0;
 
   @override
-  double get minExtent => 100.0;
+  double get minExtent => 98.0;
 
   @override
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {

@@ -1,275 +1,270 @@
+import 'package:campcon/screens/profile/profile_view.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttericon/font_awesome5_icons.dart';
-import 'package:fluttericon/font_awesome_icons.dart';
-import 'package:iconly/iconly.dart';
-import 'package:page_transition/page_transition.dart';
-import 'package:campcon/onboarding/loginscreen.dart';
-import 'package:campcon/screens/addpoints.dart';
-import 'package:campcon/screens/addupi.dart';
-import 'package:campcon/screens/bids.dart';
-import 'package:campcon/screens/contacts.dart';
-import 'package:campcon/screens/game_rates.dart';
-import 'package:campcon/screens/profile.dart';
-import 'package:campcon/screens/transact.dart';
-import 'package:campcon/screens/wthpoints.dart';
-import 'package:campcon/services/task_data.dart';
-import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher_string.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_feather_icons/flutter_feather_icons.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-class DrawerWidget extends StatelessWidget {
-  const DrawerWidget({super.key});
+class CustomDrawer extends StatelessWidget {
+  const CustomDrawer({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // Provider
-    final taskData = Provider.of<TaskData>(context);
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.grey.shade100, // Set the status bar color
+      statusBarIconBrightness:
+          Brightness.dark, // For light text on dark background
+    ));
 
-    double screenWidth = MediaQuery.of(context).size.width;
-
-    // Functions
-    // Direct the user to their default browser
-    void launchURL(String? url) async {
-      if (await canLaunchUrlString(url!)) {
-        await launchUrlString(url, mode: LaunchMode.externalApplication);
-      } else {
-        throw 'Could not launch $url';
-      }
-    }
-
-    return Drawer(
-      child: Material(
-        color: Colors.black,
-        child: ListView(
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                  color: Colors.grey.shade900,
-                  border: Border(
-                      bottom: BorderSide(
-                    width: 0,
-                    color: Colors.grey.shade900,
-                  ))),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.account_circle,
-                    size: screenWidth / 4,
-                    color: Colors.white,
-                  ),
-                  const SizedBox(
-                    width: 20,
-                  ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        taskData.name,
-                        style: TextStyle(
-                            fontFamily: 'Nexa Bold',
-                            fontSize: screenWidth / 23,
-                            color: Colors.white),
+    return SafeArea(
+      child: Drawer(
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topRight: Radius.circular(0), // No radius on the top-right
+            bottomRight: Radius.circular(0), // No radius on the bottom-right
+          ),
+        ),
+        backgroundColor: Colors.grey.shade50,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Drawer Header
+              Container(
+                padding: const EdgeInsets.only(
+                    left: 16, right: 16, top: 30, bottom: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CircleAvatar(
+                      radius: 22,
+                      backgroundImage: AssetImage(
+                        'assets/images/social.jpeg',
                       ),
-                      Text(
-                        taskData.id.toString(),
-                        style: TextStyle(
-                            fontFamily: 'Nexa Bold',
-                            fontSize: screenWidth / 23,
-                            color: Colors.blue.shade300),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Bolaji d Dev',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        color: Colors.grey.shade800,
+                        fontWeight: FontWeight.w600,
+                        // fontFamily: 'Trebuchet',
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                    Text(
+                      '@Bolaji',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                        fontFamily: 'Trebuchet',
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(15),
+                        border:
+                            Border.all(width: 1, color: Colors.grey.shade400),
+                      ),
+                      padding:
+                          EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '10',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                  // fontFamily: 'Trebuchet',
+                                ),
+                              ),
+                              Text(
+                                'Following',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: Colors.grey.shade800,
+                                  // fontFamily: 'Trebuchet',
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(width: 30), // Space between the counts
+                          Container(
+                            height:
+                                40, // Add a fixed height to make the divider visible
+                            child: VerticalDivider(
+                              color: Colors.grey.shade400, // Color of the line
+                              thickness: 1, // Line thickness
+                              width:
+                                  1, // Set a small width for the divider to appear
+                            ),
+                          ),
+                          SizedBox(
+                              width:
+                                  30), // Space between the line and the second column
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '20',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                  // fontFamily: 'Trebuchet',
+                                ),
+                              ),
+                              Text(
+                                'Followers',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: Colors.grey.shade800,
+                                  // fontFamily: 'Trebuchet',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    )
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(
-              height: 15,
-            ),
-            listTiles(
-              label: 'My Profile',
-              icon: IconlyBold.profile,
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  PageTransition(
-                    child: const ProfileScreen(),
-                    type: PageTransitionType.leftToRight,
-                    duration: const Duration(milliseconds: 500),
-                    reverseDuration: const Duration(milliseconds: 500),
-                  ),
-                );
-              },
-            ),
-            listTiles(
-              label: 'Add Points',
-              icon: IconlyBold.wallet,
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  PageTransition(
-                    child: const AddPointsScreen(),
-                    type: PageTransitionType.leftToRight,
-                    duration: const Duration(milliseconds: 500),
-                    reverseDuration: const Duration(milliseconds: 500),
-                  ),
-                );
-              },
-            ),
-            listTiles(
-              label: 'Withdraw Point',
-              icon: FontAwesome5.dollar_sign,
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  PageTransition(
-                    child: const WthPointsScreen(),
-                    type: PageTransitionType.leftToRight,
-                    duration: const Duration(milliseconds: 500),
-                    reverseDuration: const Duration(milliseconds: 500),
-                  ),
-                );
-              },
-            ),
-            listTiles(
-              label: 'Bid History',
-              icon: IconlyBold.activity,
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const BidsScreen()));
-              },
-            ),
-            listTiles(
-              label: 'Transaction',
-              icon: IconlyBold.more_circle,
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const TransactScreen()));
-              },
-            ),
-            listTiles(
-              label: 'Add UPI ID',
-              icon: FontAwesome.bank,
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  PageTransition(
-                    child: const AddUpiScreen(),
-                    type: PageTransitionType.leftToRight,
-                    duration: const Duration(milliseconds: 500),
-                    reverseDuration: const Duration(milliseconds: 500),
-                  ),
-                );
-              },
-            ),
-            listTiles(
-              label: 'Game Rates',
-              icon: IconlyBold.game,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  PageTransition(
-                    child: const GameRatesScreen(),
-                    type: PageTransitionType.leftToRight,
-                    duration: const Duration(milliseconds: 500),
-                    reverseDuration: const Duration(milliseconds: 500),
-                  ),
-                );
-              },
-            ),
-            listTiles(
-              label: 'Contact Us',
-              icon: Icons.contact_support,
-              onTap: () {
-                // Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  PageTransition(
-                    child: const ContactsScreen(),
-                    type: PageTransitionType.leftToRight,
-                    duration: const Duration(milliseconds: 500),
-                    reverseDuration: const Duration(milliseconds: 500),
-                  ),
-                );
-              },
-            ),
-            listTiles(
-              label: 'Rate App',
-              icon: IconlyBold.star,
-              onTap: () {
-                Navigator.pop(context);
-                launchURL('https://flutter.dev');
-              },
-            ),
-            listTiles(
-              label: 'How To Play',
-              icon: IconlyBold.play,
-              onTap: () {
-                Navigator.pop(context);
-                launchURL('https://paytmmakta.com');
-              },
-            ),
-            listTiles(
-              label: 'Share With Friends',
-              icon: Icons.share,
-              onTap: () async {
-                // try {
-                //   await Share.share('url',
-                //       subject: 'Share our app with friends and bid.');
-                // } catch (e) {
-                //   GlobalMethods.errorDialog(
-                //       errorMessage: e.toString(), context: context);
-                // }
-              },
-            ),
-            listTiles(
-              label: 'Logout',
-              icon: IconlyBold.logout,
-              onTap: () {
-                Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const LoginScreen()),
-                    (route) => false);
+              Padding(
+                padding: const EdgeInsets.only(left: 20, right: 20),
+                child: const Divider(),
+              ),
 
-                Future.delayed(const Duration(seconds: 2), () {
-                  // Remove key
-                  taskData.saveLogsOut();
-                });
-              },
-            ),
-          ],
+              // Drawer Items
+              CustomDrawerTile(
+                icon: FeatherIcons.user,
+                title: 'Profile',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ProfilePage(
+                          coverImageUrl: 'assets/images/social.jpeg',
+                          profileImageUrl: 'assets/images/social.jpeg',
+                          userName: 'The Initial Order',
+                          userHandle: 'Bolaji',
+                          connectsCount: 20,
+                          connectingCount: 40),
+                    ),
+                  );
+                }, // Define navigation logic here
+              ),
+              const CustomDrawerTile(
+                icon: FeatherIcons.bookmark,
+                title: 'Bookmark',
+                onTap: null, // Define navigation logic here
+              ),
+              // Notifications with circular number
+              const CustomDrawerTile(
+                icon: FeatherIcons.bell,
+                title: 'Notifications',
+                onTap: null, // Define navigation logic here
+              ),
+              const CustomDrawerTile(
+                icon: FeatherIcons.bookOpen,
+                title: 'Resources',
+                onTap: null, // Define navigation logic here
+              ),
+              const CustomDrawerTile(
+                icon: FeatherIcons.trendingUp,
+                title: 'Promote',
+                onTap: null, // Define navigation logic here
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 20, right: 20),
+                child: const Divider(),
+              ),
+              const CustomDrawerTile(
+                icon: FeatherIcons.settings,
+                title: 'Settings',
+                onTap: null, // Define navigation logic here
+              ),
+              const CustomDrawerTile(
+                icon: FeatherIcons.helpCircle,
+                title: 'Help',
+                onTap: null, // Define navigation logic here
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 20, right: 20),
+                child: const Divider(),
+              ),
+
+              // Logout
+              const CustomDrawerTile(
+                icon: FeatherIcons.logOut,
+                title: 'Logout',
+                onTap: null, // Define logout logic here
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+}
 
-  ListTile listTiles(
-      {required String label,
-      required Function onTap,
-      required IconData icon}) {
+// Reusable Drawer Tile Widget
+class CustomDrawerTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final VoidCallback? onTap;
+
+  const CustomDrawerTile({
+    Key? key,
+    required this.icon,
+    required this.title,
+    this.onTap,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(
-        icon,
-        color: Colors.white,
-      ),
+      leading: Icon(icon, color: Colors.grey.shade800),
       title: Text(
-        label,
-        style: const TextStyle(color: Colors.white, fontFamily: 'Nexa Bold'),
+        title,
+        style: const TextStyle(
+          fontFamily: 'Trebuchet',
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.black87,
+        ),
       ),
       onTap: () {
-        onTap();
+        Navigator.of(context).pop();
+        onTap!();
       },
+      trailing: title == 'Notifications'
+          ? Container(
+              width: 25, // Fixed width to avoid infinite width error
+              height: 25, // Height of the circle
+              decoration: BoxDecoration(
+                color: Color(0xFFBA9E02), // Circle color
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  '3', // Example number for notifications
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white,
+                    fontFamily: 'Trebuchet',
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            )
+          : null,
     );
   }
 }

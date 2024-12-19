@@ -1,57 +1,99 @@
 import 'package:flutter/material.dart';
+import 'package:iconly/iconly.dart';
 
 class CamplistCategoryWidget extends StatelessWidget {
-  // Sample list of categories: Personal, Faculty, and Institution
+  // List of categories with icons
   final List<Map<String, dynamic>> categories = [
-    {'icon': Icons.person, 'label': 'Personal'}, // Personal category
-    {'icon': Icons.school, 'label': 'Faculty'}, // Faculty category
-    {'icon': Icons.business, 'label': 'Institution'}, // Institution category
+    {'icon': Icons.person_4, 'label': 'Mine'},
+    {'icon': Icons.school, 'label': 'Faculty'},
+    {'icon': Icons.business, 'label': 'Institution'},
   ];
+
+  final String activeCategory;
+  final void Function(String category)? onCategoryTap;
+
+  CamplistCategoryWidget({
+    Key? key,
+    this.activeCategory = 'Mine', // Default active category
+    this.onCategoryTap,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 120, // Adjust height based on your layout needs
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    return Container(
+      padding: const EdgeInsets.only(top: 10),
+      height: 45, // Adjusted height to fit icon and text
+      width: screenWidth,
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: Colors.grey.shade300, width: 1),
+        ),
+      ),
       child: ListView.builder(
-        padding: const EdgeInsets.only(top: 20),
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
         itemBuilder: (context, index) {
           final category = categories[index];
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15.0),
-            child: Column(
-              children: [
-                Container(
-                  height: 60,
-                  width: 60,
-                  decoration: BoxDecoration(
-                      color: category['label'] == 'Personal'
-                          ? Colors.grey.shade600
-                          : Colors.white,
-                      border: Border.all(width: 1, color: Colors.grey.shade600),
-                      shape: BoxShape.circle),
-                  child: Icon(
-                    category['icon'],
-                    size: 30,
-                    color: category['label'] == 'Personal'
-                        ? Colors.white
-                        : Colors.black, // Icon color
-                  ),
-                ),
-                const SizedBox(height: 8), // Spacing between icon and text
-                Text(
-                  category['label'], // Dynamic label based on category
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontFamily: 'Trebuchet',
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
+          return _buildCategoryItem(
+            category['label'],
+            icon: category['icon'],
+            isActive: category['label'] == activeCategory,
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildCategoryItem(String label,
+      {required IconData icon, bool isActive = false}) {
+    return GestureDetector(
+      onTap: () {
+        if (onCategoryTap != null) {
+          onCategoryTap!(label); // Pass the label back on tap
+        }
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(left: 20, right: 10),
+        child: Container(
+          decoration: isActive
+              ? BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      width: 3,
+                      color: const Color(0xFFBA9E02), // Active underline color
+                    ),
+                  ),
+                )
+              : null,
+          child: Column(
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Icon(
+                  //   icon,
+                  //   color: isActive ? Colors.black : Colors.grey.shade600,
+                  //   size: 20,
+                  // ),
+                  // const SizedBox(width: 5),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontFamily: 'Trebuchet',
+                      fontSize: 14,
+                      fontWeight:
+                          isActive ? FontWeight.bold : FontWeight.normal,
+                      color: isActive ? Colors.black : Colors.grey.shade600,
+                    ),
+                  ),
+                  // const SizedBox(width: 5),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

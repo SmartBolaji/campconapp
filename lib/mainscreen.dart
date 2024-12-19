@@ -1,11 +1,11 @@
 import 'package:campcon/screens/camplist_screen/view_list.dart';
 import 'package:campcon/screens/events_screen/events.dart';
 import 'package:campcon/screens/initial_screen/homepage.dart';
-import 'package:campcon/screens/search.dart';
+import 'package:campcon/screens/search_screen/search.dart';
+import 'package:campcon/widgets/drawer_widget.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:iconly/iconly.dart';
 import 'package:flutter/material.dart';
-import 'package:campcon/widgets/drawer_widget.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -74,7 +74,7 @@ class _MainScreenState extends State<MainScreen> {
             ),
           ),
         ),
-        drawer: const SafeArea(child: DrawerWidget()),
+        drawer: CustomDrawer(),
         body: _screens[_currentIndex]);
   }
 }

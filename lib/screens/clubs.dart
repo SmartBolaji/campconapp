@@ -117,7 +117,7 @@ class _ClubsScreenState extends State<ClubsScreen> {
 
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
-      drawer: const SafeArea(child: DrawerWidget()),
+      // drawer: const SafeArea(child: DrawerWidget()),
       body: Column(
         children: [
           Container(

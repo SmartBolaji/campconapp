@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 
-class PostWidget extends StatelessWidget {
+class PostWidget extends StatefulWidget {
   final String userHandle;
   final String userName;
   final String userImageUrl;
@@ -23,6 +24,7 @@ class PostWidget extends StatelessWidget {
   final double height;
   final double width;
   final String time;
+  final List<String> imageUrls; // List of image URLs for carousel
 
   const PostWidget({
     Key? key,
@@ -46,23 +48,75 @@ class PostWidget extends StatelessWidget {
     required this.height,
     required this.width,
     required this.time,
+    required this.imageUrls, // Pass the image URLs here
   }) : super(key: key);
 
   @override
+  State<PostWidget> createState() => _PostWidgetState();
+}
+
+class _PostWidgetState extends State<PostWidget> {
+  int _currentIndex = 0;
+
+  @override
   Widget build(BuildContext context) {
-    bool isLongContent = content.length > 100;
-    String displayContent = isLongContent ? content.substring(0, 100) : content;
+    const int maxVisibleIndicators = 5;
+
+    // Determine the start and end of the visible range
+    int startIndex = (_currentIndex - maxVisibleIndicators ~/ 2)
+        .clamp(0, widget.imageUrls.length - maxVisibleIndicators);
+    int endIndex =
+        (startIndex + maxVisibleIndicators).clamp(0, widget.imageUrls.length);
+
+    // Generate indicators
+    List<Widget> indicators = [];
+    if (startIndex > 0) {
+      indicators.add(Container(
+        margin: EdgeInsets.symmetric(horizontal: 4),
+        width: 6,
+        height: 6,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.grey.withOpacity(0.6), // Mini dot
+        ),
+      ));
+    }
+    for (int i = startIndex; i < endIndex; i++) {
+      indicators.add(Container(
+        margin: EdgeInsets.symmetric(horizontal: 4),
+        width: 8,
+        height: 8,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: _currentIndex == i ? Color(0xFFBA9E02) : Colors.grey,
+        ),
+      ));
+    }
+    if (endIndex < widget.imageUrls.length) {
+      indicators.add(Container(
+        margin: EdgeInsets.symmetric(horizontal: 4),
+        width: 6,
+        height: 6,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.grey.withOpacity(0.6), // Mini dot
+        ),
+      ));
+    }
+
+    bool isLongContent = widget.content.length > 100;
+    String displayContent =
+        isLongContent ? widget.content.substring(0, 100) : widget.content;
 
     return Column(
       children: [
+        // Content
         Container(
-          padding: EdgeInsets.symmetric(
-              horizontal: width / 24, vertical: height / 60),
-          // decoration: BoxDecoration(
-          //   border: Border(
-          //     bottom: BorderSide(color: Colors.grey.shade300, width: 1),
-          //   ),
-          // ),
+          padding: EdgeInsets.only(
+              top: widget.height / 64,
+              bottom: 5,
+              left: widget.width / 24,
+              right: widget.width / 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -73,14 +127,13 @@ class PostWidget extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      // User Image with added border and slightly larger size
                       Container(
-                        width: width / 12,
-                        height: width / 12,
+                        width: widget.width / 12,
+                        height: widget.width / 12,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           image: DecorationImage(
-                            image: AssetImage(userImageUrl),
+                            image: AssetImage(widget.userImageUrl),
                             fit: BoxFit.cover,
                           ),
                         ),
@@ -105,19 +158,19 @@ class PostWidget extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            userName,
+                            widget.userName,
                             style: TextStyle(
                               fontFamily: 'Trebuchet',
                               fontWeight: FontWeight.bold,
-                              fontSize: width / 25,
+                              fontSize: widget.width / 25,
                               color: Colors.black,
                             ),
                           ),
                           Text(
-                            '@$userHandle',
+                            '@${widget.userHandle}',
                             style: TextStyle(
                               fontFamily: 'Trebuchet',
-                              fontSize: width / 28,
+                              fontSize: widget.width / 28,
                               color: Colors.grey.shade600,
                             ),
                           ),
@@ -126,10 +179,10 @@ class PostWidget extends StatelessWidget {
                     ],
                   ),
                   Text(
-                    time,
+                    widget.time,
                     style: TextStyle(
                       fontFamily: 'Trebuchet',
-                      fontSize: width / 28,
+                      fontSize: widget.width / 28,
                       color: Colors.grey.shade600,
                     ),
                   ),
@@ -143,7 +196,7 @@ class PostWidget extends StatelessWidget {
                   text: TextSpan(
                     text: displayContent,
                     style: GoogleFonts.poppins(
-                      fontSize: width / 26,
+                      fontSize: widget.width / 25,
                       color: Colors.black87,
                       height: 1.4,
                     ),
@@ -164,91 +217,106 @@ class PostWidget extends StatelessWidget {
             ],
           ),
         ),
+        Stack(
+          children: [
+            // PageView for images
+            SizedBox(
+              height: 200,
+              child: PageView.builder(
+                itemCount: widget.imageUrls.length,
+                controller: PageController(viewportFraction: 1),
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentIndex = index;
+                  });
+                },
+                itemBuilder: (context, index) {
+                  return Image.asset(
+                    widget.imageUrls[index],
+                    fit: BoxFit.cover,
+                    width: widget.width,
+                  );
+                },
+              ),
+            ),
+            // Indicator positioned at the bottom center
+            Positioned(
+              bottom: 10,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: indicators,
+              ),
+            ),
+          ],
+        ),
         // Buttons row with More button
         Container(
           padding: EdgeInsets.symmetric(
-              horizontal: width / 24, vertical: height / 60),
+              horizontal: widget.width / 24, vertical: widget.height / 60),
           decoration: BoxDecoration(
-            // border: Border(
-            //   bottom: BorderSide(
-            //       color: isLiked || isDisliked
-            //           ? Colors.grey.withOpacity(0.5)
-            //           : Colors.grey.shade300,
-            //       width: 1),
-            // ),
             color: Colors.grey.shade100,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.shade300,
-                offset: const Offset(0, 1),
-                blurRadius: 3,
-              ),
-            ],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
                 children: [
-                  // Like and Dislike
                   Row(
                     children: [
                       _buildActionIcon(
-                        icon: FeatherIcons.thumbsUp,
-                        count: likesCount,
-                        isActive: isLiked,
-                        onTap: onLike,
+                        icon: FeatherIcons.arrowUpCircle,
+                        count: widget.likesCount,
+                        isActive: widget.isLiked,
+                        onTap: widget.onLike,
                       ),
                       const SizedBox(width: 10),
                       _buildActionIcon(
-                        icon: FeatherIcons.thumbsDown,
-                        count: dislikesCount,
-                        isActive: isDisliked,
-                        onTap: onDislike,
+                        icon: FeatherIcons.arrowDownCircle,
+                        count: widget.dislikesCount,
+                        isActive: widget.isDisliked,
+                        onTap: widget.onDislike,
                       ),
                     ],
                   ),
                   const SizedBox(width: 10),
-                  // Reply
                   _buildActionIcon(
                     icon: FeatherIcons.messageCircle,
-                    count: repliesCount,
+                    count: widget.repliesCount,
                     isActive: false,
-                    onTap: onReply,
+                    onTap: widget.onReply,
                   ),
                 ],
               ),
               const SizedBox(width: 20),
               Row(
                 children: [
-                  // Bookmark
                   GestureDetector(
                     child: Icon(
                       FeatherIcons.bookmark,
                       color: Colors.grey.shade500,
-                      size: width / 18,
+                      size: widget.width / 18,
                     ),
-                    onTap: onBookmark(),
+                    onTap: () => widget.onBookmark(),
                   ),
                   const SizedBox(width: 10),
-                  // Share
                   GestureDetector(
                     child: Icon(
                       FeatherIcons.share,
                       color: Colors.grey.shade500,
-                      size: width / 18,
+                      size: widget.width / 18,
                     ),
-                    onTap: () => onShare(),
+                    onTap: () => widget.onShare(),
                   ),
                   const SizedBox(width: 10),
-                  // More Button
                   GestureDetector(
                     child: Icon(
                       FeatherIcons.moreHorizontal,
                       color: Colors.grey.shade500,
-                      size: width / 18,
+                      size: widget.width / 18,
                     ),
-                    onTap: () => onMore(),
+                    onTap: () => widget.onMore(),
                   ),
                 ],
               )
@@ -272,14 +340,14 @@ class PostWidget extends StatelessWidget {
           Icon(
             icon,
             color: isActive ? Color(0xFFBA9E02) : Colors.grey.shade500,
-            size: width / 18,
+            size: widget.width / 18,
           ),
           const SizedBox(width: 5),
           Text(
             '$count',
             style: TextStyle(
               fontFamily: 'Trebuchet',
-              fontSize: width / 28,
+              fontSize: widget.width / 28,
               color: isActive ? Color(0xFFBA9E02) : Colors.grey.shade600,
             ),
           ),

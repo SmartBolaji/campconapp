@@ -445,11 +445,11 @@ class TaskData extends ChangeNotifier {
   Future<void> connectToUser(String uid, String cUid) async {
     if (!_connections.containsKey(uid) || !_connections[uid]!) {
       try {
-        // Step 1: Add current user to the target user's 'connecting' subcollection
+        // Step 1: Add current user to the target user's 'following' subcollection
         await FirebaseFirestore.instance
             .collection('users')
             .doc(uid)
-            .collection('connecting')
+            .collection('following')
             .doc(cUid) // The current user
             .set({
           'uid': cUid,
@@ -459,11 +459,11 @@ class TaskData extends ChangeNotifier {
           'addedDate': FieldValue.serverTimestamp(),
         });
 
-        // Step 2: Add target user to the current user's 'connects' subcollection
+        // Step 2: Add target user to the current user's 'followers' subcollection
         await FirebaseFirestore.instance
             .collection('users')
             .doc(cUid)
-            .collection('connects')
+            .collection('followers')
             .doc(uid) // The current user
             .set({
           'uid': uid,
@@ -471,17 +471,17 @@ class TaskData extends ChangeNotifier {
           'addedDate': FieldValue.serverTimestamp(),
         });
 
-        // Step 3: Update the 'connecting' field in the targets user's document
-        // Incrementing the 'connecting' count by 1
+        // Step 3: Update the 'following' field in the targets user's document
+        // Incrementing the 'following' count by 1
         await FirebaseFirestore.instance.collection('users').doc(uid).update({
-          'connecting':
+          'following':
               FieldValue.increment(1), // Increment the connecting count
         });
 
-        // Step 4: Update the 'connects' field in the current user's document
-        // Incrementing the 'connects' count by 1
+        // Step 4: Update the 'followers' field in the current user's document
+        // Incrementing the 'followers' count by 1
         await FirebaseFirestore.instance.collection('users').doc(cUid).update({
-          'connects': FieldValue.increment(1), // Increment the followers count
+          'followers': FieldValue.increment(1), // Increment the followers count
         });
 
         _connections[uid] = true;

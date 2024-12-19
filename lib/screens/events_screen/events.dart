@@ -109,8 +109,13 @@ class _EventScreenState extends State<EventScreen> {
             //   ),
             // ),
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Container(
+                padding: const EdgeInsets.only(left: 20, right: 20, bottom: 5),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: Colors.grey.shade300, width: 1),
+                  ),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -128,14 +133,14 @@ class _EventScreenState extends State<EventScreen> {
                         ),
                         Row(
                           children: [
-                            GestureDetector(
-                              onTap: () {},
-                              child: const Icon(
-                                IconlyBroken.plus,
-                                size: 25,
-                              ),
-                            ),
-                            const SizedBox(width: 15),
+                            // GestureDetector(
+                            //   onTap: () {},
+                            //   child: const Icon(
+                            //     IconlyBroken.plus,
+                            //     size: 25,
+                            //   ),
+                            // ),
+                            // const SizedBox(width: 15),
                             GestureDetector(
                               onTap: () {},
                               child: const Icon(

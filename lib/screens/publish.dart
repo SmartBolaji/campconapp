@@ -78,21 +78,21 @@ class _PostPageState extends State<PostPage> {
           ),
           onPressed: () => Navigator.pop(context),
         ),
-        // title: const Text(
-        //   'New Post',
-        //   style: TextStyle(
-        //     color: Colors.black,
-        //     fontSize: 22,
-        //     fontWeight: FontWeight.bold,
-        //     fontFamily: 'Trebuchet',
-        //   ),
-        // ),
+        title: const Text(
+          'New Post',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Trebuchet',
+          ),
+        ),
         actions: [
           TextButton(
               onPressed: () {
                 _tags.addAll(taskData.tags);
                 savePost(taskData.uid, contentController.text, _tags);
-                Future.delayed(Duration(seconds: 2), () {
+                Future.delayed(const Duration(seconds: 2), () {
                   taskData.loadSnap(newTags: taskData.tags, limit: 20);
                 });
                 Navigator.pop(context);
