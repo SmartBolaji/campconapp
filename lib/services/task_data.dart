@@ -29,6 +29,8 @@ class TaskData extends ChangeNotifier {
   String _userid = '';
   String _pass = '';
   List<String> _tags = [];
+  // role
+  String _role = 'Student';
   // school
   String _sch = '';
   String _level = '';
@@ -153,6 +155,13 @@ class TaskData extends ChangeNotifier {
     notifyListeners();
   }
 
+  // loading
+  bool get circular => _circular;
+  set circular(bool value) {
+    _circular = value;
+    notifyListeners();
+  }
+
   double get points => _points;
   set points(double value) {
     _points = value;
@@ -165,10 +174,10 @@ class TaskData extends ChangeNotifier {
     notifyListeners();
   }
 
-  // loading
-  bool get circular => _circular;
-  set circular(bool value) {
-    _circular = value;
+  // role
+  String get role => _role;
+  set role(String value) {
+    _role = value;
     notifyListeners();
   }
 
@@ -261,18 +270,41 @@ class TaskData extends ChangeNotifier {
         _snapShot = snap;
       }
 
-      // Fetch author data in parallel
+      // Fetch author data and like/dislike status in parallel
       final List<Future<Map<String, dynamic>>> authorFetchTasks =
           _snapShot!.docs.map((postDoc) async {
         final authorRef = postDoc['author'] as DocumentReference;
         final authorSnapshot = await authorRef.get();
+
+        final postId = postDoc.id;
+        final userId = _uid; // Replace with the actual current user ID
+
+        // Check if the user has liked or disliked the post
+        final likeDoc = await FirebaseFirestore.instance
+            .collection('posts')
+            .doc(postId)
+            .collection('likes')
+            .doc(userId)
+            .get();
+        final isLiked = likeDoc.exists;
+
+        final dislikeDoc = await FirebaseFirestore.instance
+            .collection('posts')
+            .doc(postId)
+            .collection('dislikes')
+            .doc(userId)
+            .get();
+        final isDisliked = dislikeDoc.exists;
+
         return {
           'post': postDoc.data(),
           'author': authorSnapshot.exists ? authorSnapshot.data() : null,
+          'isLiked': isLiked,
+          'isDisliked': isDisliked,
         };
       }).toList();
 
-      // Combine posts with their authors
+      // Combine posts with their authors and like/dislike status
       _snapWithAuthors = await Future.wait(authorFetchTasks);
 
       // Limit the snap size to a maximum of 30
@@ -427,6 +459,12 @@ class TaskData extends ChangeNotifier {
     faculty = prefs.getString('faculty')!;
     loc = prefs.getString('loc')!;
     tags = prefs.getStringList('tags')!;
+    notifyListeners();
+  }
+
+  // role
+  void updateRole(context, String newRole) {
+    _role = newRole;
     notifyListeners();
   }
 

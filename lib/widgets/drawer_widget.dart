@@ -43,20 +43,21 @@ class CustomDrawer extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'Bolaji d Dev',
-                      style: GoogleFonts.poppins(
+                      'Peter Opad.',
+                      style: TextStyle(
                         fontSize: 18,
                         color: Colors.grey.shade800,
                         fontWeight: FontWeight.w600,
-                        // fontFamily: 'Trebuchet',
+                        fontFamily: 'Lato',
                       ),
                     ),
                     Text(
-                      '@Bolaji',
+                      '@Peter',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey.shade600,
-                        fontFamily: 'Trebuchet',
+                        fontFamily: 'Lato',
+                        fontWeight: FontWeight.w400,
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -77,19 +78,20 @@ class CustomDrawer extends StatelessWidget {
                             children: [
                               Text(
                                 '10',
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(
                                   fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w900,
                                   color: Colors.black87,
-                                  // fontFamily: 'Trebuchet',
+                                  fontFamily: 'Lato',
                                 ),
                               ),
                               Text(
                                 'Following',
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(
                                   fontSize: 13,
                                   color: Colors.grey.shade800,
-                                  // fontFamily: 'Trebuchet',
+                                  fontFamily: 'Lato',
+                                  fontWeight: FontWeight.w400,
                                 ),
                               ),
                             ],
@@ -113,19 +115,20 @@ class CustomDrawer extends StatelessWidget {
                             children: [
                               Text(
                                 '20',
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(
                                   fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w900,
                                   color: Colors.black87,
-                                  // fontFamily: 'Trebuchet',
+                                  fontFamily: 'Lato',
                                 ),
                               ),
                               Text(
                                 'Followers',
-                                style: GoogleFonts.poppins(
+                                style: TextStyle(
                                   fontSize: 13,
                                   color: Colors.grey.shade800,
-                                  // fontFamily: 'Trebuchet',
+                                  fontFamily: 'Lato',
+                                  fontWeight: FontWeight.w400,
                                 ),
                               ),
                             ],
@@ -152,8 +155,8 @@ class CustomDrawer extends StatelessWidget {
                       builder: (context) => ProfilePage(
                           coverImageUrl: 'assets/images/social.jpeg',
                           profileImageUrl: 'assets/images/social.jpeg',
-                          userName: 'The Initial Order',
-                          userHandle: 'Bolaji',
+                          userName: 'Peter Opad.',
+                          userHandle: 'Peter',
                           connectsCount: 20,
                           connectingCount: 40),
                     ),
@@ -171,11 +174,11 @@ class CustomDrawer extends StatelessWidget {
                 title: 'Notifications',
                 onTap: null, // Define navigation logic here
               ),
-              const CustomDrawerTile(
-                icon: FeatherIcons.bookOpen,
-                title: 'Resources',
-                onTap: null, // Define navigation logic here
-              ),
+              // const CustomDrawerTile(
+              //   icon: FeatherIcons.bookOpen,
+              //   title: 'Resources',
+              //   onTap: null, // Define navigation logic here
+              // ),
               const CustomDrawerTile(
                 icon: FeatherIcons.trendingUp,
                 title: 'Promote',
@@ -234,7 +237,7 @@ class CustomDrawerTile extends StatelessWidget {
       title: Text(
         title,
         style: const TextStyle(
-          fontFamily: 'Trebuchet',
+          fontFamily: 'Lato',
           fontSize: 16,
           fontWeight: FontWeight.bold,
           color: Colors.black87,
@@ -258,7 +261,7 @@ class CustomDrawerTile extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.white,
-                    fontFamily: 'Trebuchet',
+                    fontFamily: 'Lato',
                     fontWeight: FontWeight.bold,
                   ),
                 ),

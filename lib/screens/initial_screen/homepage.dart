@@ -1,9 +1,10 @@
+import 'package:campcon/floatingbutton.dart';
 import 'package:campcon/screens/light_screen/lighttracker.dart';
 import 'package:campcon/screens/initial_screen/story_carousel.dart';
 import 'package:campcon/screens/points.dart';
 import 'package:campcon/screens/publish.dart';
 import 'package:campcon/widgets/drawer_widget.dart';
-import 'package:campcon/widgets/posts.dart';
+import 'package:campcon/screens/posts/posts.dart';
 import 'package:campcon/widgets/homesuggest.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/rendering.dart';
@@ -109,26 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
     screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      floatingActionButton: AnimatedOpacity(
-        duration: const Duration(milliseconds: 300),
-        opacity: _isFabVisible ? 1.0 : 0.0,
-        child: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              PageTransition(
-                child: const PostPage(),
-                type: PageTransitionType.bottomToTop,
-                duration: const Duration(milliseconds: 500),
-                reverseDuration: const Duration(milliseconds: 500),
-              ),
-            );
-          },
-          shape: const CircleBorder(),
-          backgroundColor: Colors.grey.shade800,
-          child: const Icon(Icons.add, size: 30, color: Colors.white),
-        ),
-      ),
+      floatingActionButton: FloatingButton(isFabVisible: _isFabVisible),
       backgroundColor: Colors.grey.shade50,
       body: SafeArea(
         child: CustomScrollView(
@@ -148,24 +130,64 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
+                            // Profile Image with Notification Dot
                             GestureDetector(
                               onTap: () => Scaffold.of(context).openDrawer(),
-                              child: SizedBox(
-                                width: screenWidth / 14,
-                                height: screenWidth / 14,
-                                child: CircleAvatar(
-                                  backgroundImage:
-                                      AssetImage('assets/images/social.jpeg'),
-                                  backgroundColor:
-                                      Colors.transparent, // Optional
-                                ),
+                              child: Stack(
+                                children: [
+                                  // Profile Image
+                                  Container(
+                                    margin: EdgeInsets.only(
+                                        top: 10, bottom: 10, right: 10),
+                                    child: SizedBox(
+                                      width: screenWidth / 14,
+                                      height: screenWidth / 14,
+                                      child: const CircleAvatar(
+                                        backgroundImage: AssetImage(
+                                            'assets/images/social.jpeg'),
+                                        backgroundColor:
+                                            Colors.transparent, // Optional
+                                      ),
+                                    ),
+                                  ),
+                                  // Notification Dot
+                                  Positioned(
+                                    top: 2,
+                                    right: 2,
+                                    child: Container(
+                                      width: screenWidth / 30,
+                                      height: screenWidth / 30,
+                                      decoration: BoxDecoration(
+                                        color: const Color(
+                                            0xFFBA9E02), // Notification background color
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          '3', // Example notification count
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontFamily: 'Lato',
+                                            fontSize:
+                                                9, // Adjust size as needed
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
+
+                            // Logo
                             Image.asset(
                               'assets/images/logo2.png',
                               width: screenWidth / 3,
                               height: 55,
                             ),
+
+                            // Lightbulb Icon
                             GestureDetector(
                               onTap: () =>
                                   _navigateTo(context, const LightScreen()),
@@ -173,9 +195,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                 decoration: const BoxDecoration(
                                   shape: BoxShape.circle,
                                 ),
-                                child: Icon(Icons.lightbulb,
-                                    size: screenWidth / 14,
-                                    color: Colors.yellow.shade700),
+                                child: Icon(
+                                  Icons.lightbulb,
+                                  size: screenWidth / 14,
+                                  color: const Color(0xFFBA9E02),
+                                ),
                               ),
                             ),
                           ],
@@ -223,28 +247,198 @@ class _HomeScreenState extends State<HomeScreen> {
                       (postData['addedDate'] as Timestamp).toDate();
                   final String relativeTime = formatRelativeTime(addedDate);
 
-                  return PostWidget(
-                    userHandle: authorData?['userId'] ?? 'Unknown',
-                    userName: authorData?['name'] ?? 'Unknown',
-                    userImageUrl: 'assets/images/social.jpeg',
-                    content: postData['content'] ?? '',
-                    time: relativeTime,
-                    likesCount: postData['likesCount'] ?? 0,
-                    dislikesCount: postData['dislikesCount'] ?? 0,
-                    repliesCount: postData['repliesCount'] ?? 0,
-                    bookmarksCount: postData['bookmarksCount'] ?? 0,
-                    isLiked: false,
-                    isBookmarked: false,
-                    isDisliked: true,
-                    onLike: () {},
-                    onDislike: () {},
-                    onReply: () {},
-                    onBookmark: () {},
-                    onShare: () {},
-                    onMore: () {},
-                    height: screenHeight,
-                    width: screenWidth,
-                    imageUrls: storyImages,
+                  // Accessing like and dislike status
+                  bool isLiked = postWithAuthor['isLiked'];
+                  bool isDisliked = postWithAuthor['isDisliked'];
+
+                  int likesCount = postData['likesCount'] ?? 0;
+                  int dislikesCount = postData['dislikesCount'] ?? 0;
+
+                  return StatefulBuilder(
+                    builder: (context, setState) {
+                      return PostWidget(
+                        userHandle: authorData?['userId'] ?? 'Unknown',
+                        userName: authorData?['name'] ?? 'Unknown',
+                        userImageUrl: 'assets/images/social.jpeg',
+                        content: postData['content'] ?? '',
+                        time: relativeTime,
+                        likesCount: likesCount,
+                        dislikesCount: dislikesCount,
+                        repliesCount: postData['repliesCount'] ?? 0,
+                        bookmarksCount: postData['bookmarksCount'] ?? 0,
+                        isLiked: isLiked,
+                        isBookmarked: false,
+                        isMedia: postData['media'] ?? false,
+                        isDisliked: isDisliked,
+                        onLike: () async {
+                          setState(() {
+                            if (!isLiked) {
+                              likesCount++;
+                              isLiked = true;
+
+                              if (isDisliked) {
+                                dislikesCount--;
+                                isDisliked = false;
+                              }
+                            } else {
+                              likesCount--;
+                              isLiked = false;
+                            }
+
+                            // Update the taskData for persistence
+                            taskData.snapWithAuthors[index]['isLiked'] =
+                                isLiked;
+                            taskData.snapWithAuthors[index]['isDisliked'] =
+                                isDisliked;
+                            taskData.snapWithAuthors[index]['post']
+                                ['likesCount'] = likesCount;
+                            taskData.snapWithAuthors[index]['post']
+                                ['dislikesCount'] = dislikesCount;
+                          });
+
+                          final postId = postData['postId'];
+                          final userId = taskData.uid;
+
+                          final likeDoc = FirebaseFirestore.instance
+                              .collection('posts')
+                              .doc(postId)
+                              .collection('likes')
+                              .doc(userId);
+
+                          final dislikeDoc = FirebaseFirestore.instance
+                              .collection('posts')
+                              .doc(postId)
+                              .collection('dislikes')
+                              .doc(userId);
+
+                          // Firestore logic
+                          await FirebaseFirestore.instance
+                              .runTransaction((transaction) async {
+                            final likeSnapshot = await transaction.get(likeDoc);
+                            final dislikeSnapshot =
+                                await transaction.get(dislikeDoc);
+
+                            if (dislikeSnapshot.exists) {
+                              transaction.delete(dislikeDoc);
+                              transaction.update(
+                                FirebaseFirestore.instance
+                                    .collection('posts')
+                                    .doc(postId),
+                                {'dislikesCount': FieldValue.increment(-1)},
+                              );
+                            }
+
+                            if (!likeSnapshot.exists) {
+                              transaction.set(likeDoc, {
+                                'likedby': userId,
+                                'timestamp': FieldValue.serverTimestamp(),
+                              });
+                              transaction.update(
+                                FirebaseFirestore.instance
+                                    .collection('posts')
+                                    .doc(postId),
+                                {'likesCount': FieldValue.increment(1)},
+                              );
+                            } else {
+                              transaction.delete(likeDoc);
+                              transaction.update(
+                                FirebaseFirestore.instance
+                                    .collection('posts')
+                                    .doc(postId),
+                                {'likesCount': FieldValue.increment(-1)},
+                              );
+                            }
+                          });
+                        },
+                        onDislike: () async {
+                          setState(() {
+                            if (!isDisliked) {
+                              dislikesCount++;
+                              isDisliked = true;
+
+                              if (isLiked) {
+                                likesCount--;
+                                isLiked = false;
+                              }
+                            } else {
+                              dislikesCount--;
+                              isDisliked = false;
+                            }
+
+                            // Update the taskData for persistence
+                            taskData.snapWithAuthors[index]['isLiked'] =
+                                isLiked;
+                            taskData.snapWithAuthors[index]['isDisliked'] =
+                                isDisliked;
+                            taskData.snapWithAuthors[index]['post']
+                                ['likesCount'] = likesCount;
+                            taskData.snapWithAuthors[index]['post']
+                                ['dislikesCount'] = dislikesCount;
+                          });
+
+                          final postId = postData['postId'];
+                          final userId = taskData.uid;
+
+                          final dislikeDoc = FirebaseFirestore.instance
+                              .collection('posts')
+                              .doc(postId)
+                              .collection('dislikes')
+                              .doc(userId);
+
+                          final likeDoc = FirebaseFirestore.instance
+                              .collection('posts')
+                              .doc(postId)
+                              .collection('likes')
+                              .doc(userId);
+
+                          // Firestore logic
+                          await FirebaseFirestore.instance
+                              .runTransaction((transaction) async {
+                            final likeSnapshot = await transaction.get(likeDoc);
+                            final dislikeSnapshot =
+                                await transaction.get(dislikeDoc);
+
+                            if (likeSnapshot.exists) {
+                              transaction.delete(likeDoc);
+                              transaction.update(
+                                FirebaseFirestore.instance
+                                    .collection('posts')
+                                    .doc(postId),
+                                {'likesCount': FieldValue.increment(-1)},
+                              );
+                            }
+
+                            if (!dislikeSnapshot.exists) {
+                              transaction.set(dislikeDoc, {
+                                'dislikedby': userId,
+                                'timestamp': FieldValue.serverTimestamp(),
+                              });
+                              transaction.update(
+                                FirebaseFirestore.instance
+                                    .collection('posts')
+                                    .doc(postId),
+                                {'dislikesCount': FieldValue.increment(1)},
+                              );
+                            } else {
+                              transaction.delete(dislikeDoc);
+                              transaction.update(
+                                FirebaseFirestore.instance
+                                    .collection('posts')
+                                    .doc(postId),
+                                {'dislikesCount': FieldValue.increment(-1)},
+                              );
+                            }
+                          });
+                        },
+                        onReply: () {},
+                        onBookmark: () {},
+                        onShare: () {},
+                        onMore: () {},
+                        height: screenHeight,
+                        width: screenWidth,
+                        imageUrls: storyImages,
+                      );
+                    },
                   );
                 },
                 childCount: taskData.snapWithAuthors.length,
@@ -286,7 +480,8 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Text(
           text,
           style: TextStyle(
-            fontFamily: 'Trebuchet',
+            fontFamily: 'Lato',
+            fontWeight: FontWeight.w400,
             fontSize: screenWidth / 25,
             color: onSelect ? const Color(0xFFBA9E02) : Colors.grey.shade600,
           ),
@@ -320,10 +515,10 @@ class SliverRowHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  double get maxExtent => 98.0;
+  double get maxExtent => 94.0;
 
   @override
-  double get minExtent => 98.0;
+  double get minExtent => 94.0;
 
   @override
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {

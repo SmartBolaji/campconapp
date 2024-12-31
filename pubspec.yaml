@@ -109,6 +109,31 @@ flutter:
       fonts:
         - asset: assets/fonts/Nexa Light.otf
           weight: 700
+    - family: Lato
+      fonts:
+        - asset: assets/fonts/Lato-Thin.ttf
+          weight: 100
+        - asset: assets/fonts/Lato-ThinItalic.ttf
+          weight: 100
+          style: italic
+        - asset: assets/fonts/Lato-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Lato-LightItalic.ttf
+          weight: 300
+          style: italic
+        - asset: assets/fonts/Lato-Regular.ttf
+        - asset: assets/fonts/Lato-Italic.ttf
+          style: italic
+        - asset: assets/fonts/Lato-Black.ttf
+          weight: 500
+        - asset: assets/fonts/Lato-BlackItalic.ttf
+          weight: 500
+          style: italic
+        - asset: assets/fonts/Lato-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Lato-BoldItalic.ttf
+          weight: 700
+          style: italic
     - family: Trebuchet
       fonts:
         - asset: assets/fonts/trebuc.ttf

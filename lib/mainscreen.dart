@@ -1,3 +1,4 @@
+import 'package:campcon/floatingbutton.dart';
 import 'package:campcon/screens/camplist_screen/view_list.dart';
 import 'package:campcon/screens/events_screen/events.dart';
 import 'package:campcon/screens/initial_screen/homepage.dart';
@@ -18,6 +19,7 @@ class _MainScreenState extends State<MainScreen> {
   double screenHeight = 0.0;
   double screenWidth = 0.0;
   int _currentIndex = 0;
+  // bool _isFabVisible = true;
 
   // List of screens to navigate on tap
   final List<Widget> _screens = [
@@ -42,6 +44,7 @@ class _MainScreenState extends State<MainScreen> {
     screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
+        // floatingActionButton: FloatingButton(isFabVisible: _isFabVisible),
         backgroundColor: Colors.grey.shade100,
         bottomNavigationBar: Container(
           margin: const EdgeInsets.only(top: 0),
@@ -49,8 +52,10 @@ class _MainScreenState extends State<MainScreen> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
             child: GNav(
-              textStyle:
-                  const TextStyle(fontFamily: 'Trebuchet', fontSize: 12.5),
+              textStyle: const TextStyle(
+                  fontFamily: 'Lato',
+                  fontWeight: FontWeight.w400,
+                  fontSize: 12.5),
               backgroundColor: Colors.grey.shade100,
               color: Colors.grey.shade900,
               activeColor: Colors.black,
@@ -65,16 +70,14 @@ class _MainScreenState extends State<MainScreen> {
                 GButton(
                     icon: IconlyLight.calendar, iconSize: 21, text: 'Event'),
                 GButton(
-                    icon: IconlyLight.tick_square,
-                    iconSize: 21,
-                    text: 'Camplist'),
+                    icon: IconlyLight.tick_square, iconSize: 21, text: 'List'),
                 // GButton(
                 //     icon: IconlyLight.more_square, iconSize: 25, text: 'More'),
               ],
             ),
           ),
         ),
-        drawer: CustomDrawer(),
+        drawer: const CustomDrawer(),
         body: _screens[_currentIndex]);
   }
 }

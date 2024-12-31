@@ -1,7 +1,13 @@
+import 'package:campcon/screens/posts/bubble_action.dart';
+import 'package:campcon/widgets/twoline.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttericon/font_awesome5_icons.dart';
+import 'package:fluttericon/rpg_awesome_icons.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:iconly/iconly.dart';
 
 class PostWidget extends StatefulWidget {
   final String userHandle;
@@ -15,6 +21,7 @@ class PostWidget extends StatefulWidget {
   final bool isLiked;
   final bool isDisliked;
   final bool isBookmarked;
+  final bool isMedia;
   final Function onLike;
   final Function onDislike;
   final Function onBookmark;
@@ -39,6 +46,7 @@ class PostWidget extends StatefulWidget {
     required this.isLiked,
     required this.isDisliked,
     required this.isBookmarked,
+    required this.isMedia,
     required this.onLike,
     required this.onDislike,
     required this.onBookmark,
@@ -60,7 +68,7 @@ class _PostWidgetState extends State<PostWidget> {
 
   @override
   Widget build(BuildContext context) {
-    const int maxVisibleIndicators = 5;
+    const int maxVisibleIndicators = 4;
 
     // Determine the start and end of the visible range
     int startIndex = (_currentIndex - maxVisibleIndicators ~/ 2)
@@ -72,9 +80,9 @@ class _PostWidgetState extends State<PostWidget> {
     List<Widget> indicators = [];
     if (startIndex > 0) {
       indicators.add(Container(
-        margin: EdgeInsets.symmetric(horizontal: 4),
-        width: 6,
-        height: 6,
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        width: 4,
+        height: 4,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: Colors.grey.withOpacity(0.6), // Mini dot
@@ -83,20 +91,20 @@ class _PostWidgetState extends State<PostWidget> {
     }
     for (int i = startIndex; i < endIndex; i++) {
       indicators.add(Container(
-        margin: EdgeInsets.symmetric(horizontal: 4),
-        width: 8,
-        height: 8,
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        width: 6,
+        height: 6,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: _currentIndex == i ? Color(0xFFBA9E02) : Colors.grey,
+          color: _currentIndex == i ? const Color(0xFFBA9E02) : Colors.grey,
         ),
       ));
     }
     if (endIndex < widget.imageUrls.length) {
       indicators.add(Container(
-        margin: EdgeInsets.symmetric(horizontal: 4),
-        width: 6,
-        height: 6,
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        width: 4,
+        height: 4,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: Colors.grey.withOpacity(0.6), // Mini dot
@@ -104,9 +112,9 @@ class _PostWidgetState extends State<PostWidget> {
       ));
     }
 
-    bool isLongContent = widget.content.length > 100;
+    bool isLongContent = widget.content.length > 150;
     String displayContent =
-        isLongContent ? widget.content.substring(0, 100) : widget.content;
+        isLongContent ? widget.content.substring(0, 150) : widget.content;
 
     return Column(
       children: [
@@ -160,17 +168,20 @@ class _PostWidgetState extends State<PostWidget> {
                           Text(
                             widget.userName,
                             style: TextStyle(
-                              fontFamily: 'Trebuchet',
-                              fontWeight: FontWeight.bold,
-                              fontSize: widget.width / 25,
+                              fontFamily: 'Lato',
+                              fontWeight: FontWeight.w600,
+                              // fontStyle: FontStyle.italic,
+                              // fontWeight: FontWeight.bold,
+                              fontSize: 14,
                               color: Colors.black,
                             ),
                           ),
                           Text(
                             '@${widget.userHandle}',
                             style: TextStyle(
-                              fontFamily: 'Trebuchet',
-                              fontSize: widget.width / 28,
+                              fontFamily: 'Lato',
+                              fontWeight: FontWeight.w400,
+                              fontSize: 12,
                               color: Colors.grey.shade600,
                             ),
                           ),
@@ -181,8 +192,9 @@ class _PostWidgetState extends State<PostWidget> {
                   Text(
                     widget.time,
                     style: TextStyle(
-                      fontFamily: 'Trebuchet',
-                      fontSize: widget.width / 28,
+                      fontFamily: 'Lato',
+                      fontWeight: FontWeight.w500,
+                      fontSize: 12,
                       color: Colors.grey.shade600,
                     ),
                   ),
@@ -195,18 +207,20 @@ class _PostWidgetState extends State<PostWidget> {
                 child: RichText(
                   text: TextSpan(
                     text: displayContent,
-                    style: GoogleFonts.poppins(
-                      fontSize: widget.width / 25,
+                    style: TextStyle(
+                      fontSize: 15,
                       color: Colors.black87,
                       height: 1.4,
+                      fontFamily: 'Lato',
+                      fontWeight: FontWeight.w400,
                     ),
                     children: isLongContent
                         ? [
                             const TextSpan(
                               text: ' See more',
                               style: TextStyle(
-                                color: Colors.blue,
-                                fontWeight: FontWeight.w500,
+                                color: Color(0xFFBA9E02),
+                                fontWeight: FontWeight.w400,
                               ),
                             ),
                           ]
@@ -217,40 +231,42 @@ class _PostWidgetState extends State<PostWidget> {
             ],
           ),
         ),
-        Stack(
-          children: [
-            // PageView for images
-            SizedBox(
-              height: 200,
-              child: PageView.builder(
-                itemCount: widget.imageUrls.length,
-                controller: PageController(viewportFraction: 1),
-                onPageChanged: (index) {
-                  setState(() {
-                    _currentIndex = index;
-                  });
-                },
-                itemBuilder: (context, index) {
-                  return Image.asset(
-                    widget.imageUrls[index],
-                    fit: BoxFit.cover,
-                    width: widget.width,
-                  );
-                },
-              ),
-            ),
-            // Indicator positioned at the bottom center
-            Positioned(
-              bottom: 10,
-              left: 0,
-              right: 0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: indicators,
-              ),
-            ),
-          ],
-        ),
+        widget.isMedia
+            ? Stack(
+                children: [
+                  // PageView for images
+                  SizedBox(
+                    height: 200,
+                    child: PageView.builder(
+                      itemCount: widget.imageUrls.length,
+                      controller: PageController(viewportFraction: 1),
+                      onPageChanged: (index) {
+                        setState(() {
+                          _currentIndex = index;
+                        });
+                      },
+                      itemBuilder: (context, index) {
+                        return Image.asset(
+                          widget.imageUrls[index],
+                          fit: BoxFit.cover,
+                          width: widget.width,
+                        );
+                      },
+                    ),
+                  ),
+                  // Indicator positioned at the bottom center
+                  Positioned(
+                    bottom: 10,
+                    left: 0,
+                    right: 0,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: indicators,
+                    ),
+                  ),
+                ],
+              )
+            : const SizedBox(),
         // Buttons row with More button
         Container(
           padding: EdgeInsets.symmetric(
@@ -265,27 +281,30 @@ class _PostWidgetState extends State<PostWidget> {
                 children: [
                   Row(
                     children: [
-                      _buildActionIcon(
+                      BuildActionIcon(
                         icon: FeatherIcons.arrowUpCircle,
                         count: widget.likesCount,
                         isActive: widget.isLiked,
                         onTap: widget.onLike,
+                        width: MediaQuery.of(context).size.width,
                       ),
                       const SizedBox(width: 10),
-                      _buildActionIcon(
+                      BuildActionIcon(
                         icon: FeatherIcons.arrowDownCircle,
                         count: widget.dislikesCount,
                         isActive: widget.isDisliked,
                         onTap: widget.onDislike,
+                        width: MediaQuery.of(context).size.width,
                       ),
                     ],
                   ),
                   const SizedBox(width: 10),
-                  _buildActionIcon(
+                  BuildActionIcon(
                     icon: FeatherIcons.messageCircle,
                     count: widget.repliesCount,
                     isActive: false,
                     onTap: widget.onReply,
+                    width: MediaQuery.of(context).size.width,
                   ),
                 ],
               ),
@@ -311,11 +330,7 @@ class _PostWidgetState extends State<PostWidget> {
                   ),
                   const SizedBox(width: 10),
                   GestureDetector(
-                    child: Icon(
-                      FeatherIcons.moreHorizontal,
-                      color: Colors.grey.shade500,
-                      size: widget.width / 18,
-                    ),
+                    child: TwoLineMenuIcon(),
                     onTap: () => widget.onMore(),
                   ),
                 ],
@@ -327,32 +342,32 @@ class _PostWidgetState extends State<PostWidget> {
     );
   }
 
-  Widget _buildActionIcon({
-    required IconData icon,
-    required int count,
-    required bool isActive,
-    required Function onTap,
-  }) {
-    return GestureDetector(
-      onTap: () => onTap(),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            color: isActive ? Color(0xFFBA9E02) : Colors.grey.shade500,
-            size: widget.width / 18,
-          ),
-          const SizedBox(width: 5),
-          Text(
-            '$count',
-            style: TextStyle(
-              fontFamily: 'Trebuchet',
-              fontSize: widget.width / 28,
-              color: isActive ? Color(0xFFBA9E02) : Colors.grey.shade600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildActionIcon({
+  //   required IconData icon,
+  //   required int count,
+  //   required bool isActive,
+  //   required Function onTap,
+  // }) {
+  //   return GestureDetector(
+  //     onTap: () => onTap(),
+  //     child: Row(
+  //       children: [
+  //         Icon(
+  //           icon,
+  //           color: isActive ? const Color(0xFFBA9E02) : Colors.grey.shade500,
+  //           size: widget.width / 18,
+  //         ),
+  //         const SizedBox(width: 5),
+  //         Text(
+  //           '$count',
+  //           style: TextStyle(
+  //             fontFamily: 'Trebuchet',
+  //             fontSize: widget.width / 28,
+  //             color: isActive ? const Color(0xFFBA9E02) : Colors.grey.shade600,
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 }

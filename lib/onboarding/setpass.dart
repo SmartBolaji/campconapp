@@ -270,18 +270,34 @@ class _PassScreenState extends State<PassScreen> {
                                             passInput,
                                           );
 
-                                          Navigator.push(
-                                            context,
-                                            PageTransition(
-                                              child: const SchScreen(),
-                                              type: PageTransitionType
-                                                  .rightToLeft,
-                                              duration: const Duration(
-                                                  milliseconds: 500),
-                                              reverseDuration: const Duration(
-                                                  milliseconds: 500),
-                                            ),
-                                          );
+                                          // dynamic naviagation
+                                          if (taskData.role == 'Student') {
+                                            Navigator.push(
+                                              context,
+                                              PageTransition(
+                                                child: const SchScreen(),
+                                                type: PageTransitionType
+                                                    .rightToLeft,
+                                                duration: const Duration(
+                                                    milliseconds: 500),
+                                                reverseDuration: const Duration(
+                                                    milliseconds: 500),
+                                              ),
+                                            );
+                                          } else {
+                                            Navigator.push(
+                                              context,
+                                              PageTransition(
+                                                child: const UsernameScreen(),
+                                                type: PageTransitionType
+                                                    .rightToLeft,
+                                                duration: const Duration(
+                                                    milliseconds: 500),
+                                                reverseDuration: const Duration(
+                                                    milliseconds: 500),
+                                              ),
+                                            );
+                                          }
                                         }
                                       } catch (e) {
                                         // stop rolling

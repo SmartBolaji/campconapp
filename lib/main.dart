@@ -1,5 +1,6 @@
 import 'package:campcon/firebase_options.dart';
 import 'package:campcon/mainscreen.dart';
+import 'package:campcon/model/theme.dart';
 import 'package:campcon/services/timeago.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -38,38 +39,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'CampCon',
-        theme: ThemeData(
-          timePickerTheme: const TimePickerThemeData(
-            helpTextStyle: TextStyle(
-              fontFamily: 'Nexa Bold',
-              color: Colors.blue,
-            ),
-            hourMinuteTextStyle: TextStyle(
-              fontFamily: 'Nexa Bold',
-              fontSize: 40,
-            ),
-            dayPeriodTextStyle: TextStyle(
-              fontFamily: 'Nexa Bold',
-            ),
-            dialTextStyle: TextStyle(
-              fontFamily: 'Nexa Bold',
-            ),
-            cancelButtonStyle: ButtonStyle(
-              textStyle: WidgetStatePropertyAll(
-                TextStyle(
-                  fontFamily: 'Nexa Bold',
-                ),
-              ),
-            ),
-            confirmButtonStyle: ButtonStyle(
-              textStyle: WidgetStatePropertyAll(
-                TextStyle(
-                  fontFamily: 'Nexa Bold',
-                ),
-              ),
-            ),
-          ),
-        ),
+        theme: AppStyles.themeData,
         home: const KeyboardVisibilityProvider(child: AuthCheck()),
         localizationsDelegates: const [MonthYearPickerLocalizations.delegate],
       ),

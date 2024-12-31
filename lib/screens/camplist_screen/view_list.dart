@@ -1,8 +1,7 @@
+import 'package:campcon/floatingbutton.dart';
 import 'package:campcon/screens/camplist_screen/categ_list.dart';
-import 'package:campcon/screens/points.dart';
 import 'package:flutter/material.dart';
 import 'package:iconly/iconly.dart';
-import 'package:page_transition/page_transition.dart';
 
 class ChecklistScreen extends StatefulWidget {
   const ChecklistScreen({super.key});
@@ -14,6 +13,7 @@ class ChecklistScreen extends StatefulWidget {
 class _ChecklistScreenState extends State<ChecklistScreen> {
   double screenHeight = 0.0;
   double screenWidth = 0.0;
+  bool _isFabVisible = true;
 
   // Sample checklist data with more relevant academic and administrative tasks
   List<ChecklistItem> checklist = [
@@ -43,6 +43,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
     screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
+      floatingActionButton: FloatingButton(isFabVisible: _isFabVisible),
       backgroundColor: Colors.grey.shade50,
       body: Container(
         color: Colors.grey.shade50,

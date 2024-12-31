@@ -1,3 +1,4 @@
+import 'package:campcon/floatingbutton.dart';
 import 'package:campcon/screens/search_screen/search_input.dart';
 import 'package:flutter/material.dart';
 import 'package:iconly/iconly.dart';
@@ -8,8 +9,10 @@ class SearchScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    bool _isFabVisible = true;
 
     return Scaffold(
+      floatingActionButton: FloatingButton(isFabVisible: _isFabVisible),
       backgroundColor: Colors.grey.shade100,
       body: Column(
         children: [

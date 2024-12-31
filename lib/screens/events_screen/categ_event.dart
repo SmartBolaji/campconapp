@@ -90,10 +90,9 @@ class CategoriesWidget extends StatelessWidget {
                   Text(
                     label,
                     style: TextStyle(
-                      fontFamily: 'Trebuchet',
+                      fontFamily: 'Lato',
                       fontSize: 14,
-                      fontWeight:
-                          isActive ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: isActive ? FontWeight.bold : FontWeight.w400,
                       color: isActive ? Colors.black : Colors.grey.shade600,
                     ),
                   ),

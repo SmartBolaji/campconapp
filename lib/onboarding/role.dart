@@ -1,5 +1,7 @@
+import 'package:campcon/onboarding/signupscreen.dart';
 import 'package:campcon/services/task_data.dart';
 import 'package:flutter/material.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 
 class RoleScreen extends StatelessWidget {
@@ -48,27 +50,6 @@ class RoleScreen extends StatelessWidget {
                         height: screenHeight / 9,
                       ),
                     ),
-                    // Container(
-                    //   margin: EdgeInsets.symmetric(
-                    //       horizontal: screenWidth / 12,
-                    //       vertical: screenHeight / 60),
-                    //   child: Row(
-                    //     crossAxisAlignment: CrossAxisAlignment.start,
-                    //     children: [
-                    //       Flexible(
-                    //         child: Text(
-                    //           'Become a campster!',
-                    //           style: TextStyle(
-                    //               fontFamily: 'Trebuchet',
-                    //               fontSize: screenWidth / 15,
-                    //               fontWeight: FontWeight.bold,
-                    //               color: Colors.grey.shade600,
-                    //               letterSpacing: 0),
-                    //         ),
-                    //       ),
-                    //     ],
-                    //   ),
-                    // ),
                     // Main Content
                     Padding(
                       padding:
@@ -77,24 +58,22 @@ class RoleScreen extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Title
-                          // Padding(
-                          //   padding: EdgeInsets.only(bottom: screenHeight / 30),
-                          //   child: Text(
-                          //     'Are you a...',
-                          //     textAlign: TextAlign.center,
-                          //     style: TextStyle(
-                          //       fontFamily: 'Trebuchet',
-                          //       fontSize: screenWidth / 18,
-                          //       fontWeight: FontWeight.bold,
-                          //       color: Colors.grey.shade800,
-                          //     ),
-                          //   ),
-                          // ),
                           // Buttons
                           GestureDetector(
                             onTap: () {
                               // Navigate or perform action for student
+                              taskData.updateRole(context, 'Student');
+                              // then navigate
+                              Navigator.push(
+                                context,
+                                PageTransition(
+                                  child: const SignUpScreen(),
+                                  type: PageTransitionType.rightToLeft,
+                                  duration: const Duration(milliseconds: 500),
+                                  reverseDuration:
+                                      const Duration(milliseconds: 500),
+                                ),
+                              );
                             },
                             child: RoleButton(
                               icon: Icons.school,
@@ -109,6 +88,18 @@ class RoleScreen extends StatelessWidget {
                           GestureDetector(
                             onTap: () {
                               // Navigate or perform action for non-student
+                              taskData.updateRole(context, 'Non-Student');
+                              // then navigate
+                              Navigator.push(
+                                context,
+                                PageTransition(
+                                  child: const SignUpScreen(),
+                                  type: PageTransitionType.rightToLeft,
+                                  duration: const Duration(milliseconds: 500),
+                                  reverseDuration:
+                                      const Duration(milliseconds: 500),
+                                ),
+                              );
                             },
                             child: RoleButton(
                               icon: Icons.business_center,
@@ -147,8 +138,9 @@ class RoleScreen extends StatelessWidget {
                               'Back',
                               style: TextStyle(
                                   fontSize: screenWidth / 25,
-                                  fontFamily: 'Trebuchet',
-                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Lato',
+                                  fontWeight: FontWeight.w500,
+                                  fontStyle: FontStyle.italic,
                                   color: primary),
                             ),
                           ],
@@ -230,7 +222,7 @@ class RoleButton extends StatelessWidget {
                   Text(
                     text,
                     style: TextStyle(
-                      fontFamily: 'Trebuchet',
+                      fontFamily: 'Lato',
                       fontSize: screenWidth / 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.grey.shade800,
@@ -240,8 +232,9 @@ class RoleButton extends StatelessWidget {
                   Text(
                     subText,
                     style: TextStyle(
-                      fontFamily: 'Trebuchet',
+                      fontFamily: 'Lato',
                       fontSize: screenWidth / 30,
+                      fontWeight: FontWeight.w400,
                       color: Colors.grey.shade600,
                     ),
                   ),

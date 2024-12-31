@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 
 class SuggestionWidget extends StatelessWidget {
   final List<User> suggestedUsers;
@@ -35,22 +36,31 @@ class SuggestionWidget extends StatelessWidget {
         children: [
           Padding(
             padding: EdgeInsets.only(
-              bottom: height / 50,
-              left: width / 20,
-            ),
-            child: Text(
-              "Suggested Connects",
-              style: TextStyle(
-                fontFamily: 'Trebuchet',
-                fontWeight: FontWeight.bold,
-                fontSize: width / 22,
-                color: Colors.black87,
-              ),
+                bottom: height / 50, left: 10, right: 10, top: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Suggestions",
+                  style: TextStyle(
+                    fontFamily: 'Lato',
+                    // fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.bold,
+                    fontSize: width / 22,
+                    color: Colors.black87,
+                  ),
+                ),
+                Icon(
+                  FeatherIcons.moreHorizontal,
+                  color: Colors.black87,
+                  size: 20,
+                )
+              ],
             ),
           ),
           // Suggested users in a horizontal sliding view
           SizedBox(
-            height: height / 5, // Adjust height as needed
+            height: height / 4.1, // Adjust height as needed
             child: ListView.builder(
               padding: EdgeInsets.zero,
               scrollDirection: Axis.horizontal,
@@ -68,6 +78,11 @@ class SuggestionWidget extends StatelessWidget {
   Widget _buildUserSuggestion(User user) {
     return Container(
       width: width / 2.5, // Adjust width for each item
+      decoration: BoxDecoration(
+        border: Border.all(width: 1, color: Colors.grey.shade400),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      padding: EdgeInsets.only(top: 15, bottom: 15),
       margin: const EdgeInsets.symmetric(horizontal: 8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -89,7 +104,8 @@ class SuggestionWidget extends StatelessWidget {
           Text(
             user.name,
             style: TextStyle(
-              fontFamily: 'Trebuchet',
+              fontFamily: 'Lato',
+              // fontWeight: FontWeight.w600,
               fontSize: width / 28,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
@@ -99,7 +115,8 @@ class SuggestionWidget extends StatelessWidget {
           Text(
             '@${user.handle}',
             style: TextStyle(
-              fontFamily: 'Trebuchet',
+              fontFamily: 'Lato',
+              fontWeight: FontWeight.w400,
               fontSize: width / 30,
               color: Colors.grey.shade600,
             ),
@@ -120,7 +137,8 @@ class SuggestionWidget extends StatelessWidget {
             child: Text(
               'Connect',
               style: TextStyle(
-                fontFamily: 'Trebuchet',
+                fontFamily: 'Lato',
+                fontWeight: FontWeight.w500,
                 fontSize: width / 30,
                 color: Colors.white,
               ),

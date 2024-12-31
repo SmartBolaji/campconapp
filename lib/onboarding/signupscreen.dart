@@ -80,7 +80,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             child: Text(
                               'Become a campster!',
                               style: TextStyle(
-                                  fontFamily: 'Trebuchet',
+                                  fontFamily: 'Lato',
                                   fontSize: screenWidth / 15,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.grey.shade600,
@@ -280,8 +280,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               'Back',
                               style: TextStyle(
                                   fontSize: screenWidth / 25,
-                                  fontFamily: 'Trebuchet',
-                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Lato',
+                                  fontWeight: FontWeight.w500,
+                                  fontStyle: FontStyle.italic,
                                   color: primary),
                             ),
                           ],
@@ -367,9 +368,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
               child: TextFormField(
                 style: TextStyle(
-                    fontFamily: 'Trebuchet',
-                    fontSize: screenWidth / 30,
-                    // fontWeight: FontWeight.bold,
+                    fontFamily: 'Lato',
+                    fontSize: screenWidth / 32,
+                    fontWeight: FontWeight.w400,
                     color: Colors.black),
                 controller: controller,
                 textCapitalization: type,
@@ -385,9 +386,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   border: InputBorder.none,
                   hintText: hint,
                   hintStyle: TextStyle(
-                      fontFamily: 'Trebuchet',
-                      fontSize: screenWidth / 30,
-                      // fontWeight: FontWeight.bold,
+                      fontFamily: 'Lato',
+                      fontSize: screenWidth / 32,
+                      fontWeight: FontWeight.w400,
                       color: Colors.black),
                   suffixIcon: GestureDetector(
                     onTap: () {
