@@ -50,7 +50,10 @@ class SearchScreen extends StatelessWidget {
                     SizedBox(width: 10),
                     Text(
                       'Search...',
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontFamily: 'Lato',
+                      ),
                     ),
                   ],
                 ),
@@ -72,6 +75,7 @@ class SearchScreen extends StatelessWidget {
               // padding: const EdgeInsets.symmetric(horizontal: 10),
               children: [
                 _buildCategoryItem('Trending', isActive: true),
+                // _buildCategoryItem('People'),
                 _buildCategoryItem('News'),
                 _buildCategoryItem('Education'),
                 _buildCategoryItem('Sports'),
@@ -112,7 +116,7 @@ class SearchScreen extends StatelessWidget {
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 20,
-                        fontFamily: 'Trebuchet',
+                        fontFamily: 'Lato',
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -121,6 +125,22 @@ class SearchScreen extends StatelessWidget {
               ),
             ),
           ),
+
+          // Trending people
+          // const Padding(
+          //   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          //   child: Align(
+          //     alignment: Alignment.centerLeft,
+          //     child: Text(
+          //       'People',
+          //       style: TextStyle(
+          //         fontSize: 18,
+          //         fontWeight: FontWeight.bold,
+          //         fontFamily: 'Lato',
+          //       ),
+          //     ),
+          //   ),
+          // ),
 
           // Trending Topics Section
           const Padding(
@@ -132,7 +152,7 @@ class SearchScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'Trebuchet',
+                  fontFamily: 'Lato',
                 ),
               ),
             ),
@@ -157,9 +177,9 @@ class SearchScreen extends StatelessWidget {
                       topic,
                       style: TextStyle(
                         color: Colors.grey.shade700,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w500,
                         fontSize: 15,
-                        fontFamily: 'Trebuchet',
+                        fontFamily: 'Lato',
                       ),
                     ),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
@@ -199,7 +219,7 @@ class SearchScreen extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontFamily: 'Trebuchet',
+                fontFamily: 'Lato',
                 fontSize: 16,
                 fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
                 color: isActive ? Colors.black : Colors.grey.shade600,

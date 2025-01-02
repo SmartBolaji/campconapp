@@ -497,6 +497,7 @@ class _EventViewPageState extends State<EventViewPage> {
                                   color: Colors.grey.shade600,
                                   fontFamily: 'Lato',
                                   fontWeight: FontWeight.w400,
+                                  height: 1.5,
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -551,14 +552,14 @@ class _EventViewPageState extends State<EventViewPage> {
                                     color: Colors.grey.shade100,
                                     borderRadius: BorderRadius.circular(10)),
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 20),
+                                    horizontal: 16, vertical: 25),
                                 margin:
                                     const EdgeInsets.only(top: 40, bottom: 20),
                                 child: Column(
                                   children: [
                                     // Username and Followers
                                     CircleAvatar(
-                                      radius: 30, // Size of the profile picture
+                                      radius: 25, // Size of the profile picture
                                       backgroundImage: const AssetImage(
                                           'assets/images/social.jpeg'), // Replace with the image URL or path
                                       backgroundColor: Colors
@@ -577,7 +578,7 @@ class _EventViewPageState extends State<EventViewPage> {
                                         fontWeight: FontWeight.w400,
                                       ),
                                     ),
-                                    const SizedBox(height: 10),
+                                    const SizedBox(height: 5),
                                     Text(
                                       'Peter Opad.', // Replace with dynamic username
                                       style: TextStyle(
@@ -585,27 +586,6 @@ class _EventViewPageState extends State<EventViewPage> {
                                         fontFamily: 'Lato',
                                         // fontWeight: FontWeight.w400,
                                         fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
-
-                                    Text(
-                                      '1.5k', // Replace with dynamic follower count
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        color: Colors.grey.shade900,
-                                        fontFamily: 'Lato',
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Text(
-                                      'Followers', // Replace with dynamic follower count
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey.shade600,
-                                        fontFamily: 'Lato',
-                                        fontWeight: FontWeight.w400,
                                       ),
                                     ),
                                     const SizedBox(height: 15),
@@ -623,7 +603,7 @@ class _EventViewPageState extends State<EventViewPage> {
                                               BorderRadius.circular(8),
                                         ),
                                         padding: const EdgeInsets.symmetric(
-                                            horizontal: 20, vertical: 8),
+                                            horizontal: 15, vertical: 8),
                                       ),
                                       child: const Text(
                                         'Connect',

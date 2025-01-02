@@ -2,6 +2,7 @@ import 'package:campcon/floatingbutton.dart';
 import 'package:campcon/screens/light_screen/lighttracker.dart';
 import 'package:campcon/screens/initial_screen/story_carousel.dart';
 import 'package:campcon/screens/points.dart';
+import 'package:campcon/screens/posts/post_view.dart';
 import 'package:campcon/screens/publish.dart';
 import 'package:campcon/widgets/drawer_widget.dart';
 import 'package:campcon/screens/posts/posts.dart';
@@ -14,6 +15,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:campcon/services/task_data.dart';
 import 'package:iconly/iconly.dart';
+import 'package:intl/intl.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -49,6 +51,13 @@ class _HomeScreenState extends State<HomeScreen> {
   String formatRelativeTime(DateTime addedDate) {
     return timeago.format(addedDate, locale: 'short');
   }
+
+  String formatTime(DateTime dateTime) {
+  final timeFormat = DateFormat('HH:mm'); // Format for time (24-hour format)
+  final dateFormat = DateFormat('dd MMM yy'); // Format for date
+
+  return '${timeFormat.format(dateTime)} · ${dateFormat.format(dateTime)}';
+}
 
   @override
   void initState() {
@@ -137,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 children: [
                                   // Profile Image
                                   Container(
-                                    margin: EdgeInsets.only(
+                                    margin: const EdgeInsets.only(
                                         top: 10, bottom: 10, right: 10),
                                     child: SizedBox(
                                       width: screenWidth / 14,
@@ -153,19 +162,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                   // Notification Dot
                                   Positioned(
                                     top: 2,
-                                    right: 2,
+                                    right: 0,
                                     child: Container(
-                                      width: screenWidth / 30,
-                                      height: screenWidth / 30,
-                                      decoration: BoxDecoration(
-                                        color: const Color(
+                                      width: screenWidth / 28,
+                                      height: screenWidth / 28,
+                                      decoration: const BoxDecoration(
+                                        color: Color(
                                             0xFFBA9E02), // Notification background color
                                         shape: BoxShape.circle,
                                       ),
-                                      child: Center(
+                                      child: const Center(
                                         child: Text(
                                           '3', // Example notification count
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             color: Colors.white,
                                             fontFamily: 'Lato',
                                             fontSize:
@@ -192,13 +201,22 @@ class _HomeScreenState extends State<HomeScreen> {
                               onTap: () =>
                                   _navigateTo(context, const LightScreen()),
                               child: Container(
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.lightbulb,
-                                  size: screenWidth / 14,
-                                  color: const Color(0xFFBA9E02),
+                                decoration: BoxDecoration(
+                                    color: const Color(0xFFBA9E02),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                        width: 1,
+                                        color: const Color(0xFFBA9E02))),
+                                margin: const EdgeInsets.only(
+                                    top: 10, bottom: 10, right: 0),
+                                child: SizedBox(
+                                  width: screenWidth / 14,
+                                  height: screenWidth / 14,
+                                  child: Icon(
+                                    Icons.lightbulb,
+                                    size: screenWidth / 20,
+                                    color: Colors.grey.shade50,
+                                  ),
                                 ),
                               ),
                             ),
@@ -270,6 +288,34 @@ class _HomeScreenState extends State<HomeScreen> {
                         isBookmarked: false,
                         isMedia: postData['media'] ?? false,
                         isDisliked: isDisliked,
+                        onTap: () => _navigateTo(
+                            context,
+                            PostViewWidget(
+                              userHandle: authorData?['userId'] ?? 'Unknown',
+                              userName: authorData?['name'] ?? 'Unknown',
+                              userImageUrl: 'assets/images/social.jpeg',
+                              content: postData['content'] ?? '',
+                              time: formatTime(addedDate),
+                              likesCount: likesCount,
+                              dislikesCount: dislikesCount,
+                              repliesCount: postData['repliesCount'] ?? 0,
+                              bookmarksCount: postData['bookmarksCount'] ?? 0,
+                              isLiked: isLiked,
+                              isBookmarked: false,
+                              isMedia: postData['media'] ?? false,
+                              isDisliked: isDisliked,
+                              // isBookmarked: isBookmarked,
+                              // isMedia: isMedia,
+                              onLike: () {},
+                              onDislike: () {},
+                              onReply: () {},
+                              onBookmark: () {},
+                              onShare: () {},
+                              onMore: () {},
+                              // height: screenHeight,
+                              // width: screenWidth,
+                              imageUrls: storyImages,
+                            )),
                         onLike: () async {
                           setState(() {
                             if (!isLiked) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 
 class BuildActionIcon extends StatefulWidget {
   final IconData icon;
@@ -63,13 +64,35 @@ class _BuildActionIconState extends State<BuildActionIcon>
             builder: (context, child) {
               return Transform.scale(
                 scale: _scaleAnimation.value,
-                child: Icon(
-                  widget.icon,
-                  color: widget.isActive
-                      ? const Color(0xFFBA9E02)
-                      : Colors.grey.shade500,
-                  size: widget.width / 18,
-                ),
+                child: widget.icon != FeatherIcons.messageCircle
+                    ? Container(
+                        height: 25,
+                        width: 25,
+                        decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: widget.isActive
+                                ? const Color(0xFFBA9E02)
+                                : Colors.grey.shade100,
+                            border: Border.all(
+                                width: 1.9,
+                                color: widget.isActive
+                                    ? const Color(0xFFBA9E02)
+                                    : Colors.grey.shade500)),
+                        child: Icon(
+                          widget.icon,
+                          color: widget.isActive
+                              ? Colors.grey.shade100
+                              : Colors.grey.shade500,
+                          size: widget.width / 25,
+                        ),
+                      )
+                    : Icon(
+                        widget.icon,
+                        color: widget.isActive
+                            ? Colors.grey.shade100
+                            : Colors.grey.shade500,
+                        size: widget.width / 15,
+                      ),
               );
             },
           ),

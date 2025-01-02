@@ -28,6 +28,7 @@ class PostWidget extends StatefulWidget {
   final Function onReply;
   final Function onShare;
   final Function onMore;
+  final Function onTap;
   final double height;
   final double width;
   final String time;
@@ -53,6 +54,7 @@ class PostWidget extends StatefulWidget {
     required this.onReply,
     required this.onShare,
     required this.onMore,
+    required this.onTap,
     required this.height,
     required this.width,
     required this.time,
@@ -116,229 +118,232 @@ class _PostWidgetState extends State<PostWidget> {
     String displayContent =
         isLongContent ? widget.content.substring(0, 150) : widget.content;
 
-    return Column(
-      children: [
-        // Content
-        Container(
-          padding: EdgeInsets.only(
-              top: widget.height / 64,
-              bottom: 5,
-              left: widget.width / 24,
-              right: widget.width / 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // User details
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: widget.width / 12,
-                        height: widget.width / 12,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          image: DecorationImage(
-                            image: AssetImage(widget.userImageUrl),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        child: Align(
-                          alignment: Alignment.bottomRight,
-                          child: Container(
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Color(0xFFBA9E02),
-                            ),
-                            padding: const EdgeInsets.all(2),
-                            child: const Icon(
-                              Icons.add,
-                              size: 13,
-                              color: Colors.white,
+    return GestureDetector(
+      onTap: () => widget.onTap(),
+      child: Column(
+        children: [
+          // Content
+          Container(
+            padding: EdgeInsets.only(
+                top: widget.height / 64,
+                bottom: 5,
+                left: widget.width / 24,
+                right: widget.width / 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // User details
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: widget.width / 12,
+                          height: widget.width / 12,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            image: DecorationImage(
+                              image: AssetImage(widget.userImageUrl),
+                              fit: BoxFit.cover,
                             ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.userName,
-                            style: TextStyle(
-                              fontFamily: 'Lato',
-                              fontWeight: FontWeight.w600,
-                              // fontStyle: FontStyle.italic,
-                              // fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              color: Colors.black,
-                            ),
-                          ),
-                          Text(
-                            '@${widget.userHandle}',
-                            style: TextStyle(
-                              fontFamily: 'Lato',
-                              fontWeight: FontWeight.w400,
-                              fontSize: 12,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  Text(
-                    widget.time,
-                    style: TextStyle(
-                      fontFamily: 'Lato',
-                      fontWeight: FontWeight.w500,
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 2),
-              // Content
-              GestureDetector(
-                onTap: () {},
-                child: RichText(
-                  text: TextSpan(
-                    text: displayContent,
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Colors.black87,
-                      height: 1.4,
-                      fontFamily: 'Lato',
-                      fontWeight: FontWeight.w400,
-                    ),
-                    children: isLongContent
-                        ? [
-                            const TextSpan(
-                              text: ' See more',
-                              style: TextStyle(
+                          child: Align(
+                            alignment: Alignment.bottomRight,
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
                                 color: Color(0xFFBA9E02),
-                                fontWeight: FontWeight.w400,
+                              ),
+                              padding: const EdgeInsets.all(2),
+                              child: const Icon(
+                                Icons.add,
+                                size: 13,
+                                color: Colors.white,
                               ),
                             ),
-                          ]
-                        : [],
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.userName,
+                              style: TextStyle(
+                                fontFamily: 'Lato',
+                                fontWeight: FontWeight.w600,
+                                // fontStyle: FontStyle.italic,
+                                // fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: Colors.black,
+                              ),
+                            ),
+                            Text(
+                              '@${widget.userHandle}',
+                              style: TextStyle(
+                                fontFamily: 'Lato',
+                                fontWeight: FontWeight.w400,
+                                fontSize: 13,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    Text(
+                      widget.time,
+                      style: TextStyle(
+                        fontFamily: 'Lato',
+                        fontWeight: FontWeight.w500,
+                        fontSize: 13,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                // Content
+                GestureDetector(
+                  onTap: () => widget.onTap(),
+                  child: RichText(
+                    text: TextSpan(
+                      text: displayContent,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Colors.black87,
+                        height: 1.3,
+                        fontFamily: 'Lato',
+                        fontWeight: FontWeight.w500,
+                      ),
+                      children: isLongContent
+                          ? [
+                              const TextSpan(
+                                text: ' See more',
+                                style: TextStyle(
+                                  color: Color(0xFFBA9E02),
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ]
+                          : [],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        widget.isMedia
-            ? Stack(
-                children: [
-                  // PageView for images
-                  SizedBox(
-                    height: 200,
-                    child: PageView.builder(
-                      itemCount: widget.imageUrls.length,
-                      controller: PageController(viewportFraction: 1),
-                      onPageChanged: (index) {
-                        setState(() {
-                          _currentIndex = index;
-                        });
-                      },
-                      itemBuilder: (context, index) {
-                        return Image.asset(
-                          widget.imageUrls[index],
-                          fit: BoxFit.cover,
-                          width: widget.width,
-                        );
-                      },
-                    ),
-                  ),
-                  // Indicator positioned at the bottom center
-                  Positioned(
-                    bottom: 10,
-                    left: 0,
-                    right: 0,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: indicators,
-                    ),
-                  ),
-                ],
-              )
-            : const SizedBox(),
-        // Buttons row with More button
-        Container(
-          padding: EdgeInsets.symmetric(
-              horizontal: widget.width / 24, vertical: widget.height / 60),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Row(
-                    children: [
-                      BuildActionIcon(
-                        icon: FeatherIcons.arrowUpCircle,
-                        count: widget.likesCount,
-                        isActive: widget.isLiked,
-                        onTap: widget.onLike,
-                        width: MediaQuery.of(context).size.width,
+          widget.isMedia
+              ? Stack(
+                  children: [
+                    // PageView for images
+                    SizedBox(
+                      height: 200,
+                      child: PageView.builder(
+                        itemCount: widget.imageUrls.length,
+                        controller: PageController(viewportFraction: 1),
+                        onPageChanged: (index) {
+                          setState(() {
+                            _currentIndex = index;
+                          });
+                        },
+                        itemBuilder: (context, index) {
+                          return Image.asset(
+                            widget.imageUrls[index],
+                            fit: BoxFit.cover,
+                            width: widget.width,
+                          );
+                        },
                       ),
-                      const SizedBox(width: 10),
-                      BuildActionIcon(
-                        icon: FeatherIcons.arrowDownCircle,
-                        count: widget.dislikesCount,
-                        isActive: widget.isDisliked,
-                        onTap: widget.onDislike,
-                        width: MediaQuery.of(context).size.width,
+                    ),
+                    // Indicator positioned at the bottom center
+                    Positioned(
+                      bottom: 10,
+                      left: 0,
+                      right: 0,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: indicators,
                       ),
-                    ],
-                  ),
-                  const SizedBox(width: 10),
-                  BuildActionIcon(
-                    icon: FeatherIcons.messageCircle,
-                    count: widget.repliesCount,
-                    isActive: false,
-                    onTap: widget.onReply,
-                    width: MediaQuery.of(context).size.width,
-                  ),
-                ],
-              ),
-              const SizedBox(width: 20),
-              Row(
-                children: [
-                  GestureDetector(
-                    child: Icon(
-                      FeatherIcons.bookmark,
-                      color: Colors.grey.shade500,
-                      size: widget.width / 18,
                     ),
-                    onTap: () => widget.onBookmark(),
-                  ),
-                  const SizedBox(width: 10),
-                  GestureDetector(
-                    child: Icon(
-                      FeatherIcons.share,
-                      color: Colors.grey.shade500,
-                      size: widget.width / 18,
+                  ],
+                )
+              : const SizedBox(),
+          // Buttons row with More button
+          Container(
+            padding: EdgeInsets.symmetric(
+                horizontal: widget.width / 24, vertical: widget.height / 60),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Row(
+                      children: [
+                        BuildActionIcon(
+                          icon: FeatherIcons.arrowUp,
+                          count: widget.likesCount,
+                          isActive: widget.isLiked,
+                          onTap: widget.onLike,
+                          width: MediaQuery.of(context).size.width,
+                        ),
+                        const SizedBox(width: 10),
+                        BuildActionIcon(
+                          icon: FeatherIcons.arrowDown,
+                          count: widget.dislikesCount,
+                          isActive: widget.isDisliked,
+                          onTap: widget.onDislike,
+                          width: MediaQuery.of(context).size.width,
+                        ),
+                      ],
                     ),
-                    onTap: () => widget.onShare(),
-                  ),
-                  const SizedBox(width: 10),
-                  GestureDetector(
-                    child: TwoLineMenuIcon(),
-                    onTap: () => widget.onMore(),
-                  ),
-                ],
-              )
-            ],
+                    const SizedBox(width: 10),
+                    BuildActionIcon(
+                      icon: FeatherIcons.messageCircle,
+                      count: widget.repliesCount,
+                      isActive: false,
+                      onTap: widget.onReply,
+                      width: MediaQuery.of(context).size.width,
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 20),
+                Row(
+                  children: [
+                    GestureDetector(
+                      child: Icon(
+                        FeatherIcons.bookmark,
+                        color: Colors.grey.shade500,
+                        size: widget.width / 18,
+                      ),
+                      onTap: () => widget.onBookmark(),
+                    ),
+                    const SizedBox(width: 10),
+                    GestureDetector(
+                      child: Icon(
+                        FeatherIcons.share,
+                        color: Colors.grey.shade500,
+                        size: widget.width / 18,
+                      ),
+                      onTap: () => widget.onShare(),
+                    ),
+                    const SizedBox(width: 10),
+                    GestureDetector(
+                      child: TwoLineMenuIcon(),
+                      onTap: () => widget.onMore(),
+                    ),
+                  ],
+                )
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

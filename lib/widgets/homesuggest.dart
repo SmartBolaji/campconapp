@@ -41,18 +41,18 @@ class SuggestionWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "Suggestions",
+                  "Connect!",
                   style: TextStyle(
                     fontFamily: 'Lato',
                     // fontWeight: FontWeight.w600,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                     fontSize: width / 22,
-                    color: Colors.black87,
+                    color: Colors.grey.shade600,
                   ),
                 ),
                 Icon(
                   FeatherIcons.moreHorizontal,
-                  color: Colors.black87,
+                  color: Colors.grey.shade600,
                   size: 20,
                 )
               ],

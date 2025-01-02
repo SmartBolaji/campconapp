@@ -40,7 +40,7 @@ class BottomSheetWidget extends StatelessWidget {
                 color: Color(0xFF9c936b),
               ),
               const SizedBox(
-                width: 5,
+                width: 10,
               ),
               const Icon(
                 IconlyBold.tick_square,

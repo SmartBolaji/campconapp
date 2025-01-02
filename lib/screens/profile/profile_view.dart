@@ -39,9 +39,9 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     _scrollController.addListener(() {
-      if (_scrollController.offset > 150 && !_showAppBarTitle) {
+      if (_scrollController.offset > 200 && !_showAppBarTitle) {
         _updateCanShow(true);
-      } else if (_scrollController.offset <= 150 && _showAppBarTitle) {
+      } else if (_scrollController.offset <= 200 && _showAppBarTitle) {
         _updateCanShow(false);
       }
     });
@@ -59,24 +59,22 @@ class _ProfilePageState extends State<ProfilePage> {
     double height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: Colors.grey.shade100,
       body: SafeArea(
         child: Stack(
           children: [
-            // CustomScrollView with sliver-based AppBar
+            // Main Content with CustomScrollView
             CustomScrollView(
               controller: _scrollController,
               slivers: [
-                // Other slivers, e.g., SliverAppBar, SliverList for profile details
                 SliverList(
                   delegate: SliverChildListDelegate([
-                    // Other widgets for profile details, etc.
                     Stack(
                       clipBehavior: Clip.none,
                       children: [
                         Container(
                           width: width,
-                          height: height / 5.5,
+                          height: height / 9,
                           decoration: BoxDecoration(
                             image: DecorationImage(
                               image: AssetImage(widget.coverImageUrl),
@@ -85,29 +83,13 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           child: Align(
                             alignment: Alignment.topLeft,
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              margin: const EdgeInsets.only(
-                                  top: 6,
-                                  left: 5), // Add padding for proper placement
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(
-                                    0.5), // Add background for better visibility
-                                shape: BoxShape.circle,
-                              ),
-                              child: GestureDetector(
-                                child: const Icon(IconlyLight.arrow_left,
-                                    size: 24, color: Colors.white),
-                                onTap: () => Navigator.of(context).pop(),
-                              ),
-                            ),
+                            child: _buildAppBarAction(
+                                context, IconlyLight.arrow_left, false),
                           ),
                         ),
-                        // Profile Image
                         Positioned(
-                          bottom:
-                              -height / 20, // Extends the profile image outside
-                          left: width / 2 - (width / 8), // Centers the image
+                          bottom: -height / 20,
+                          left: width / 2 - (width / 8),
                           child: Container(
                             width: width / 4.5,
                             height: width / 4.5,
@@ -125,20 +107,18 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     const SizedBox(height: 40),
                     _buildProfileDetails(width),
-                    // const SizedBox(height: 15),
-                    // _buildBioColumn(),
                     const SizedBox(height: 20),
                     _buildCountsRow(),
                     const SizedBox(height: 20),
                     _buildActionButtons(),
-                    const SizedBox(height: 25),
                   ]),
                 ),
-                // Place SliverPersistentHeader directly as a sliver
                 SliverPersistentHeader(
                   floating: true,
                   pinned: true,
                   delegate: SliverRowHeaderDelegate(
+                    _showAppBarTitle ? 80 : 50,
+                    _showAppBarTitle ? 80 : 50,
                     child: Container(
                       decoration: BoxDecoration(
                         border: Border(
@@ -146,24 +126,50 @@ class _ProfilePageState extends State<ProfilePage> {
                               BorderSide(color: Colors.grey.shade300, width: 1),
                         ),
                       ),
-                      child: _buildTabBar(),
+                      child: _buildTabBar(_showAppBarTitle ? 50 : 20),
                     ),
                   ),
                 ),
-                // Placeholder post list
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Text(
-                        "Sample Post ${index + 1}",
-                        style: GoogleFonts.lato(),
-                      ),
-                    ),
-                    childCount: 100,
-                  ),
-                ),
+                // SliverList(
+                //   delegate: SliverChildBuilderDelegate(
+                //     (context, index) => Padding(
+                //       padding: const EdgeInsets.symmetric(vertical: 8),
+                //       child: Text(
+                //         "Sample Post ${index + 1}",
+                //         style: GoogleFonts.lato(),
+                //       ),
+                //     ),
+                //     childCount: 100,
+                //   ),
+                // ),
               ],
+            ),
+            // Scroll-dependent AppBar-like container
+            AnimatedOpacity(
+              opacity: _showAppBarTitle ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 300),
+              child: Container(
+                height: 50,
+                color: Colors.grey.shade100,
+                // padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    _buildAppBarAction(context, IconlyLight.arrow_left, true),
+                    const SizedBox(width: 10),
+                    if (_showAppBarTitle)
+                      Text(
+                        widget.userName,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontFamily: 'Lato',
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
@@ -171,31 +177,20 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // AppBar actions
-  List<Widget> _buildAppBarActions(BuildContext context) {
-    return [
-      // _buildAppBarAction(Icons.bookmark),
-      _buildAppBarAction(context, Icons.share),
-      const SizedBox(
-        width: 10,
-      )
-    ];
-  }
-
-  Widget _buildAppBarAction(BuildContext context, IconData icon) {
+  Widget _buildAppBarAction(BuildContext context, IconData icon, bool showBd) {
     return GestureDetector(
       onTap: () => Navigator.pop(context),
       child: Transform.scale(
-        scale: 0.85,
+        scale: 0.8,
         child: Container(
-          margin: const EdgeInsets.fromLTRB(10, 0, 0, 0),
+          margin: const EdgeInsets.fromLTRB(8, 3, 0, 0),
           padding: EdgeInsets.all(10),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: Colors.grey.shade100,
             border: Border.all(
               width: 1,
-              color: Colors.grey.shade400,
+              color: showBd ? Colors.grey.shade400 : Colors.grey.shade100,
             ),
           ),
           child: Icon(
@@ -257,16 +252,16 @@ class _ProfilePageState extends State<ProfilePage> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         _buildCountColumn(widget.connectingCount, 'Following'),
-        const SizedBox(width: 30), // Space between the counts
+        const SizedBox(width: 15), // Space between the counts
         SizedBox(
-          height: 30, // Add a fixed height to make the divider visible
+          height: 15, // Add a fixed height to make the divider visible
           child: VerticalDivider(
             color: Colors.grey.shade300, // Color of the line
             thickness: 1, // Line thickness
             width: 1, // Set a small width for the divider to appear
           ),
         ),
-        const SizedBox(width: 30), // Space between the counts
+        const SizedBox(width: 15), // Space between the counts
         _buildCountColumn(widget.connectsCount, 'Followers'),
       ],
     );
@@ -341,34 +336,39 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   // Tab Bar
-  Widget _buildTabBar() {
+  Widget _buildTabBar(double inset) {
+    final List<Widget> tabs = [
+      _buildTabButton('Posts', inset, _currentIndex == 0),
+      _buildTabButton('Media', inset, _currentIndex == 1),
+      _buildTabButton('Events', inset, _currentIndex == 3),
+      _buildTabButton('About', inset, _currentIndex == 4),
+    ];
+
     return Container(
-      color: Colors.grey.shade50,
+      color: Colors.grey.shade100,
       width: double.infinity,
-      height: 30,
+      height: 100,
       child: Center(
-        child: Container(
-          child: ListView(
-            shrinkWrap: true,
-            padding: EdgeInsets.zero,
-            scrollDirection: Axis.horizontal,
-            children: [
-              _buildTabButton('Posts', true),
-              _buildTabButton('Media'),
-              _showAppBarTitle ? _buildTabButton('Media') : const SizedBox(),
-              _buildTabButton('Events'),
-              _buildTabButton('About'),
-            ],
-          ),
+        child: ListView(
+          shrinkWrap: true,
+          padding: EdgeInsets.zero,
+          scrollDirection: Axis.horizontal,
+          children: tabs,
         ),
       ),
     );
   }
 
-  Widget _buildTabButton(String label, [bool isActive = false]) {
+  Widget _buildTabButton(String label, double inset, bool isActive) {
     return GestureDetector(
-      onTap: () {},
-      child: Padding(
+      onTap: () {
+        setState(() {
+          _currentIndex = isActive ? 0 : 1; // Update logic for current index
+        });
+      },
+      child: Container(
+        color: Colors.grey.shade100,
+        margin: EdgeInsets.only(top: inset),
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -413,8 +413,11 @@ class _ProfilePageState extends State<ProfilePage> {
 
 class SliverRowHeaderDelegate extends SliverPersistentHeaderDelegate {
   final Widget child;
+  final double _maxExtent;
+  final double _minExtent;
 
-  SliverRowHeaderDelegate({required this.child});
+  SliverRowHeaderDelegate(this._maxExtent, this._minExtent,
+      {required this.child});
 
   @override
   Widget build(
@@ -423,13 +426,16 @@ class SliverRowHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  double get maxExtent => 30.0;
+  double get maxExtent => _maxExtent;
 
   @override
-  double get minExtent => 30.0;
+  double get minExtent => _minExtent;
 
   @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
-    return false;
+  bool shouldRebuild(covariant SliverRowHeaderDelegate oldDelegate) {
+    // Rebuild if maxExtent or minExtent changes
+    return _maxExtent != oldDelegate.maxExtent ||
+        _minExtent != oldDelegate.minExtent ||
+        child != oldDelegate.child;
   }
 }
