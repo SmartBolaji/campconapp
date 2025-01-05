@@ -197,7 +197,7 @@ class _UsernameScreenState extends State<UsernameScreen> {
                           Text(
                             'Pick a unique username!',
                             style: TextStyle(
-                                fontFamily: 'Trebuchet',
+                                fontFamily: 'Lato',
                                 fontSize: screenWidth / 20,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.grey.shade600,
@@ -253,7 +253,7 @@ class _UsernameScreenState extends State<UsernameScreen> {
                                     label: Text(
                                       '@$username',
                                       style: TextStyle(
-                                        fontFamily: 'Trebuchet',
+                                        fontFamily: 'Lato',
                                         fontSize: screenWidth / 30,
                                         color: Colors.grey.shade900,
                                       ),
@@ -325,7 +325,7 @@ class _UsernameScreenState extends State<UsernameScreen> {
                                                     content: Text(
                                                       'This username already exists in our record, use a different email and try again!',
                                                       style: TextStyle(
-                                                        fontFamily: 'Trebuchet',
+                                                        fontFamily: 'Lato',
                                                         fontSize:
                                                             screenWidth / 28,
                                                         color: Colors.white,
@@ -459,8 +459,7 @@ class _UsernameScreenState extends State<UsernameScreen> {
                                                       content: Text(
                                                         'An error occurred: ${e.toString()}',
                                                         style: TextStyle(
-                                                          fontFamily:
-                                                              'Trebuchet',
+                                                          fontFamily: 'Lato',
                                                           fontSize:
                                                               screenWidth / 30,
                                                           color: Colors.white,
@@ -482,7 +481,7 @@ class _UsernameScreenState extends State<UsernameScreen> {
                                                   content: Text(
                                                     'An error occurred: ${e.toString()}',
                                                     style: TextStyle(
-                                                      fontFamily: 'Trebuchet',
+                                                      fontFamily: 'Lato',
                                                       fontSize:
                                                           screenWidth / 30,
                                                       color: Colors.white,
@@ -522,7 +521,7 @@ class _UsernameScreenState extends State<UsernameScreen> {
                               'Back',
                               style: TextStyle(
                                   fontSize: screenWidth / 25,
-                                  fontFamily: 'Trebuchet',
+                                  fontFamily: 'Lato',
                                   fontWeight: FontWeight.bold,
                                   color: primary),
                             ),
@@ -567,7 +566,7 @@ class _UsernameScreenState extends State<UsernameScreen> {
               : Text(
                   txt,
                   style: TextStyle(
-                      fontFamily: 'Trebuchet',
+                      fontFamily: 'Lato',
                       fontSize: screenWidth / 25,
                       fontWeight: FontWeight.bold,
                       color: txtColor,
@@ -612,7 +611,7 @@ class _UsernameScreenState extends State<UsernameScreen> {
             Expanded(
               child: TextFormField(
                 style: TextStyle(
-                    fontFamily: 'Trebuchet',
+                    fontFamily: 'Lato',
                     fontSize: screenWidth / 30,
                     // fontWeight: FontWeight.bold,
                     color: Colors.black),
@@ -633,7 +632,7 @@ class _UsernameScreenState extends State<UsernameScreen> {
                   border: InputBorder.none,
                   hintText: hint,
                   hintStyle: TextStyle(
-                      fontFamily: 'Trebuchet',
+                      fontFamily: 'Lato',
                       fontSize: screenWidth / 30,
                       // fontWeight: FontWeight.bold,
                       color: Colors.black),

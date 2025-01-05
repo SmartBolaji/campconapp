@@ -1,4 +1,4 @@
-import 'package:campcon/screens/publish.dart';
+import 'package:campcon/screens/publish_screen/publish.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:page_transition/page_transition.dart';

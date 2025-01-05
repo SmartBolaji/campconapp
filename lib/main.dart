@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:month_year_picker/month_year_picker.dart';
 import 'package:campcon/onboarding/onboarding.dart';
@@ -26,6 +27,7 @@ Future<void> main() async {
     persistenceEnabled: true,
   );
   timeago.setLocaleMessages('short', ShortTimeAgo());
+  await dotenv.load(fileName: ".env");
   runApp(const MyApp());
 }
 
@@ -38,7 +40,7 @@ class MyApp extends StatelessWidget {
       create: (context) => TaskData(),
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'CampCon',
+        title: 'Campcon',
         theme: AppStyles.themeData,
         home: const KeyboardVisibilityProvider(child: AuthCheck()),
         localizationsDelegates: const [MonthYearPickerLocalizations.delegate],

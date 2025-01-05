@@ -1,3 +1,4 @@
+import 'package:campcon/onboarding/bottom_terms.dart';
 import 'package:campcon/onboarding/role.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
@@ -44,6 +45,10 @@ class _LoginScreenState extends State<LoginScreen> {
     screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
+      bottomSheet: TermsAndConditionsBottomSheet(
+        onTapTerms: () {},
+      ),
+      resizeToAvoidBottomInset: false, // Prevents content from shifting
       backgroundColor: Colors.grey.shade100,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -429,7 +434,7 @@ class _LoginScreenState extends State<LoginScreen> {
               fontSize: screenWidth / 30,
               fontFamily: 'Lato',
               fontWeight: FontWeight.w500,
-              fontStyle: FontStyle.italic,
+              // fontStyle: FontStyle.italic,
               color: Color(0xFFBA9E02)),
         ),
       ),
@@ -463,7 +468,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: TextFormField(
                 style: TextStyle(
                     fontFamily: 'Lato',
-                    fontSize: screenWidth / 32,
+                    fontSize: screenWidth / 30,
                     fontWeight: FontWeight.w400,
                     color: Colors.black),
                 controller: controller,
@@ -483,7 +488,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   hintStyle: TextStyle(
                       fontFamily: 'Lato',
                       fontWeight: FontWeight.w400,
-                      fontSize: screenWidth / 32,
+                      fontSize: screenWidth / 30,
                       color: Colors.black),
                   suffixIcon: GestureDetector(
                     onTap: () {
@@ -517,7 +522,10 @@ class _LoginScreenState extends State<LoginScreen> {
             child: _buildFeatureBox(
               icon: IconlyLight.chat,
               label: 'Social Posts',
-              gradientColors: [Colors.blue, Colors.blueAccent],
+              gradientColors: [
+                Colors.grey.shade300,
+                Colors.grey.shade300,
+              ],
               onTap: () => print('Social Posts tapped'),
             ),
           ),
@@ -528,7 +536,10 @@ class _LoginScreenState extends State<LoginScreen> {
             child: _buildFeatureBox(
               icon: IconlyLight.calendar,
               label: 'Events',
-              gradientColors: [Colors.purple, Colors.pink],
+              gradientColors: [
+                Colors.grey.shade300,
+                Colors.grey.shade300,
+              ],
               onTap: () => print('Events tapped'),
             ),
           ),
@@ -539,7 +550,10 @@ class _LoginScreenState extends State<LoginScreen> {
             child: _buildFeatureBox(
               icon: IconlyBroken.tick_square,
               label: 'Camplist',
-              gradientColors: [Colors.green, Colors.teal],
+              gradientColors: [
+                Colors.grey.shade300,
+                Colors.grey.shade300,
+              ],
               onTap: () => print('Camplist tapped'),
             ),
           ),
@@ -550,7 +564,10 @@ class _LoginScreenState extends State<LoginScreen> {
             child: _buildFeatureBox(
               icon: IconlyLight.camera,
               label: 'Camplist',
-              gradientColors: [Colors.red, Colors.orange],
+              gradientColors: [
+                Colors.grey.shade300,
+                Colors.grey.shade300,
+              ],
               onTap: () => print('Camplist tapped'),
             ),
           ),
@@ -577,18 +594,11 @@ class _LoginScreenState extends State<LoginScreen> {
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(16.0),
-          // boxShadow: [
-          //   BoxShadow(
-          //     color: gradientColors.last.withOpacity(0.5),
-          //     blurRadius: 10.0,
-          //     offset: Offset(0, 5),
-          //   ),
-          // ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: Colors.white, size: 40.0),
+            Icon(icon, color: Colors.grey.shade800, size: 40.0),
             // SizedBox(height: 8.0),
             // Text(
             //   label,

@@ -139,8 +139,8 @@ class RoleScreen extends StatelessWidget {
                               style: TextStyle(
                                   fontSize: screenWidth / 25,
                                   fontFamily: 'Lato',
-                                  fontWeight: FontWeight.w500,
-                                  fontStyle: FontStyle.italic,
+                                  fontWeight: FontWeight.bold,
+                                  // fontStyle: FontStyle.italic,
                                   color: primary),
                             ),
                           ],

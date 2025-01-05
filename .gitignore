@@ -7,8 +7,16 @@
 .atom/
 .buildlog/
 .history
+.env
 .svn/
 migrate_working_dir/
+firebase.json/
+# Ignore firebase_options.dart
+lib/firebase_options.dart
+# Ignore google-services.json
+android/app/google-services.json
+
+
 
 # IntelliJ related
 *.iml

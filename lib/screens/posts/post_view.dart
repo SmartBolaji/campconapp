@@ -74,7 +74,7 @@ class PostViewWidget extends StatelessWidget {
             scale: 0.85, // Adjust the scale factor to reduce size
             child: Container(
               margin: const EdgeInsets.fromLTRB(5, 0, 0, 0),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 shape: BoxShape.circle,
                 // color: Colors.grey.shade100,
               ),
@@ -212,7 +212,7 @@ class PostViewWidget extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.grey.shade100,
               ),
-              padding: EdgeInsets.only(
+              padding: const EdgeInsets.only(
                 left: 15,
                 top: 0,
                 bottom: 15,
@@ -229,9 +229,18 @@ class PostViewWidget extends StatelessWidget {
             // Actions with counts above icons
             Container(
               decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-              ),
-              padding: EdgeInsets.only(top: 17, bottom: 17),
+                  color: Colors.grey.shade200,
+                  border: Border(
+                    top: BorderSide(
+                      width: 1,
+                      color: Colors.grey.shade300,
+                    ),
+                    bottom: BorderSide(
+                      width: 1,
+                      color: Colors.grey.shade300,
+                    ),
+                  )),
+              padding: const EdgeInsets.only(top: 17, bottom: 17),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -300,7 +309,9 @@ class PostViewWidget extends StatelessWidget {
           child: Icon(
             icon,
             color: isActive ? const Color(0xFFBA9E02) : Colors.grey.shade500,
-            size: 30,
+            size: 28,
+
+            // weight: 0.3,
           ),
           onTap: () => onTap(),
         ),

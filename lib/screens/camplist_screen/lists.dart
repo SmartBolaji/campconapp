@@ -1,7 +1,10 @@
 import 'package:campcon/floatingbutton.dart';
 import 'package:campcon/screens/camplist_screen/categ_list.dart';
+import 'package:campcon/screens/camplist_screen/list_view.dart';
+import 'package:campcon/widgets/navigation_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:iconly/iconly.dart';
+import 'package:page_transition/page_transition.dart';
 
 class ChecklistScreen extends StatefulWidget {
   const ChecklistScreen({super.key});
@@ -98,7 +101,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                         Text(
                           'Camplist',
                           style: TextStyle(
-                            fontFamily: 'Trebuchet',
+                            fontFamily: 'Lato',
                             fontSize: screenWidth / 15,
                             fontWeight: FontWeight.bold,
                             color: Colors.grey.shade800,
@@ -150,6 +153,10 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                         checklist[index].isCompleted = value ?? false;
                       });
                     },
+                    onTap: () {
+                      NavigationHelper.navigateTo(
+                          context, SingleTaskViewPage());
+                    },
                     date: checklist[index].date, // Pass the date here
                   );
                 },
@@ -200,6 +207,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
     required String description,
     required bool isCompleted,
     required Function(bool?) onChanged,
+    required Function onTap,
     required String date, // Add date as a new parameter
   }) {
     return Container(
@@ -226,8 +234,9 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
               Text(
                 date,
                 style: TextStyle(
-                  fontSize: screenWidth / 30,
-                  fontFamily: 'Trebuchet',
+                  fontSize: screenWidth / 33,
+                  fontFamily: 'Lato',
+                  fontWeight: FontWeight.w400,
                   color: Colors.grey.shade700,
                 ),
               ),
@@ -244,56 +253,63 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
 
           // Right column: Description and checkbox
           Expanded(
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-              padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                color: isCompleted ? Colors.grey.shade200 : Colors.transparent,
-                border: Border.all(width: 1, color: Colors.grey.shade200),
-                borderRadius: BorderRadius.circular(15),
-                boxShadow: [
-                  // BoxShadow(
-                  //
-                  //   blurRadius: 5,
-                  //   spreadRadius: 2,
-                  //   offset: const Offset(0, 2),
-                  // ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Description text
-                  Expanded(
-                    child: Text(
-                      description,
-                      style: TextStyle(
-                        fontSize: screenWidth / 23,
-                        fontFamily: 'Trebuchet',
-                        color: Colors.grey.shade800,
+            child: GestureDetector(
+              onTap: () {
+                onTap();
+              },
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                padding: const EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  color:
+                      isCompleted ? Colors.grey.shade200 : Colors.transparent,
+                  border: Border.all(width: 1, color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: [
+                    // BoxShadow(
+                    //
+                    //   blurRadius: 5,
+                    //   spreadRadius: 2,
+                    //   offset: const Offset(0, 2),
+                    // ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Description text
+                    Expanded(
+                      child: Text(
+                        description,
+                        style: TextStyle(
+                          fontSize: screenWidth / 23,
+                          fontFamily: 'Lato',
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey.shade800,
+                        ),
                       ),
                     ),
-                  ),
-                  // Checkbox with custom styling
-                  Transform.scale(
-                    scale: 1.5, // Increase size of the checkbox
-                    child: Checkbox(
-                      value: isCompleted,
-                      onChanged: onChanged,
-                      activeColor: const Color(0xFFBA9E02),
-                      checkColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(40), // Rounded corners
-                      ),
-                      side: BorderSide(
-                        color: Colors
-                            .grey.shade200, // Border color of the checkbox
-                        width: 2, // Border width
+                    // Checkbox with custom styling
+                    Transform.scale(
+                      scale: 1.5, // Increase size of the checkbox
+                      child: Checkbox(
+                        value: isCompleted,
+                        onChanged: onChanged,
+                        activeColor: const Color(0xFFBA9E02),
+                        checkColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(40), // Rounded corners
+                        ),
+                        side: BorderSide(
+                          color: Colors
+                              .grey.shade200, // Border color of the checkbox
+                          width: 2, // Border width
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

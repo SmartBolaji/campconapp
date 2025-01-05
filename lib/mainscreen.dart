@@ -1,5 +1,5 @@
 import 'package:campcon/floatingbutton.dart';
-import 'package:campcon/screens/camplist_screen/view_list.dart';
+import 'package:campcon/screens/camplist_screen/lists.dart';
 import 'package:campcon/screens/events_screen/events.dart';
 import 'package:campcon/screens/initial_screen/homepage.dart';
 import 'package:campcon/screens/search_screen/search.dart';

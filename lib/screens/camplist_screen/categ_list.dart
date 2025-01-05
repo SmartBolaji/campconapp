@@ -24,6 +24,7 @@ class CamplistCategoryWidget extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.only(top: 10),
+      margin: const EdgeInsets.only(bottom: 10),
       height: 45, // Adjusted height to fit icon and text
       width: screenWidth,
       decoration: BoxDecoration(
@@ -81,7 +82,7 @@ class CamplistCategoryWidget extends StatelessWidget {
                   Text(
                     label,
                     style: TextStyle(
-                      fontFamily: 'Trebuchet',
+                      fontFamily: 'Lato',
                       fontSize: 14,
                       fontWeight:
                           isActive ? FontWeight.bold : FontWeight.normal,

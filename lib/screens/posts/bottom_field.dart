@@ -26,12 +26,17 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(16),
-          topRight: Radius.circular(16),
-        ),
-      ),
+          color: Colors.grey.shade200,
+          border: Border(
+              top: BorderSide(
+            width: 1,
+            color: Colors.grey.shade300,
+          ))
+          // borderRadius: BorderRadius.only(
+          //   topLeft: Radius.circular(16),
+          //   topRight: Radius.circular(16),
+          // ),
+          ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

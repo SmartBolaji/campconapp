@@ -3,7 +3,7 @@ import 'package:campcon/screens/light_screen/lighttracker.dart';
 import 'package:campcon/screens/initial_screen/story_carousel.dart';
 import 'package:campcon/screens/points.dart';
 import 'package:campcon/screens/posts/post_view.dart';
-import 'package:campcon/screens/publish.dart';
+import 'package:campcon/screens/publish_screen/publish.dart';
 import 'package:campcon/widgets/drawer_widget.dart';
 import 'package:campcon/screens/posts/posts.dart';
 import 'package:campcon/widgets/homesuggest.dart';

@@ -78,7 +78,7 @@ class _SchScreenState extends State<SchScreen> {
                             child: Text(
                               'We want to know you and help you!',
                               style: TextStyle(
-                                  fontFamily: 'Trebuchet',
+                                  fontFamily: 'Lato',
                                   fontSize: screenWidth / 15,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.grey.shade600,
@@ -245,7 +245,7 @@ class _SchScreenState extends State<SchScreen> {
                               'Back',
                               style: TextStyle(
                                   fontSize: screenWidth / 25,
-                                  fontFamily: 'Trebuchet',
+                                  fontFamily: 'Lato',
                                   fontWeight: FontWeight.bold,
                                   color: primary),
                             ),
@@ -289,7 +289,7 @@ class _SchScreenState extends State<SchScreen> {
               : Text(
                   txt,
                   style: TextStyle(
-                      fontFamily: 'Trebuchet',
+                      fontFamily: 'Lato',
                       fontSize: screenWidth / 25,
                       fontWeight: FontWeight.bold,
                       color: txtColor,
@@ -335,7 +335,7 @@ class _SchScreenState extends State<SchScreen> {
         hint: Text(
           hintText,
           style: TextStyle(
-            fontFamily: 'Trebuchet',
+            fontFamily: 'Lato',
             fontSize: screenWidth / 30,
             color: Colors.grey.shade800,
           ),
@@ -358,7 +358,7 @@ class _SchScreenState extends State<SchScreen> {
               child: Text(
                 item,
                 style: TextStyle(
-                  fontFamily: 'Trebuchet',
+                  fontFamily: 'Lato',
                   fontSize: screenWidth / 30,
                   color: item == selectedValue
                       ? const Color(0xFFBA9E02)
@@ -372,7 +372,7 @@ class _SchScreenState extends State<SchScreen> {
           );
         }).toList(),
         style: const TextStyle(
-          fontFamily: 'Trebuchet',
+          fontFamily: 'Lato',
           fontSize: 16,
           color: Colors.black,
         ),
@@ -415,7 +415,7 @@ class _SchScreenState extends State<SchScreen> {
         hint: Text(
           hintText,
           style: TextStyle(
-            fontFamily: 'Trebuchet',
+            fontFamily: 'Lato',
             fontSize: screenWidth / 30,
             color: Colors.grey.shade800,
           ),
@@ -444,7 +444,7 @@ class _SchScreenState extends State<SchScreen> {
               child: Text(
                 item['department']!,
                 style: TextStyle(
-                  fontFamily: 'Trebuchet',
+                  fontFamily: 'Lato',
                   fontSize: screenWidth / 30,
                   color: item['department'] == selectedValue
                       ? const Color(0xFFBA9E02)
@@ -458,7 +458,7 @@ class _SchScreenState extends State<SchScreen> {
           );
         }).toList(),
         style: TextStyle(
-          fontFamily: 'Trebuchet',
+          fontFamily: 'Lato',
           fontSize: screenWidth / 30,
           color: Colors.black,
         ),
@@ -493,7 +493,7 @@ class _SchScreenState extends State<SchScreen> {
               padding: EdgeInsets.only(right: screenWidth / 30),
               child: TextFormField(
                 style: TextStyle(
-                    fontFamily: 'Trebuchet',
+                    fontFamily: 'Lato',
                     fontSize: screenWidth / 30,
                     // fontWeight: FontWeight.bold,
                     color: Colors.black),
@@ -510,7 +510,7 @@ class _SchScreenState extends State<SchScreen> {
                   border: InputBorder.none,
                   hintText: hint,
                   hintStyle: TextStyle(
-                      fontFamily: 'Trebuchet',
+                      fontFamily: 'Lato',
                       fontSize: screenWidth / 30,
                       // fontWeight: FontWeight.bold,
                       color: Colors.black),

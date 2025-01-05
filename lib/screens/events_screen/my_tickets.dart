@@ -29,7 +29,7 @@ class MyTicketsPage extends StatelessWidget {
         backgroundColor: Colors.grey.shade100,
         appBar: AppBar(
           backgroundColor: Colors.grey.shade100,
-          title: Text(
+          title: const Text(
             "My Tickets",
             style: TextStyle(
               color: Colors.black,
@@ -95,7 +95,7 @@ class MyTicketsPage extends StatelessWidget {
                       itemBuilder: (context, index) {
                         final ticket = tickets[index];
                         return Container(
-                          margin: EdgeInsets.only(bottom: 16),
+                          margin: const EdgeInsets.only(bottom: 16),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
@@ -103,7 +103,7 @@ class MyTicketsPage extends StatelessWidget {
                               BoxShadow(
                                 color: Colors.grey.shade300,
                                 blurRadius: 10,
-                                offset: Offset(0, 4),
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
@@ -114,7 +114,7 @@ class MyTicketsPage extends StatelessWidget {
                                 children: [
                                   // Ticket Image
                                   ClipRRect(
-                                    borderRadius: BorderRadius.only(
+                                    borderRadius: const BorderRadius.only(
                                       topLeft: Radius.circular(12),
                                       topRight: Radius.circular(12),
                                     ),
@@ -133,13 +133,13 @@ class MyTicketsPage extends StatelessWidget {
                                       children: [
                                         Text(
                                           ticket['event']!,
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                             fontSize: 20,
                                             fontFamily: 'Lato',
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
-                                        SizedBox(height: 12),
+                                        const SizedBox(height: 12),
                                         Text(
                                           ticket['location']!,
                                           style: TextStyle(
@@ -148,7 +148,7 @@ class MyTicketsPage extends StatelessWidget {
                                             fontWeight: FontWeight.w400,
                                           ),
                                         ),
-                                        SizedBox(height: 8),
+                                        const SizedBox(height: 8),
                                         Text(
                                           "Ticket ID: $ticketid",
                                           style: TextStyle(
@@ -157,14 +157,14 @@ class MyTicketsPage extends StatelessWidget {
                                             fontWeight: FontWeight.w400,
                                           ),
                                         ),
-                                        SizedBox(height: 16),
+                                        const SizedBox(height: 16),
                                         Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
                                           children: [
                                             Text(
                                               "Price: ${ticket['price']}",
-                                              style: TextStyle(
+                                              style: const TextStyle(
                                                 fontSize: 16,
                                                 fontFamily: 'Lato',
                                                 fontWeight: FontWeight.w400,
@@ -172,7 +172,7 @@ class MyTicketsPage extends StatelessWidget {
                                             ),
                                             Text(
                                               "Quantity: ${ticket['quantity']}",
-                                              style: TextStyle(
+                                              style: const TextStyle(
                                                 fontSize: 16,
                                                 fontFamily: 'Lato',
                                                 fontWeight: FontWeight.w400,
@@ -190,7 +190,7 @@ class MyTicketsPage extends StatelessWidget {
                                 top: 10,
                                 left: 10,
                                 child: Container(
-                                  padding: EdgeInsets.symmetric(
+                                  padding: const EdgeInsets.symmetric(
                                       horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
                                     color: Colors.grey.shade800,
@@ -198,7 +198,7 @@ class MyTicketsPage extends StatelessWidget {
                                   ),
                                   child: Text(
                                     "${ticket['date']}",
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
@@ -212,13 +212,13 @@ class MyTicketsPage extends StatelessWidget {
                                 top: 10,
                                 right: 10,
                                 child: Container(
-                                  padding: EdgeInsets.symmetric(
+                                  padding: const EdgeInsets.symmetric(
                                       horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
                                     color: Colors.green,
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: Text(
+                                  child: const Text(
                                     "Bought",
                                     style: TextStyle(
                                       color: Colors.white,

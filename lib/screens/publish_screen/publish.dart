@@ -1,4 +1,7 @@
+import 'package:campcon/screens/publish_screen/custom_picker.dart';
+import 'package:campcon/screens/publish_screen/image_uploader.dart';
 import 'package:campcon/services/task_data.dart';
+import 'package:campcon/widgets/navigation_helper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -404,7 +407,10 @@ class _PostPageState extends State<PublishPage> {
                     IconButton(
                       icon:
                           Icon(FeatherIcons.image, color: Colors.grey.shade600),
-                      onPressed: () {},
+                      onPressed: () {
+                        NavigationHelper.navigateTo(
+                            context, CustomImagePicker());
+                      },
                     ),
                     // IconButton(
                     //   icon: Icon(Icons.gif, color: Colors.grey.shade600),

@@ -128,7 +128,7 @@ class _PassScreenState extends State<PassScreen> {
                           Text(
                             'You need a password',
                             style: TextStyle(
-                                fontFamily: 'Trebuchet',
+                                fontFamily: 'Lato',
                                 fontSize: screenWidth / 15,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.grey.shade600,
@@ -353,8 +353,9 @@ class _PassScreenState extends State<PassScreen> {
                               'Back',
                               style: TextStyle(
                                   fontSize: screenWidth / 25,
-                                  fontFamily: 'Trebuchet',
+                                  fontFamily: 'Lato',
                                   fontWeight: FontWeight.bold,
+                                  // fontStyle: FontStyle.italic,
                                   color: primary),
                             ),
                           ],
@@ -398,7 +399,7 @@ class _PassScreenState extends State<PassScreen> {
               : Text(
                   txt,
                   style: TextStyle(
-                      fontFamily: 'Trebuchet',
+                      fontFamily: 'Lato',
                       fontSize: screenWidth / 25,
                       fontWeight: FontWeight.bold,
                       color: txtColor,
@@ -437,7 +438,7 @@ class _PassScreenState extends State<PassScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
               child: TextFormField(
                 style: TextStyle(
-                    fontFamily: 'Trebuchet',
+                    fontFamily: 'Lato',
                     fontSize: screenWidth / 30,
                     // fontWeight: FontWeight.bold,
                     color: Colors.black),
@@ -455,7 +456,7 @@ class _PassScreenState extends State<PassScreen> {
                   border: InputBorder.none,
                   hintText: hint,
                   hintStyle: TextStyle(
-                      fontFamily: 'Trebuchet',
+                      fontFamily: 'Lato',
                       fontSize: screenWidth / 30,
                       // fontWeight: FontWeight.bold,
                       color: Colors.black),

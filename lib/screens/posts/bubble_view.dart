@@ -83,15 +83,15 @@ class _BuildActionWithCountState extends State<BuildActionWithCount>
               return Transform.scale(
                 scale: _scaleAnimation.value,
                 child: Container(
-                  height: 30, // Height of the circular container
-                  width: 30, // Width of the circular container
+                  height: 28, // Height of the circular container
+                  width: 28, // Width of the circular container
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: widget.isActive
                         ? const Color(0xFFBA9E02)
                         : Colors.grey.shade100,
                     border: Border.all(
-                      width: 2.5,
+                      width: 2,
                       color: widget.isActive
                           ? const Color(0xFFBA9E02)
                           : Colors.grey.shade500,

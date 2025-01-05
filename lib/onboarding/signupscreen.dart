@@ -171,7 +171,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                               content: Text(
                                                 'Please enter a valid name and email.',
                                                 style: TextStyle(
-                                                  fontFamily: 'Trebuchet',
+                                                  fontFamily: 'Lato',
                                                   fontSize: screenWidth / 30,
                                                   color: Colors.white,
                                                 ),
@@ -190,7 +190,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                               content: Text(
                                                 'This account already exists in our record, use a different email and try again!',
                                                 style: TextStyle(
-                                                  fontFamily: 'Trebuchet',
+                                                  fontFamily: 'Lato',
                                                   fontSize: screenWidth / 30,
                                                   color: Colors.white,
                                                 ),
@@ -238,7 +238,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                             content: Text(
                                               'An error occurred: ${e.toString()}',
                                               style: TextStyle(
-                                                fontFamily: 'Trebuchet',
+                                                fontFamily: 'Lato',
                                                 fontSize: screenWidth / 30,
                                                 color: Colors.white,
                                               ),
@@ -281,8 +281,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               style: TextStyle(
                                   fontSize: screenWidth / 25,
                                   fontFamily: 'Lato',
-                                  fontWeight: FontWeight.w500,
-                                  fontStyle: FontStyle.italic,
+                                  fontWeight: FontWeight.bold,
+                                  // fontStyle: FontStyle.italic,
                                   color: primary),
                             ),
                           ],
