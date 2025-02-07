@@ -11,6 +11,7 @@ import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:month_year_picker/month_year_picker.dart';
 import 'package:campcon/onboarding/onboarding.dart';
 import 'package:campcon/services/task_data.dart';
+import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -28,6 +29,7 @@ Future<void> main() async {
   );
   timeago.setLocaleMessages('short', ShortTimeAgo());
   await dotenv.load(fileName: ".env");
+  PhotoManager.clearFileCache();
   runApp(const MyApp());
 }
 

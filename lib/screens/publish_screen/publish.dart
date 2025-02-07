@@ -94,27 +94,27 @@ class _PostPageState extends State<PublishPage> {
             child: Container(
               margin: const EdgeInsets.fromLTRB(10, 0, 0, 0),
               decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.grey.shade100,
-                  border: Border.all(width: 1, color: Colors.grey.shade900)),
+                shape: BoxShape.circle,
+                color: Colors.grey.shade100,
+              ),
               child: Icon(
                 Icons.close,
                 color: Colors.grey.shade800,
-                size: 25,
+                size: 30,
               ),
             ),
           ),
         ),
-        title: const Text(
-          'New Post',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 22,
-            fontWeight: FontWeight.w600,
-            fontFamily: 'Lato',
-            // fontWeight: FontWeight.w600,
-          ),
-        ),
+        // title: Text(
+        //   'New Post',
+        //   style: TextStyle(
+        //     color: Colors.grey.shade800,
+        //     fontSize: 22,
+        //     fontWeight: FontWeight.w600,
+        //     fontFamily: 'Lato',
+        //     // fontWeight: FontWeight.w600,
+        //   ),
+        // ),
         actions: [
           TextButton(
               onPressed: () {
@@ -151,7 +151,7 @@ class _PostPageState extends State<PublishPage> {
               children: [
                 // The main content area that scrolls
                 SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -199,7 +199,7 @@ class _PostPageState extends State<PublishPage> {
                 ),
                 // CircleAvatar fixed at the top
                 Positioned(
-                  top: 20, // Position it at the top with some padding
+                  top: 4, // Position it at the top with some padding
                   left: 16,
                   child: CircleAvatar(
                     backgroundColor: Colors.grey.shade600,

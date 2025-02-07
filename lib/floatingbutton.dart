@@ -58,43 +58,53 @@ class _FloatingButtonState extends State<FloatingButton>
           Padding(
             padding: const EdgeInsets.only(
                 bottom: 70, right: 16), // Prevent FAB overlap
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                _buildOption(
-                  context,
-                  FeatherIcons.calendar,
-                  'Event',
-                  const Color(0xFFBA9E02),
-                  () => _navigateTo(context, const PublishPage()),
-                ),
-                const SizedBox(height: 10),
-                _buildOption(
-                  context,
-                  FeatherIcons.image,
-                  'Photos',
-                  const Color(0xFFBA9E02),
-                  () => _navigateTo(context, const PublishPage()),
-                ),
-                const SizedBox(height: 10),
-                _buildOption(
-                  context,
-                  FeatherIcons.checkSquare,
-                  'List',
-                  const Color(0xFFBA9E02),
-                  () => _navigateTo(context, const PublishPage()),
-                ),
-                const SizedBox(height: 10),
-                _buildOption(
-                  context,
-                  FeatherIcons.edit2,
-                  'Post',
-                  const Color(0xFFBA9E02),
-                  () => _navigateTo(context, const PublishPage()),
-                ),
-              ],
-            ),
+            child: widget.isFabVisible
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      _buildOption(
+                        context,
+                        FeatherIcons.calendar,
+                        'Event',
+                        const Color(0xFFBA9E02),
+                        () => _navigateTo(context, const PublishPage()),
+                      ),
+                      const SizedBox(height: 10),
+                      _buildOption(
+                        context,
+                        FeatherIcons.image,
+                        'Photos',
+                        const Color(0xFFBA9E02),
+                        () => _navigateTo(context, const PublishPage()),
+                      ),
+                      const SizedBox(height: 10),
+                      _buildOption(
+                        context,
+                        FeatherIcons.checkSquare,
+                        'List',
+                        const Color(0xFFBA9E02),
+                        () => _navigateTo(context, const PublishPage()),
+                      ),
+                      const SizedBox(height: 10),
+                      _buildOption(
+                        context,
+                        FeatherIcons.camera,
+                        'Story',
+                        const Color(0xFFBA9E02),
+                        () => _navigateTo(context, const PublishPage()),
+                      ),
+                      const SizedBox(height: 10),
+                      _buildOption(
+                        context,
+                        FeatherIcons.edit2,
+                        'Post',
+                        const Color(0xFFBA9E02),
+                        () => _navigateTo(context, const PublishPage()),
+                      ),
+                    ],
+                  )
+                : const SizedBox(),
           ),
         // Main floating action button
         // Main floating action button (Animated + to X transition)

@@ -439,8 +439,8 @@ class _PassScreenState extends State<PassScreen> {
               child: TextFormField(
                 style: TextStyle(
                     fontFamily: 'Lato',
-                    fontSize: screenWidth / 30,
-                    // fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
                     color: Colors.black),
                 controller: controller,
                 textCapitalization: TextCapitalization.words,
@@ -451,13 +451,12 @@ class _PassScreenState extends State<PassScreen> {
                 autofocus: true,
                 autocorrect: false,
                 decoration: InputDecoration(
-                  contentPadding:
-                      EdgeInsets.symmetric(vertical: screenHeight / 50),
+                  contentPadding: EdgeInsets.symmetric(vertical: 14),
                   border: InputBorder.none,
-                  hintText: hint,
-                  hintStyle: TextStyle(
+                  labelText: hint,
+                  labelStyle: TextStyle(
                       fontFamily: 'Lato',
-                      fontSize: screenWidth / 30,
+                      fontSize: 12,
                       // fontWeight: FontWeight.bold,
                       color: Colors.black),
                   suffixIcon: GestureDetector(

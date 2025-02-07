@@ -610,10 +610,10 @@ class _UsernameScreenState extends State<UsernameScreen> {
             ),
             Expanded(
               child: TextFormField(
-                style: TextStyle(
+                style: const TextStyle(
                     fontFamily: 'Lato',
-                    fontSize: screenWidth / 30,
-                    // fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
                     color: Colors.black),
                 controller: controller,
                 onChanged: (value) {
@@ -627,13 +627,12 @@ class _UsernameScreenState extends State<UsernameScreen> {
                 autofocus: true,
                 autocorrect: false,
                 decoration: InputDecoration(
-                  contentPadding:
-                      EdgeInsets.symmetric(vertical: screenHeight / 50),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
                   border: InputBorder.none,
-                  hintText: hint,
-                  hintStyle: TextStyle(
+                  labelText: hint,
+                  labelStyle: const TextStyle(
                       fontFamily: 'Lato',
-                      fontSize: screenWidth / 30,
+                      fontSize: 12,
                       // fontWeight: FontWeight.bold,
                       color: Colors.black),
                   suffix: GestureDetector(

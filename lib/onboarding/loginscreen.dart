@@ -8,7 +8,6 @@ import 'package:page_transition/page_transition.dart';
 import 'package:campcon/mainscreen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:campcon/screens/fgt_pass.dart';
 import 'package:campcon/services/task_data.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -71,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           height: screenHeight / 9,
                         )),
                     Container(
-                      padding: EdgeInsets.only(left: 40, right: 40),
+                      padding: const EdgeInsets.only(left: 40, right: 40),
                       child: Text(
                         'Connect with people on Campcon',
                         style: TextStyle(
@@ -84,7 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         textAlign: TextAlign.center,
                       ),
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     Container(
                         alignment: Alignment.centerLeft,
                         margin:
@@ -435,7 +434,7 @@ class _LoginScreenState extends State<LoginScreen> {
               fontFamily: 'Lato',
               fontWeight: FontWeight.w500,
               // fontStyle: FontStyle.italic,
-              color: Color(0xFFBA9E02)),
+              color: const Color(0xFFBA9E02)),
         ),
       ),
     );
@@ -466,10 +465,10 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Padding(
               padding: EdgeInsets.only(right: screenWidth / 150),
               child: TextFormField(
-                style: TextStyle(
+                style: const TextStyle(
                     fontFamily: 'Lato',
-                    fontSize: screenWidth / 30,
-                    fontWeight: FontWeight.w400,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
                     color: Colors.black),
                 controller: controller,
                 onChanged: (value) {
@@ -480,15 +479,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 autocorrect: false,
                 textCapitalization: type,
                 decoration: InputDecoration(
-                  contentPadding: EdgeInsets.symmetric(
-                      vertical: screenHeight / 50,
-                      horizontal: screenHeight / 50),
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
                   border: InputBorder.none,
-                  hintText: hint,
-                  hintStyle: TextStyle(
+                  labelText: hint,
+                  labelStyle: const TextStyle(
                       fontFamily: 'Lato',
                       fontWeight: FontWeight.w400,
-                      fontSize: screenWidth / 30,
+                      fontSize: 12,
                       color: Colors.black),
                   suffixIcon: GestureDetector(
                     onTap: () {

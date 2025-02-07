@@ -369,8 +369,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
               child: TextFormField(
                 style: TextStyle(
                     fontFamily: 'Lato',
-                    fontSize: screenWidth / 32,
-                    fontWeight: FontWeight.w400,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
                     color: Colors.black),
                 controller: controller,
                 textCapitalization: type,
@@ -381,13 +381,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 autofocus: true,
                 autocorrect: false,
                 decoration: InputDecoration(
-                  contentPadding:
-                      EdgeInsets.symmetric(vertical: screenHeight / 50),
+                  contentPadding: EdgeInsets.symmetric(vertical: 14),
                   border: InputBorder.none,
-                  hintText: hint,
-                  hintStyle: TextStyle(
+                  labelText: hint,
+                  labelStyle: TextStyle(
                       fontFamily: 'Lato',
-                      fontSize: screenWidth / 32,
+                      fontSize: 12,
                       fontWeight: FontWeight.w400,
                       color: Colors.black),
                   suffixIcon: GestureDetector(

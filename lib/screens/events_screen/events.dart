@@ -4,6 +4,7 @@ import 'package:campcon/screens/events_screen/event_tile.dart';
 import 'package:campcon/screens/events_screen/event_view.dart';
 import 'package:campcon/screens/events_screen/featured_tile.dart';
 import 'package:campcon/screens/events_screen/my_tickets.dart';
+import 'package:campcon/widgets/navigation_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:iconly/iconly.dart';
 
@@ -224,35 +225,33 @@ class _EventScreenState extends State<EventScreen> {
                     reservations: event['reservations'],
                     totalSeats: event['totalSeats'],
                     onTap: () {
-                      Navigator.push(
+                      NavigationHelper.navigateTo(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => EventViewPage(
-                            title: event['title'],
-                            location: event['location'],
-                            food: event['food'],
-                            date: DateTime.now(),
-                            imageUrls: const [
-                              'assets/images/social.jpeg',
-                              'assets/images/social.jpeg',
-                              'assets/images/social.jpeg',
-                              'assets/images/social.jpeg',
-                              'assets/images/social.jpeg',
-                              'assets/images/social.jpeg',
-                            ],
-                            attendingProfiles: const [
-                              'assets/images/social.jpeg',
-                              'assets/images/social.jpeg',
-                              'assets/images/social.jpeg',
-                              'assets/images/social.jpeg',
-                              'assets/images/social.jpeg',
-                              'assets/images/social.jpeg',
-                            ],
-                            reservations: event['reservations'],
-                            totalSeats: event['totalSeats'],
-                            price: 'FREE',
-                            time: '6PM',
-                          ),
+                        EventViewPage(
+                          title: event['title'],
+                          location: event['location'],
+                          food: event['food'],
+                          date: DateTime.now(),
+                          imageUrls: const [
+                            'assets/images/social.jpeg',
+                            'assets/images/social.jpeg',
+                            'assets/images/social.jpeg',
+                            'assets/images/social.jpeg',
+                            'assets/images/social.jpeg',
+                            'assets/images/social.jpeg',
+                          ],
+                          attendingProfiles: const [
+                            'assets/images/social.jpeg',
+                            'assets/images/social.jpeg',
+                            'assets/images/social.jpeg',
+                            'assets/images/social.jpeg',
+                            'assets/images/social.jpeg',
+                            'assets/images/social.jpeg',
+                          ],
+                          reservations: event['reservations'],
+                          totalSeats: event['totalSeats'],
+                          price: 'FREE',
+                          time: '6PM',
                         ),
                       );
                     },

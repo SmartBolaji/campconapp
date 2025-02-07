@@ -1,5 +1,6 @@
 import 'package:campcon/screens/events_screen/event_view.dart';
 import 'package:campcon/screens/events_screen/ticket_booking.dart';
+import 'package:campcon/widgets/navigation_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:iconly/iconly.dart';
 
@@ -53,10 +54,7 @@ class BottomSheetWidget extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: () {
                   // Add to checkout
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => TicketBookingPage()));
+                  NavigationHelper.navigateTo(context, TicketBookingPage());
                 },
                 icon: null,
                 label: const Text(
