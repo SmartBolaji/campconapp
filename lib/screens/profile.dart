@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:page_transition/page_transition.dart';
-import 'package:campcon/mainscreen.dart';
 import 'package:campcon/screens/chg_pass.dart';
 import 'package:campcon/services/task_data.dart';
 import 'package:provider/provider.dart';
@@ -25,15 +23,15 @@ class ProfileScreen extends StatelessWidget {
         backgroundColor: Colors.blue.shade300,
         leading: IconButton(
           onPressed: () {
-            Navigator.push(
-              context,
-              PageTransition(
-                child: MainScreen(),
-                type: PageTransitionType.topToBottom,
-                duration: const Duration(milliseconds: 500),
-                reverseDuration: const Duration(milliseconds: 500),
-              ),
-            );
+            // Navigator.push(
+            //   context,
+            //   PageTransition(
+            //     child: MainScreen(),
+            //     type: PageTransitionType.topToBottom,
+            //     duration: const Duration(milliseconds: 500),
+            //     reverseDuration: const Duration(milliseconds: 500),
+            //   ),
+            // );
           },
           icon: Icon(
             Icons.arrow_back,

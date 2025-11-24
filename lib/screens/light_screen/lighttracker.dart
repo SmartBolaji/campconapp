@@ -1,7 +1,6 @@
-import 'package:campcon/screens/points.dart';
+
 import 'package:flutter/material.dart';
 import 'package:iconly/iconly.dart';
-import 'package:page_transition/page_transition.dart';
 
 class LightScreen extends StatefulWidget {
   const LightScreen({super.key});

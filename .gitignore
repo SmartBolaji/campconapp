@@ -17,7 +17,13 @@ migrate_working_dir/
 # android/app/google-services.json
 
 
+# Fingerprint Type,Key to Register
+# SHA1,D8:79:C8:9A:51:3D:3C:5D:44:A4:A5:DF:5D:AD:AE:0F:5C:27:23:45
+# SHA-256,C1:B7:22:F9:CF:22:42:80:BB:93:C9:34:2B:72:24:33:E5:F6:11:CC:37:4F:8E:31:ED:68:6B:61:3B:FF:64:8D
 
+# Fingerprint Type,Key to Register
+# SHA1,36:83:4B:34:F9:BA:71:A8:4E:09:C6:35:B4:B5:3A:AF:67:CF:B0:31
+# SHA-256,78:5D:42:38:8A:9D:51:AD:3F:C7:B2:AE:46:9D:F2:16:F5:3F:28:D7:1E:8C:BA:72:EB:FD:BC:59:4D:56:CC:C1
 # IntelliJ related
 *.iml
 *.ipr
@@ -41,7 +47,7 @@ migrate_working_dir/
 /build/
 
 # Symbolication related
-# app.*.symbols
+app.*.symbols
 
 # Obfuscation related
 app.*.map.json

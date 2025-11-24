@@ -182,7 +182,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
           ),
         ),
       ),
-      drawer: const SafeArea(child: AdminDrawerWidget()),
+      // drawer: const SafeArea(child: AdminDrawerWidget()),
       body: SingleChildScrollView(
         padding: const EdgeInsets.only(
           left: 20,

@@ -1,9 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
-import 'dart:math';
-
-import 'package:iconly/iconly.dart';
-import 'package:campcon/mainscreen.dart';
-import 'package:campcon/model/user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:campcon/services/task_data.dart';

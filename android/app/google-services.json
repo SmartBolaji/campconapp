@@ -14,6 +14,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "987673267133-0lkiordfvdukc5pj4ljdnmhsdnfa9msm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.campcon.app",
+            "certificate_hash": "d879c89a513d3c5d44a4a5df5dadae0f5c272345"
+          }
+        },
+        {
+          "client_id": "987673267133-uj2fen09j1pe2ov6jt96g8saafao1vco.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.campcon.app",
+            "certificate_hash": "36834b34f9ba71a84e09c635b4b53aaf67cfb031"
+          }
+        },
+        {
           "client_id": "987673267133-7vqfdmn1m8ihnsig3i1a4r9usjin2i94.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -29,6 +45,13 @@
             {
               "client_id": "987673267133-7vqfdmn1m8ihnsig3i1a4r9usjin2i94.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "987673267133-8919919gjr80hkhru0nkq69jomf3jth9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.campcon.app"
+              }
             }
           ]
         }

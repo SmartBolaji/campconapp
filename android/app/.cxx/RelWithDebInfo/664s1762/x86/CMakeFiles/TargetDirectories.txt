@@ -1,0 +1,2 @@
+C:/Users/HP/Desktop/campcon/android/app/.cxx/RelWithDebInfo/664s1762/x86/CMakeFiles/edit_cache.dir
+C:/Users/HP/Desktop/campcon/android/app/.cxx/RelWithDebInfo/664s1762/x86/CMakeFiles/rebuild_cache.dir
