@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
@@ -19,7 +18,8 @@ class NewPostScreen extends StatefulWidget {
 
 class _NewPostScreenState extends State<NewPostScreen> {
   final TextEditingController _contentController = TextEditingController();
-  double _pickerHeight = 0.35; // 35% of screen height
+  final FocusNode _contentFocusNode = FocusNode();
+  double _pickerHeight = 0.35;
   final double _minPickerHeight = 0.25;
   final double _maxPickerHeight = 0.50;
   bool _isPickerExpanded = true;
@@ -27,7 +27,6 @@ class _NewPostScreenState extends State<NewPostScreen> {
   @override
   void initState() {
     super.initState();
-    // Clear previous selections when opening new post
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<MediaSelectionProvider>(context, listen: false)
           .clearSelection();
@@ -37,6 +36,7 @@ class _NewPostScreenState extends State<NewPostScreen> {
   @override
   void dispose() {
     _contentController.dispose();
+    _contentFocusNode.dispose();
     super.dispose();
   }
 
@@ -60,10 +60,18 @@ class _NewPostScreenState extends State<NewPostScreen> {
       return;
     }
 
-    // Show loading dialog
-    _showLoadingDialog();
+    // Dismiss keyboard
+    FocusScope.of(context).unfocus();
 
-    final success = await postProvider.createPost(
+    // Clear form immediately
+    _contentController.clear();
+    mediaProvider.clearSelection();
+
+    // Close the screen
+    Navigator.of(context).pop();
+
+    // Start silent upload
+    final success = await postProvider.createPostSilently(
       userId: currentUser.uid,
       username: currentUser.username,
       userProfileImage: currentUser.profileImageUrl ?? '',
@@ -71,73 +79,8 @@ class _NewPostScreenState extends State<NewPostScreen> {
       images: images.isNotEmpty ? images : null,
     );
 
-    if (mounted) {
-      Navigator.of(context).pop(); // Close loading dialog
-
-      if (success) {
-        // Clear form
-        _contentController.clear();
-        mediaProvider.clearSelection();
-
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Post created successfully!'),
-            backgroundColor: AppTheme.success,
-            duration: Duration(seconds: 2),
-          ),
-        );
-
-        // Go back to home
-        Navigator.of(context).pop(true);
-      } else {
-        _showError(postProvider.errorMessage ?? 'Failed to create post');
-      }
-    }
-  }
-
-  void _showLoadingDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => Consumer<PostProvider>(
-        builder: (context, provider, child) {
-          return WillPopScope(
-            onWillPop: () async => false,
-            child: Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.r),
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(24.w),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(
-                      color: AppTheme.primary,
-                      value: provider.isUploadingImages
-                          ? provider.uploadProgress
-                          : null,
-                    ),
-                    SizedBox(height: 16.h),
-                    Text(
-                      provider.isUploadingImages
-                          ? 'Uploading images...\n${(provider.uploadProgress * 100).toInt()}%'
-                          : 'Creating post...',
-                      textAlign: TextAlign.center,
-                      style: TextConstants.mediumText.copyWith(
-                        fontSize: 14.sp,
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
+    // Success/error is already handled by the upload bar
+    debugPrint(success ? '✅ Post created silently' : '❌ Silent upload failed');
   }
 
   void _showError(String message) {
@@ -150,24 +93,18 @@ class _NewPostScreenState extends State<NewPostScreen> {
     );
   }
 
-  void _togglePicker() {
-    setState(() {
-      if (_isPickerExpanded) {
-        _pickerHeight = _minPickerHeight;
-      } else {
-        _pickerHeight = _maxPickerHeight;
-      }
-      _isPickerExpanded = !_isPickerExpanded;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final mediaProvider = Provider.of<MediaSelectionProvider>(context);
-    final hasImages = mediaProvider.selectedImages.isNotEmpty;
+    final hasImages = mediaProvider.selectedImages.isNotEmpty ||
+        mediaProvider.capturedImages.isNotEmpty;
+
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final isKeyboardVisible = keyboardHeight > 0;
 
     return Scaffold(
       backgroundColor: AppTheme.surface,
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Column(
           children: [
@@ -187,7 +124,10 @@ class _NewPostScreenState extends State<NewPostScreen> {
                   ),
                   SizedBox(width: 16.w),
                   GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
+                    onTap: () {
+                      FocusScope.of(context).unfocus();
+                      Navigator.of(context).pop();
+                    },
                     child: Icon(
                       FeatherIcons.x,
                       color: AppTheme.textPrimary,
@@ -198,107 +138,150 @@ class _NewPostScreenState extends State<NewPostScreen> {
               ),
             ),
 
-            // Divider
             Divider(
               height: 1,
               thickness: 1,
               color: AppTheme.border,
             ),
 
-            // Content area
             Expanded(
-              child: SingleChildScrollView(
-                child: Container(
-                  color: AppTheme.surface,
-                  padding: EdgeInsets.all(16.w),
-                  child: TextField(
-                    controller: _contentController,
-                    maxLines: null,
-                    minLines: 5,
-                    style: TextConstants.mediumText.copyWith(
-                      fontSize: 16.sp,
-                      color: AppTheme.textPrimary,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Say something...',
-                      hintStyle: TextConstants.mediumText.copyWith(
-                        fontSize: 15.sp,
-                        color: AppTheme.textLight,
-                      ),
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            // Image Picker Section
-            GestureDetector(
-              onVerticalDragUpdate: (details) {
-                setState(() {
-                  final delta =
-                      -details.delta.dy / MediaQuery.of(context).size.height;
-                  _pickerHeight = (_pickerHeight + delta)
-                      .clamp(_minPickerHeight, _maxPickerHeight);
-                });
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                height: MediaQuery.of(context).size.height * _pickerHeight,
-                decoration: BoxDecoration(
-                  color: AppTheme.surface,
-                  border: Border(
-                    top: BorderSide(
-                      color: AppTheme.border,
-                      width: 1,
-                    ),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    // Drag handle
-                    Container(
-                      padding: EdgeInsets.symmetric(vertical: 8.h),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // Container(
-                          //   width: 40.w,
-                          //   height: 4.h,
-                          //   decoration: BoxDecoration(
-                          //     color: AppTheme.border,
-                          //     borderRadius: BorderRadius.circular(2.r),
-                          //   ),
-                          // ),
-                          // SizedBox(width: 8.w),
-                          // GestureDetector(
-                          //   onTap: _togglePicker,
-                          //   child: Icon(
-                          //     _isPickerExpanded
-                          //         ? FeatherIcons.chevronDown
-                          //         : FeatherIcons.chevronUp,
-                          //     size: 20.sp,
-                          //     color: AppTheme.textSecondary,
-                          //   ),
-                          // ),
-                        ],
+              child: Column(
+                children: [
+                  // Content area
+                  Expanded(
+                    flex: isKeyboardVisible ? 3 : 2,
+                    child: SingleChildScrollView(
+                      child: Container(
+                        color: AppTheme.surface,
+                        padding: EdgeInsets.all(16.w),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (hasImages && isKeyboardVisible)
+                              Container(
+                                margin: EdgeInsets.only(bottom: 12.h),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12.w,
+                                  vertical: 8.h,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primary.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8.r),
+                                  border: Border.all(
+                                    color: AppTheme.primary.withOpacity(0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      FeatherIcons.image,
+                                      size: 16.sp,
+                                      color: AppTheme.primary,
+                                    ),
+                                    SizedBox(width: 8.w),
+                                    Text(
+                                      '${mediaProvider.selectedImages.length + mediaProvider.capturedImages.length} ${(mediaProvider.selectedImages.length + mediaProvider.capturedImages.length) == 1 ? "image" : "images"} selected',
+                                      style: TextConstants.smallText.copyWith(
+                                        color: AppTheme.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            TextField(
+                              controller: _contentController,
+                              focusNode: _contentFocusNode,
+                              maxLines: null,
+                              minLines: isKeyboardVisible ? 10 : 5,
+                              style: TextConstants.mediumText.copyWith(
+                                fontSize: 16.sp,
+                                color: AppTheme.textPrimary,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: 'Say something...',
+                                hintStyle: TextConstants.mediumText.copyWith(
+                                  fontSize: 15.sp,
+                                  color: AppTheme.textLight,
+                                ),
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
+                  ),
 
-                    // Image picker
-                    const Expanded(
-                      child: PostImagePicker(),
+                  // Image Picker Section
+                  if (!isKeyboardVisible)
+                    GestureDetector(
+                      onVerticalDragUpdate: (details) {
+                        setState(() {
+                          final delta = -details.delta.dy /
+                              MediaQuery.of(context).size.height;
+                          _pickerHeight = (_pickerHeight + delta)
+                              .clamp(_minPickerHeight, _maxPickerHeight);
+                        });
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        height:
+                            MediaQuery.of(context).size.height * _pickerHeight,
+                        decoration: BoxDecoration(
+                          color: AppTheme.surface,
+                          border: Border(
+                            top: BorderSide(
+                              color: AppTheme.border,
+                              width: 1,
+                            ),
+                          ),
+                        ),
+                        child: const Column(
+                          children: [
+                            // Drag handle
+                            // Container(
+                            //   padding: EdgeInsets.symmetric(vertical: 8.h),
+                            //   child: Row(
+                            //     mainAxisAlignment: MainAxisAlignment.center,
+                            //     children: [
+                            //       Container(
+                            //         width: 40.w,
+                            //         height: 4.h,
+                            //         decoration: BoxDecoration(
+                            //           color: AppTheme.border,
+                            //           borderRadius: BorderRadius.circular(2.r),
+                            //         ),
+                            //       ),
+                            //     ],
+                            //   ),
+                            // ),
+
+                            // Image picker
+                            Expanded(
+                              child: PostImagePicker(),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ],
-                ),
+                ],
               ),
             ),
 
             // Post Button
             Container(
-              padding: EdgeInsets.all(16.w),
+              padding: EdgeInsets.only(
+                left: 16.w,
+                right: 16.w,
+                top: 16.h,
+                bottom: isKeyboardVisible ? keyboardHeight + 16.h : 16.h,
+              ),
               decoration: BoxDecoration(
                 color: AppTheme.surface,
                 border: Border(
@@ -316,13 +299,6 @@ class _NewPostScreenState extends State<NewPostScreen> {
                   decoration: BoxDecoration(
                     color: AppTheme.primary,
                     borderRadius: BorderRadius.circular(40.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.primary.withOpacity(0.4),
-                        blurRadius: 16,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
                   ),
                   child: Center(
                     child: Text(

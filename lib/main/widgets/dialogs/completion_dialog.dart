@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:provider/provider.dart';
-import 'package:campcon/main/provider/animated_dialog_provider.dart';
+import 'package:campcon/main/provider/animated_provider.dart';
 
 class CompletionDialog extends StatefulWidget {
   final String userName;
@@ -26,7 +26,7 @@ class CompletionDialog extends StatefulWidget {
       barrierDismissible: false,
       barrierColor: Colors.black54,
       builder: (context) => ChangeNotifierProvider(
-        create: (_) => AnimatedDialogProvider()..show(),
+        create: (_) => AnimatedProvider()..show(),
         child: CompletionDialog(
           userName: userName,
           onComplete: onComplete,
@@ -118,7 +118,7 @@ class _CompletionDialogState extends State<CompletionDialog>
             borderRadius: BorderRadius.circular(24.r),
           ),
           backgroundColor: AppTheme.surface,
-          child: Consumer<AnimatedDialogProvider>(
+          child: Consumer<AnimatedProvider>(
             builder: (context, provider, child) {
               return AnimatedOpacity(
                 opacity: provider.isContentVisible ? 1.0 : 0.0,
@@ -172,7 +172,7 @@ class _CompletionDialogState extends State<CompletionDialog>
                         delay: 400,
                       ),
 
-                      SizedBox(height: 32.h),
+                      SizedBox(height: 12.h),
 
                       // Features preview
                       _buildFeaturesList(),
@@ -379,7 +379,7 @@ class _CompletionDialogState extends State<CompletionDialog>
           opacity: value,
           child: Transform.scale(
             scale: 0.8 + (0.2 * value),
-            child: Consumer<AnimatedDialogProvider>(
+            child: Consumer<AnimatedProvider>(
               builder: (context, provider, child) {
                 return GestureDetector(
                   onTapDown: (_) => provider.pressButton(),
@@ -400,15 +400,15 @@ class _CompletionDialogState extends State<CompletionDialog>
                     decoration: BoxDecoration(
                       color: AppTheme.primary,
                       borderRadius: BorderRadius.circular(40.r),
-                      boxShadow: !provider.isButtonPressed
-                          ? [
-                              BoxShadow(
-                                color: AppTheme.primary.withOpacity(0.4),
-                                blurRadius: 16,
-                                offset: const Offset(0, 8),
-                              ),
-                            ]
-                          : [],
+                      // boxShadow: !provider.isButtonPressed
+                      //     ? [
+                      //         BoxShadow(
+                      //           color: AppTheme.primary.withOpacity(0.4),
+                      //           blurRadius: 16,
+                      //           offset: const Offset(0, 8),
+                      //         ),
+                      //       ]
+                      //     : [],
                     ),
                     transform: Matrix4.identity()
                       ..scale(provider.isButtonPressed ? 0.95 : 1.0),

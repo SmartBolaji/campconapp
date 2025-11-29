@@ -14,10 +14,10 @@ class AuthProvider extends ChangeNotifier {
 
   // Backblaze service instance
   final BackblazeService _backblazeService = BackblazeService(
-    keyId: '005da9d457a27920000000001',
-    applicationKey: 'K005VF/M8FucVqi2132OpxhuZETl31k',
-    bucketId: '1ddac98d04f5375a92470912',
-    bucketName: 'Campcon-Gallary',
+    keyId: '0050fae555030410000000003',
+    applicationKey: 'K005wG+vROJBYZFRpo0HVDn+Q4V3+zw',
+    bucketId: 'f0ef2ace6525c59093a00411',
+    bucketName: 'Campcon-Media',
   );
 
   // Form controllers

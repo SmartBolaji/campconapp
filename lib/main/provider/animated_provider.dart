@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class AnimatedDialogProvider extends ChangeNotifier {
+class AnimatedProvider extends ChangeNotifier {
   bool _isVisible = false;
   bool _isContentVisible = false;
   bool _isButtonPressed = false;

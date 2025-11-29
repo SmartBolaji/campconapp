@@ -24,34 +24,22 @@ class _PostImagePickerState extends State<PostImagePicker> {
   List<AssetEntity> _mediaList = [];
   AssetPathEntity? _selectedAlbum;
   bool _isLoading = true;
-  int _currentPage = 0;
   final int _pageSize = 50;
   bool _hasMoreToLoad = true;
+  int _currentPage = 0;
   final ImagePicker _imagePicker = ImagePicker();
-  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _fetchAlbums();
-    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
     _cachedFiles.clear();
     _cachedThumbnails.clear();
-    _scrollController.dispose();
     super.dispose();
-  }
-
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-            _scrollController.position.maxScrollExtent - 500 &&
-        !_isLoading &&
-        _hasMoreToLoad) {
-      _fetchNextPage();
-    }
   }
 
   Future<void> _fetchAlbums() async {
@@ -59,20 +47,15 @@ class _PostImagePickerState extends State<PostImagePicker> {
 
     if (permission.isAuth) {
       try {
-        final albums = await PhotoManager.getAssetPathList(
-          type: RequestType.image, // KEY DIFFERENCE: Filter at album level
-        );
-
-        if (albums.isNotEmpty && mounted) {
+        final albums = await PhotoManager.getAssetPathList();
+        if (mounted) {
           setState(() {
             _albums = albums;
-            _selectedAlbum = albums.first;
+            _selectedAlbum = albums.isNotEmpty ? albums.first : null;
           });
-          _resetAndFetchMedia();
-        } else if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
+          if (_selectedAlbum != null) {
+            _resetAndFetchMedia();
+          }
         }
       } catch (e) {
         debugPrint("Error fetching albums: $e");
@@ -81,7 +64,7 @@ class _PostImagePickerState extends State<PostImagePicker> {
         }
       }
     } else {
-      debugPrint("Permission denied");
+      debugPrint("Permission denied. Open settings to grant access.");
       await openAppSettings();
       if (mounted) {
         setState(() => _isLoading = false);
@@ -89,6 +72,7 @@ class _PostImagePickerState extends State<PostImagePicker> {
     }
   }
 
+  // Reset and start fresh when album changes
   void _resetAndFetchMedia() {
     setState(() {
       _isLoading = true;
@@ -100,8 +84,9 @@ class _PostImagePickerState extends State<PostImagePicker> {
     _fetchNextPage();
   }
 
+  // Load media one page at a time
   Future<void> _fetchNextPage() async {
-    if (!_hasMoreToLoad || _selectedAlbum == null || _isLoading) return;
+    if (!_hasMoreToLoad || _selectedAlbum == null) return;
 
     setState(() => _isLoading = true);
 
@@ -121,11 +106,11 @@ class _PostImagePickerState extends State<PostImagePicker> {
         return;
       }
 
-      // Filter for images only (same as image_picker.dart)
+      // Filter for images only and sort
       final images =
           media.where((asset) => asset.type == AssetType.image).toList();
+      images.sort((a, b) => b.createDateTime.compareTo(a.createDateTime));
 
-      // KEY DIFFERENCE: Check if filtered images are empty
       if (images.isEmpty) {
         if (mounted) {
           setState(() {
@@ -136,46 +121,49 @@ class _PostImagePickerState extends State<PostImagePicker> {
         return;
       }
 
+      // Pre-load thumbnails only, not full files
+      for (var asset in images) {
+        _loadThumbnail(asset);
+      }
+
+      // Update state with new data
       if (mounted) {
         setState(() {
-          _mediaList.addAll(images);
+          _mediaList = [..._mediaList, ...images];
           _currentPage++;
           _isLoading = false;
         });
-
-        // Load thumbnails asynchronously
-        for (var asset in images) {
-          _loadThumbnail(asset);
-        }
       }
     } catch (e) {
-      debugPrint("Error loading page: $e");
+      debugPrint("Error fetching media: $e");
       if (mounted) {
         setState(() => _isLoading = false);
       }
     }
   }
 
+  // Load thumbnails instead of full files
   Future<void> _loadThumbnail(AssetEntity asset) async {
     if (_cachedThumbnails.containsKey(asset.id)) return;
 
     try {
+      // Use a small thumbnail size to conserve memory
       final thumbnail = await asset.thumbnailDataWithSize(
         const ThumbnailSize(200, 200),
         quality: 80,
       );
 
       if (thumbnail != null && mounted) {
-        // KEY DIFFERENCE: Always call setState to force rebuild
         setState(() {
           _cachedThumbnails[asset.id] = thumbnail;
         });
       }
     } catch (e) {
-      debugPrint("Error loading thumbnail for ${asset.id}: $e");
+      debugPrint("Error loading thumbnail: $e");
     }
   }
 
+  // Only load full file when needed (for selected images)
   Future<File?> _loadFullFile(AssetEntity asset) async {
     if (_cachedFiles.containsKey(asset.id)) {
       return _cachedFiles[asset.id];
@@ -275,15 +263,20 @@ class _PostImagePickerState extends State<PostImagePicker> {
 
   @override
   Widget build(BuildContext context) {
+    // Add scroll controller to detect when to load more
+    final ScrollController scrollController = ScrollController();
+    scrollController.addListener(() {
+      if (scrollController.position.pixels >=
+              scrollController.position.maxScrollExtent - 500 &&
+          !_isLoading &&
+          _hasMoreToLoad) {
+        _fetchNextPage();
+      }
+    });
+
     final mediaProvider = Provider.of<MediaSelectionProvider>(context);
 
-    // Add scroll listener inline (same as image_picker.dart pattern)
-    if (_scrollController.hasListeners) {
-      _scrollController.removeListener(_onScroll);
-    }
-    _scrollController.addListener(_onScroll);
-
-    if (_isLoading && _mediaList.isEmpty) {
+    if (_mediaList.isEmpty && _isLoading) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -421,7 +414,7 @@ class _PostImagePickerState extends State<PostImagePicker> {
             child: Row(
               children: [
                 Icon(
-                  FeatherIcons.folder,
+                  FeatherIcons.chevronDown,
                   size: 18.sp,
                   color: AppTheme.textSecondary,
                 ),
@@ -429,11 +422,7 @@ class _PostImagePickerState extends State<PostImagePicker> {
                 Expanded(
                   child: DropdownButton<AssetPathEntity>(
                     underline: const SizedBox(),
-                    icon: Icon(
-                      FeatherIcons.chevronDown,
-                      size: 16.sp,
-                      color: AppTheme.textSecondary,
-                    ),
+                    icon: null,
                     style: TextStyle(
                       color: AppTheme.textPrimary,
                       fontSize: 14.sp,
@@ -472,14 +461,14 @@ class _PostImagePickerState extends State<PostImagePicker> {
                     },
                   ),
                 ),
-                Text(
-                  '${_mediaList.length}',
-                  style: TextStyle(
-                    color: AppTheme.textLight,
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                // Text(
+                //   '${_mediaList.length}',
+                //   style: TextStyle(
+                //     color: AppTheme.textLight,
+                //     fontSize: 12.sp,
+                //     fontWeight: FontWeight.w500,
+                //   ),
+                // ),
               ],
             ),
           ),
@@ -487,7 +476,7 @@ class _PostImagePickerState extends State<PostImagePicker> {
         // Image grid with camera button
         Expanded(
           child: GridView.builder(
-            controller: _scrollController,
+            controller: scrollController,
             padding: EdgeInsets.all(2.w),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
@@ -506,7 +495,6 @@ class _PostImagePickerState extends State<PostImagePicker> {
               }
 
               final asset = _mediaList[mediaIndex];
-              // KEY DIFFERENCE: Check if thumbnail exists (same as image_picker.dart)
               final hasThumbnail = _cachedThumbnails.containsKey(asset.id);
               final isSelected = mediaProvider.isSelected(asset);
 
@@ -522,10 +510,7 @@ class _PostImagePickerState extends State<PostImagePicker> {
                             errorBuilder: (_, __, ___) =>
                                 Container(color: AppTheme.border),
                           )
-                        : Container(
-                            color: AppTheme.border,
-                            // KEY DIFFERENCE: Don't show loading spinner in grid
-                          ),
+                        : Container(color: AppTheme.border),
                     if (isSelected)
                       Container(
                         color: AppTheme.primary.withOpacity(0.5),

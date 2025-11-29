@@ -30,27 +30,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
       child: SingleChildScrollView(
         child: Container(
           color: AppTheme.surface,
-          padding: const EdgeInsets.only(top: 10, left: 10, right: 10),
+          padding: const EdgeInsets.only(top: 0, left: 10, right: 10),
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Column(
                 children: [
-                  const SizedBox(),
-                  Column(
-                    children: [
-                      const SizedBox(height: 10),
-                      Text(
-                        "Create Your \nCampcon Account",
-                        style: TextConstants.mediumText,
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.close, color: AppTheme.textPrimary),
-                    onPressed: () => Navigator.of(context).pop(),
+                  const SizedBox(height: 10),
+                  Text(
+                    "Create Your \nCampcon Account",
+                    style: TextConstants.mediumText,
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),

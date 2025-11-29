@@ -52,16 +52,23 @@ class _HomeScreenState extends State<HomeScreen>
                   SliverToBoxAdapter(
                     child: Container(
                       color: AppTheme.surface,
-                      padding: EdgeInsets.fromLTRB(20.w, 5.h, 20.w, 0),
+                      padding: EdgeInsets.fromLTRB(0.w, 5.h, 0.w, 0),
                       child: Column(
                         children: [
-                          // Top Bar
-                          _buildTopBar(context, currentUser, isLoggedIn),
-                          SizedBox(height: 20.h),
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 0),
+                            child: Column(
+                              children: [
+                                // Top Bar
+                                _buildTopBar(context, currentUser, isLoggedIn),
+                                SizedBox(height: 20.h),
 
-                          // Create Post Button
-                          _buildCreatePostButton(),
-                          SizedBox(height: 20.h),
+                                // Create Post Button
+                                _buildCreatePostButton(),
+                                SizedBox(height: 20.h),
+                              ],
+                            ),
+                          ),
 
                           // Tab Bar
                           _buildTabBar(),
@@ -149,11 +156,11 @@ class _HomeScreenState extends State<HomeScreen>
         // Logo
         Image.asset(
           'assets/images/small_logo.png',
-          height: 40.h,
+          height: 22.h,
         ),
 
         // Search Button
-        Container(
+        SizedBox(
           width: 35.w,
           height: 35.h,
           // decoration: BoxDecoration(

@@ -7,7 +7,7 @@ import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/constants/vars_constants.dart';
 import 'package:provider/provider.dart';
-import 'package:campcon/main/provider/animated_dialog_provider.dart';
+import 'package:campcon/main/provider/animated_provider.dart';
 import 'package:campcon/main/widgets/dialogs/completion_dialog.dart';
 
 class InterestsDialog extends StatefulWidget {
@@ -27,7 +27,7 @@ class InterestsDialog extends StatefulWidget {
       barrierDismissible: false,
       barrierColor: Colors.black54,
       builder: (context) => ChangeNotifierProvider(
-        create: (_) => AnimatedDialogProvider()..show(),
+        create: (_) => AnimatedProvider()..show(),
         child: InterestsDialog(onSubmit: onSubmit),
       ),
     );
@@ -95,7 +95,7 @@ class _InterestsDialogState extends State<InterestsDialog>
             borderRadius: BorderRadius.circular(20.r),
           ),
           backgroundColor: AppTheme.surface,
-          child: Consumer<AnimatedDialogProvider>(
+          child: Consumer<AnimatedProvider>(
             builder: (context, provider, child) {
               return AnimatedOpacity(
                 opacity: provider.isContentVisible ? 1.0 : 0.0,
@@ -264,7 +264,7 @@ class _InterestsDialogState extends State<InterestsDialog>
           opacity: value,
           child: Transform.scale(
             scale: 0.8 + (0.2 * value),
-            child: Consumer<AnimatedDialogProvider>(
+            child: Consumer<AnimatedProvider>(
               builder: (context, provider, child) {
                 return GestureDetector(
                   onTapDown:
@@ -302,15 +302,15 @@ class _InterestsDialogState extends State<InterestsDialog>
                           ? AppTheme.primary
                           : AppTheme.buttonBorder,
                       borderRadius: BorderRadius.circular(40.r),
-                      boxShadow: _isFormValid && !provider.isButtonPressed
-                          ? [
-                              BoxShadow(
-                                color: AppTheme.primary.withOpacity(0.4),
-                                blurRadius: 16,
-                                offset: const Offset(0, 8),
-                              ),
-                            ]
-                          : [],
+                      // boxShadow: _isFormValid && !provider.isButtonPressed
+                      //     ? [
+                      //         BoxShadow(
+                      //           color: AppTheme.primary.withOpacity(0.4),
+                      //           blurRadius: 16,
+                      //           offset: const Offset(0, 8),
+                      //         ),
+                      //       ]
+                      //     : [],
                     ),
                     transform: Matrix4.identity()
                       ..scale(

@@ -4,7 +4,7 @@ import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/widgets/dialogs/student_details_dialog.dart';
 import 'package:provider/provider.dart';
-import 'package:campcon/main/provider/animated_dialog_provider.dart';
+import 'package:campcon/main/provider/animated_provider.dart';
 
 class UserTypeDialog extends StatefulWidget {
   final Function(
@@ -31,7 +31,7 @@ class UserTypeDialog extends StatefulWidget {
       barrierDismissible: true,
       barrierColor: Colors.black54,
       builder: (context) => ChangeNotifierProvider(
-        create: (_) => AnimatedDialogProvider()..show(),
+        create: (_) => AnimatedProvider()..show(),
         child: UserTypeDialog(onSelection: onSelection),
       ),
     );
@@ -85,7 +85,7 @@ class _UserTypeDialogState extends State<UserTypeDialog>
             borderRadius: BorderRadius.circular(20.r),
           ),
           backgroundColor: AppTheme.surface,
-          child: Consumer<AnimatedDialogProvider>(
+          child: Consumer<AnimatedProvider>(
             builder: (context, provider, child) {
               return AnimatedOpacity(
                 opacity: provider.isContentVisible ? 1.0 : 0.0,
@@ -264,7 +264,7 @@ class _AnimatedOptionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AnimatedDialogProvider>(
+    return Consumer<AnimatedProvider>(
       builder: (context, provider, child) {
         return GestureDetector(
           onTapDown: (_) => provider.pressButton(),
@@ -280,15 +280,15 @@ class _AnimatedOptionButton extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppTheme.buttonBorder,
               borderRadius: BorderRadius.circular(40.r),
-              boxShadow: provider.isButtonPressed
-                  ? []
-                  : [
-                      BoxShadow(
-                        color: AppTheme.primary.withOpacity(0.15),
-                        blurRadius: 12,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
+              // boxShadow: provider.isButtonPressed
+              //     ? []
+              //     : [
+              //         BoxShadow(
+              //           color: AppTheme.primary.withOpacity(0.15),
+              //           blurRadius: 12,
+              //           offset: const Offset(0, 6),
+              //         ),
+              //       ],
             ),
             transform: Matrix4.identity()
               ..scale(provider.isButtonPressed ? 0.95 : 1.0),

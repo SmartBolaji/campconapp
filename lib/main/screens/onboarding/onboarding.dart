@@ -140,7 +140,8 @@ class _OnboardingState extends State<Onboarding> with TickerProviderStateMixin {
                         text: "Sign In",
                         onPressed: () => CustomBottomSheet.show(
                           context: context,
-                          child: SignIn(),
+                          barrierColor: const Color(0xFFE1AF4B),
+                          child: const SignIn(),
                         ),
                         backgroundColor: AppTheme.primaryDark,
                         textColor: AppTheme.textPrimary,

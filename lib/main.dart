@@ -1,12 +1,14 @@
 import 'package:campcon/firebase_options.dart';
 import 'package:campcon/main/constants/app_colors.dart';
-import 'package:campcon/main/provider/animated_dialog_provider.dart';
+import 'package:campcon/main/provider/animated_provider.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/event_provider.dart';
+import 'package:campcon/main/provider/feed_provider.dart';
 import 'package:campcon/main/provider/friends_provider.dart';
 import 'package:campcon/main/provider/market_provider.dart';
 import 'package:campcon/main/provider/media_provider.dart';
 import 'package:campcon/main/provider/post_provider.dart';
+import 'package:campcon/main/provider/update_provider.dart';
 import 'package:campcon/main/screens/onboarding/onboarding.dart';
 import 'package:campcon/main/screens/main_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -47,9 +49,10 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (context) => FriendsTabProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => MarketplaceProvider()),
-        ChangeNotifierProvider(create: (_) => AnimatedDialogProvider()),
+        ChangeNotifierProvider(create: (_) => AnimatedProvider()),
         ChangeNotifierProvider(create: (_) => MediaSelectionProvider()),
-        ChangeNotifierProvider(create: (_) => PostProvider()), // Add this
+        ChangeNotifierProvider(create: (_) => PostProvider()),
+        ChangeNotifierProvider(create: (_) => FeedProvider()),
       ],
       child: const MyApp(),
     ),
