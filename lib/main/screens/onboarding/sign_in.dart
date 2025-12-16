@@ -117,6 +117,7 @@ class _SignInState extends State<SignIn> {
                           : () => _handleSignIn(context, authProvider),
                       backgroundColor: AppTheme.primaryDark,
                       textColor: AppTheme.textPrimary,
+                      useWidth: false,
                     ),
                     SizedBox(height: 20.h),
                     Row(

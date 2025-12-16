@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class PostModel {
   final String postId;
   final String userId;
@@ -10,6 +12,7 @@ class PostModel {
   final int shares;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String? campus; // ✅ Add this field
 
   PostModel({
     required this.postId,
@@ -18,12 +21,36 @@ class PostModel {
     required this.userProfileImage,
     required this.content,
     required this.imageUrls,
-    this.likes = 0,
-    this.comments = 0,
-    this.shares = 0,
+    required this.likes,
+    required this.comments,
+    required this.shares,
     required this.createdAt,
     required this.updatedAt,
+    this.campus, // ✅ Add this parameter
   });
+
+  factory PostModel.fromMap(Map<String, dynamic> map) {
+    return PostModel(
+      postId: map['postId'] ?? '',
+      userId: map['userId'] ?? '',
+      username: map['username'] ?? '',
+      userProfileImage: map['userProfileImage'] ?? '',
+      content: map['content'] ?? '',
+      imageUrls: List<String>.from(map['imageUrls'] ?? []),
+      likes: map['likes'] ?? 0,
+      comments: map['comments'] ?? 0,
+      shares: map['shares'] ?? 0,
+      createdAt: map['createdAt'] is Timestamp
+          ? (map['createdAt'] as Timestamp).toDate()
+          : DateTime.parse(
+              map['createdAt'] ?? DateTime.now().toIso8601String()),
+      updatedAt: map['updatedAt'] is Timestamp
+          ? (map['updatedAt'] as Timestamp).toDate()
+          : DateTime.parse(
+              map['updatedAt'] ?? DateTime.now().toIso8601String()),
+      campus: map['campus'], // ✅ Add this
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {
@@ -38,23 +65,8 @@ class PostModel {
       'shares': shares,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      'campus': campus, // ✅ Add this
     };
-  }
-
-  factory PostModel.fromMap(Map<String, dynamic> map) {
-    return PostModel(
-      postId: map['postId'] ?? '',
-      userId: map['userId'] ?? '',
-      username: map['username'] ?? '',
-      userProfileImage: map['userProfileImage'] ?? '',
-      content: map['content'] ?? '',
-      imageUrls: List<String>.from(map['imageUrls'] ?? []),
-      likes: map['likes'] ?? 0,
-      comments: map['comments'] ?? 0,
-      shares: map['shares'] ?? 0,
-      createdAt: DateTime.parse(map['createdAt']),
-      updatedAt: DateTime.parse(map['updatedAt']),
-    );
   }
 
   PostModel copyWith({
@@ -69,6 +81,7 @@ class PostModel {
     int? shares,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? campus, // ✅ Add this
   }) {
     return PostModel(
       postId: postId ?? this.postId,
@@ -82,6 +95,7 @@ class PostModel {
       shares: shares ?? this.shares,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      campus: campus ?? this.campus, // ✅ Add this
     );
   }
 }

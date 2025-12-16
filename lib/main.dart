@@ -4,11 +4,13 @@ import 'package:campcon/main/provider/animated_provider.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/event_provider.dart';
 import 'package:campcon/main/provider/feed_provider.dart';
+import 'package:campcon/main/provider/follow_provider.dart';
 import 'package:campcon/main/provider/friends_provider.dart';
 import 'package:campcon/main/provider/market_provider.dart';
 import 'package:campcon/main/provider/media_provider.dart';
 import 'package:campcon/main/provider/post_provider.dart';
-import 'package:campcon/main/provider/update_provider.dart';
+import 'package:campcon/main/provider/market_post_provider.dart';
+import 'package:campcon/main/provider/product_provider.dart';
 import 'package:campcon/main/screens/onboarding/onboarding.dart';
 import 'package:campcon/main/screens/main_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -21,6 +23,7 @@ import 'package:month_year_picker/month_year_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
 import 'main/provider/chat_provider.dart';
+import 'main/provider/top_bar_provider.dart';
 
 Future<void> main() async {
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
@@ -45,14 +48,17 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => EventProvider()),
-        ChangeNotifierProvider(create: (context) => FriendsTabProvider()),
-        ChangeNotifierProvider(create: (_) => ChatProvider()),
-        ChangeNotifierProvider(create: (_) => MarketplaceProvider()),
-        ChangeNotifierProvider(create: (_) => AnimatedProvider()),
-        ChangeNotifierProvider(create: (_) => MediaSelectionProvider()),
         ChangeNotifierProvider(create: (_) => PostProvider()),
         ChangeNotifierProvider(create: (_) => FeedProvider()),
+        ChangeNotifierProvider(create: (_) => FollowProvider()),
+        ChangeNotifierProvider(create: (_) => MarketplaceProvider()),
+        ChangeNotifierProvider(create: (_) => MarketPostProvider()),
+        ChangeNotifierProvider(create: (_) => ProductProvider()),
+        ChangeNotifierProvider(create: (_) => ChatProvider()),
+        ChangeNotifierProvider(create: (_) => FriendsTabProvider()),
+        ChangeNotifierProvider(create: (_) => AnimatedProvider()),
+        ChangeNotifierProvider(create: (_) => MediaSelectionProvider()),
+        ChangeNotifierProvider(create: (_) => EventProvider()),
       ],
       child: const MyApp(),
     ),

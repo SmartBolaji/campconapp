@@ -3,11 +3,13 @@ import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/post_model.dart';
 import 'package:campcon/main/models/user_model.dart';
 import 'package:campcon/main/provider/feed_provider.dart';
+import 'package:campcon/main/screens/profile/profile_screen.dart';
 import 'package:campcon/main/widgets/format_time.dart';
 import 'package:campcon/main/widgets/posts/image_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:page_transition/page_transition.dart';
 
 class PostWidget extends StatelessWidget {
   final PostModel post;
@@ -39,6 +41,33 @@ class PostWidget extends StatelessWidget {
     this.index = 0,
   });
 
+  void _navigateToProfile(BuildContext context) {
+    // ✅ Create initial user data from post author
+    final initialUserData = author ??
+        UserModel(
+          uid: post.userId,
+          email: '', // Not available from post
+          username: post.username,
+          name: post.username,
+          profileImageUrl: '', // Will be loaded
+          phoneNumber: '', // Not available from post
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+
+    Navigator.push(
+      context,
+      PageTransition(
+        type: PageTransitionType.rightToLeft,
+        child: ProfileScreen(
+          userId: post.userId,
+          initialUserData: initialUserData, // ✅ Pass initial data
+        ),
+        duration: const Duration(milliseconds: 300),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasImages = post.imageUrls.isNotEmpty;
@@ -56,7 +85,7 @@ class PostWidget extends StatelessWidget {
           border: Border(
             bottom: BorderSide(
               color: AppTheme.border,
-              width: 0.5,
+              width: 1,
             ),
           ),
         ),
@@ -69,19 +98,23 @@ class PostWidget extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    radius: 20.r,
-                    backgroundColor: AppTheme.primaryBackground,
-                    backgroundImage: displayImage.isNotEmpty
-                        ? NetworkImage(displayImage)
-                        : null,
-                    child: displayImage.isEmpty
-                        ? Icon(
-                            Icons.person,
-                            size: 20.sp,
-                            color: AppTheme.primary,
-                          )
-                        : null,
+                  // ✅ Clickable Avatar
+                  GestureDetector(
+                    onTap: () => _navigateToProfile(context),
+                    child: CircleAvatar(
+                      radius: 20.r,
+                      backgroundColor: AppTheme.primaryBackground,
+                      backgroundImage: displayImage.isNotEmpty
+                          ? NetworkImage(displayImage)
+                          : null,
+                      child: displayImage.isEmpty
+                          ? Icon(
+                              Icons.person,
+                              size: 20.sp,
+                              color: AppTheme.primary,
+                            )
+                          : null,
+                    ),
                   ),
                   SizedBox(width: 10.w),
                   Expanded(
@@ -90,15 +123,19 @@ class PostWidget extends StatelessWidget {
                       children: [
                         Row(
                           children: [
+                            // ✅ Clickable Name
                             Flexible(
-                              child: Text(
-                                displayName,
-                                style: TextConstants.mediumText.copyWith(
-                                  fontSize: 15.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppTheme.textPrimary,
+                              child: GestureDetector(
+                                onTap: () => _navigateToProfile(context),
+                                child: Text(
+                                  displayName,
+                                  style: TextConstants.mediumText.copyWith(
+                                    fontSize: 15.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.textPrimary,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             SizedBox(width: 6.w),
@@ -151,7 +188,7 @@ class PostWidget extends StatelessWidget {
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16.w),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12.r),
+                    // borderRadius: BorderRadius.circular(12.r),
                     child: ImagePageViewWidget(
                       imageUrls: post.imageUrls,
                       showFullScreenButton: false,

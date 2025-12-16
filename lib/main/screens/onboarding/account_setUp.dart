@@ -142,6 +142,7 @@ class _AccountSetupState extends State<AccountSetup> {
                             : () => _handleContinue(context, provider),
                         backgroundColor: Constants.primaryDark,
                         textColor: Constants.black,
+                        // useWidth: false,
                       ),
                       SizedBox(height: 20.h),
                       if (isLastStep && !provider.isLoading)

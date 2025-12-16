@@ -1,4 +1,4 @@
-// auth_providers.dart
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -11,6 +11,9 @@ import '../../services/backblaze.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
+
+  // Firestore instance
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Backblaze service instance
   final BackblazeService _backblazeService = BackblazeService(
@@ -702,6 +705,179 @@ class AuthProvider extends ChangeNotifier {
         setError('Failed to update password. Please try again.');
       }
       return false;
+    }
+  }
+
+  /// Update user profile with new data and optional profile image
+  Future<bool> updateProfile({
+    required String name,
+    required String username,
+    required String aboutMe,
+    File? newProfileImage,
+    String? originalUsername,
+  }) async {
+    if (_currentUser == null) {
+      setError('User not found');
+      return false;
+    }
+
+    setLoading(true);
+    clearError();
+
+    try {
+      // Check if username changed and is available
+      if (username.trim().toLowerCase() != originalUsername?.toLowerCase()) {
+        final usernameQuery = await FirebaseFirestore.instance
+            .collection('users')
+            .where('username', isEqualTo: username.trim().toLowerCase())
+            .get();
+
+        if (usernameQuery.docs.isNotEmpty) {
+          setLoading(false);
+          setError('Username already taken');
+          return false;
+        }
+      }
+
+      String? newImageUrl;
+
+      // Upload new profile image if changed
+      if (newProfileImage != null) {
+        try {
+          debugPrint('📸 Compressing and uploading new profile image...');
+
+          File compressedImage =
+              await _backblazeService.compressImage(newProfileImage);
+          newImageUrl = await _backblazeService.uploadFile(compressedImage);
+
+          debugPrint('✅ New profile image uploaded: $newImageUrl');
+
+          // Clean up temp file
+          if (compressedImage.path != newProfileImage.path) {
+            try {
+              await compressedImage.delete();
+            } catch (e) {
+              debugPrint('Warning: Could not delete temp file: $e');
+            }
+          }
+        } catch (e) {
+          debugPrint('❌ Error uploading image: $e');
+          setLoading(false);
+          setError('Failed to upload image');
+          return false;
+        }
+      }
+
+      // Update Firestore
+      Map<String, dynamic> updates = {
+        'name': name.trim(),
+        'username': username.trim().toLowerCase(),
+        'aboutMe': aboutMe.trim(),
+        'updatedAt': DateTime.now().toIso8601String(),
+      };
+
+      if (newImageUrl != null) {
+        updates['profileImageUrl'] = newImageUrl;
+      }
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_currentUser!.uid)
+          .update(updates);
+
+      // Update local user model
+      _currentUser = _currentUser!.copyWith(
+        name: name.trim(),
+        username: username.trim().toLowerCase(),
+        aboutMe: aboutMe.trim(),
+        profileImageUrl: newImageUrl ?? _currentUser!.profileImageUrl,
+        updatedAt: DateTime.now(),
+      );
+
+      // Update secure storage
+      await SecureStorageService.saveAuthStatus(
+        userId: _currentUser!.uid,
+        email: _currentUser!.email,
+        userData: _currentUser!.toMap(),
+      );
+
+      setLoading(false);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      setLoading(false);
+      debugPrint('❌ Error updating profile: $e');
+      setError('Failed to update profile');
+      return false;
+    }
+  }
+
+  // Delete user account
+  Future<bool> deleteAccount(String password) async {
+    if (_currentUser == null) {
+      setError('No user found');
+      return false;
+    }
+
+    setLoading(true);
+    clearError();
+
+    try {
+      // Re-authenticate user
+      bool authenticated = await _authService.reauthenticateUser(password);
+
+      if (!authenticated) {
+        setLoading(false);
+        setError('Incorrect password');
+        return false;
+      }
+
+      // Delete account
+      await _authService.deleteUserAccount(_currentUser!.uid);
+
+      // Clear secure storage
+      await SecureStorageService.clearAuthData();
+
+      // Clear local state
+      _currentUser = null;
+      _clearControllers();
+
+      setLoading(false);
+      return true;
+    } catch (e) {
+      setLoading(false);
+      debugPrint('❌ Error deleting account: $e');
+
+      if (e is FirebaseAuthException) {
+        if (e.code == 'requires-recent-login') {
+          setError(
+              'Please sign out and sign in again before deleting your account');
+        } else {
+          setError(_getErrorMessage(e));
+        }
+      } else {
+        setError('Failed to delete account. Please try again.');
+      }
+      return false;
+    }
+  }
+
+  // ✅ Update user campus
+  Future<void> updateCampus(String campus) async {
+    if (_currentUser == null) return;
+
+    try {
+      await _firestore.collection('users').doc(_currentUser!.uid).update({
+        'campus': campus,
+      });
+
+      _currentUser = _currentUser!.copyWith(campus: campus);
+      notifyListeners();
+
+      debugPrint('✅ Campus updated: $campus');
+    } catch (e) {
+      debugPrint('❌ Error updating campus: $e');
+      rethrow;
     }
   }
 

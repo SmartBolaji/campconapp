@@ -1,6 +1,28 @@
 class UsableData {
+  // University of Ibadan Campuses (Halls)
+  List<String> campusList = [
+    'Abdulsalam Abubakar Hall',
+    'Alexander Brown Hall',
+    'Awolowo Hall',
+    'Independence Hall',
+    'Kuti Hall',
+    'Mellanby Hall',
+    'Queen Elizabeth II Hall',
+    'Tedder Hall',
+    'Nnamdi Azikiwe Hall',
+    'Idia Hall',
+    'Queen Idia Hall Annex',
+    'Obafemi Awolowo Hall Annex',
+    'Ladoke Akintola Hall',
+    'Great House',
+    'Sultan Bello Hall',
+    'New Undergraduate Hostel',
+    'Postgraduate Hall',
+  ];
+
   List<String> schoolList = [
     'University of Ibadan',
+    'Other Institutions',
   ];
 
   List<String> levelList = [
@@ -90,7 +112,7 @@ class UsableData {
       "department": "Social and Environmental Forestry",
       "faculty": "Renewable Natural Resources"
     },
-    {"department": "Archaeology and Anthropology", "faculty": "Science"},
+    // {"department": "Archaeology and Anthropology", "faculty": "Science"},
     {"department": "Botany", "faculty": "Science"},
     {"department": "Chemistry", "faculty": "Science"},
     {"department": "Computer Science", "faculty": "Science"},
@@ -129,26 +151,6 @@ class UsableData {
       "department": "Veterinary Public Health and Preventive Medicine",
       "faculty": "Veterinary Medicine"
     },
-  ];
-
-  List<String> loclist = [
-    'Abdulsalam Abubakar Hall',
-    'Alexander Brown Hall',
-    'Awo Hall (Awolowo Hall)',
-    'Indy Hall (Independence Hall)',
-    'Kuti Hall',
-    'Mellanby Hall',
-    'Queen Elizabeth II Hall',
-    'Tedder Hall',
-    'Zik Hall (Nnamdi Azikiwe Hall)',
-    'Idia Hall',
-    'Queen Idia Hall Annex',
-    'Obafemi Awolowo Hall Annex',
-    'Ladoke Akintola Hall',
-    'Great House',
-    'Sultan Bello Hall',
-    'New Undergraduate Hostel',
-    'Postgraduate Hall',
   ];
 
   // Interests

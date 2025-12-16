@@ -52,6 +52,13 @@ class _NewPostScreenState extends State<NewPostScreen> {
       return;
     }
 
+    // ✅ Get user's campus
+    final campus = currentUser.campus ?? '';
+    if (campus.isEmpty) {
+      _showError('Please select your campus first');
+      return;
+    }
+
     final content = _contentController.text.trim();
     final images = mediaProvider.selectedFiles;
 
@@ -76,10 +83,10 @@ class _NewPostScreenState extends State<NewPostScreen> {
       username: currentUser.username,
       userProfileImage: currentUser.profileImageUrl ?? '',
       content: content,
+      campus: campus, 
       images: images.isNotEmpty ? images : null,
     );
 
-    // Success/error is already handled by the upload bar
     debugPrint(success ? '✅ Post created silently' : '❌ Silent upload failed');
   }
 

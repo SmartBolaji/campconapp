@@ -263,4 +263,37 @@ class AuthService {
       rethrow;
     }
   }
+
+  // Re-authenticate user before sensitive operations
+  Future<bool> reauthenticateUser(String password) async {
+    try {
+      User? user = _auth.currentUser;
+      if (user == null || user.email == null) return false;
+
+      AuthCredential credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: password,
+      );
+
+      await user.reauthenticateWithCredential(credential);
+      return true;
+    } catch (e) {
+      print('Error re-authenticating user: $e');
+      return false;
+    }
+  }
+
+  // Delete user account
+  Future<void> deleteUserAccount(String userId) async {
+    try {
+      // Delete user data from Firestore
+      await _firestore.collection('users').doc(userId).delete();
+
+      // Delete user from Firebase Auth
+      await _auth.currentUser?.delete();
+    } catch (e) {
+      print('Error deleting user account: $e');
+      rethrow;
+    }
+  }
 }

@@ -100,13 +100,13 @@ class _VerificationScreenState extends State<VerificationScreen> {
                     ),
                     SizedBox(height: 30.h),
 
-                    // Instruction Text
-                    Text(
-                      "Verification Link Sent!",
-                      style: TextConstants.boldText.copyWith(fontSize: 24.sp),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 15.h),
+                    // // Instruction Text
+                    // Text(
+                    //   "Verification Link Sent!",
+                    //   style: TextConstants.boldText.copyWith(fontSize: 24.sp),
+                    //   textAlign: TextAlign.center,
+                    // ),
+                    // SizedBox(height: 15.h),
 
                     RichText(
                       textAlign: TextAlign.center,
@@ -215,7 +215,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                       text: authProvider.isLoading
                           ? "Sending..."
                           : authProvider.canResend
-                              ? "Resend Verification Link"
+                              ? "Resend"
                               : "Resend in ${authProvider.resendCountdown}s",
                       onPressed: () {
                         if (authProvider.canResend &&

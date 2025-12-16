@@ -73,6 +73,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           : () => _handleCreateAccount(context, authProvider),
                       backgroundColor: AppTheme.primaryDark,
                       textColor: AppTheme.textPrimary,
+                      useWidth: false,
                     ),
                     SizedBox(height: 20.h),
                     Row(

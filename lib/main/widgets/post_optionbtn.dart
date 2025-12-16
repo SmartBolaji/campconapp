@@ -1,3 +1,5 @@
+import 'package:campcon/main/constants/app_colors.dart';
+import 'package:campcon/main/constants/text_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -35,9 +37,9 @@ class PostOptionButton extends StatelessWidget {
           SizedBox(height: 10.h),
           Text(
             label,
-            style: TextStyle(
+            style: TextConstants.mediumText.copyWith(
               fontSize: 14.sp,
-              fontWeight: FontWeight.w500,
+              color: AppTheme.textPrimary,
             ),
           ),
         ],

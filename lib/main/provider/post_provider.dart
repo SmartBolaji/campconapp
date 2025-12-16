@@ -160,6 +160,7 @@ class PostProvider extends ChangeNotifier {
     required String username,
     required String userProfileImage,
     required String content,
+    required String campus, // ✅ Add this parameter
     List<File>? images,
   }) async {
     if (content.trim().isEmpty && (images == null || images.isEmpty)) {
@@ -236,12 +237,13 @@ class PostProvider extends ChangeNotifier {
         shares: 0,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
+        campus: campus, // ✅ Add this
       );
 
       await postRef.set(post.toMap());
 
       setUploadSuccess();
-      debugPrint('✅ Post created successfully');
+      debugPrint('✅ Post created successfully with campus: $campus');
       return true;
     } catch (e) {
       debugPrint('❌ Error creating post: $e');
@@ -256,6 +258,7 @@ class PostProvider extends ChangeNotifier {
     required String username,
     required String userProfileImage,
     required String content,
+    required String campus, // ✅ Add this parameter
     List<File>? images,
   }) async {
     if (content.trim().isEmpty && (images == null || images.isEmpty)) {
@@ -326,12 +329,13 @@ class PostProvider extends ChangeNotifier {
         shares: 0,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
+        campus: campus, // ✅ Add this
       );
 
       await postRef.set(post.toMap());
 
       setLoading(false);
-      debugPrint('✅ Post created successfully');
+      debugPrint('✅ Post created successfully with campus: $campus');
       return true;
     } catch (e) {
       setLoading(false);
