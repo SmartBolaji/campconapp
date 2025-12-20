@@ -11,6 +11,8 @@ import 'package:campcon/main/provider/media_provider.dart';
 import 'package:campcon/main/provider/post_provider.dart';
 import 'package:campcon/main/provider/market_post_provider.dart';
 import 'package:campcon/main/provider/product_provider.dart';
+import 'package:campcon/main/provider/resource_provider.dart';
+import 'package:campcon/main/provider/notify_provider.dart';
 import 'package:campcon/main/screens/onboarding/onboarding.dart';
 import 'package:campcon/main/screens/main_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -23,7 +25,6 @@ import 'package:month_year_picker/month_year_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
 import 'main/provider/chat_provider.dart';
-import 'main/provider/top_bar_provider.dart';
 
 Future<void> main() async {
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
@@ -59,6 +60,8 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => AnimatedProvider()),
         ChangeNotifierProvider(create: (_) => MediaSelectionProvider()),
         ChangeNotifierProvider(create: (_) => EventProvider()),
+        ChangeNotifierProvider(create: (_) => ResourceProvider()),
+        ChangeNotifierProvider(create: (_) => NotifyProvider()),
       ],
       child: const MyApp(),
     ),

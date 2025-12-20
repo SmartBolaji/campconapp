@@ -94,7 +94,7 @@ class PostWidget extends StatelessWidget {
           children: [
             Padding(
               padding: EdgeInsets.fromLTRB(
-                  16.w, index == 0 ? 20.h : 12.h, 16.w, 12.h),
+                  16.w, index == 0 ? 12.h : 12.h, 16.w, 12.h),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

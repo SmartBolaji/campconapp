@@ -1,5 +1,5 @@
 import 'package:campcon/main/models/event_model.dart';
-import 'package:campcon/services/backblaze.dart';
+import 'package:campcon/main/services/backblaze.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -44,6 +44,9 @@ class EventProvider extends ChangeNotifier {
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
   bool _isFree = true;
+
+  // ✅ Form state - Add ticket stock fields
+  bool _sellOnCampcon = false;
 
   // Subscription
   StreamSubscription<QuerySnapshot>? _eventsSubscription;
@@ -94,6 +97,9 @@ class EventProvider extends ChangeNotifier {
   DateTime? get selectedDate => _selectedDate;
   TimeOfDay? get selectedTime => _selectedTime;
   bool get isFree => _isFree;
+
+  // ✅ Form getters - Add new getter
+  bool get sellOnCampcon => _sellOnCampcon;
 
   // Check if user is interested/attending
   bool isInterested(String eventId) => _interestedEvents.contains(eventId);
@@ -167,12 +173,19 @@ class EventProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ✅ Form methods - Add new method
+  void toggleSellOnCampcon(bool value) {
+    _sellOnCampcon = value;
+    notifyListeners();
+  }
+
   void clearForm() {
     _selectedImage = null;
     _selectedCategory = null;
     _selectedDate = null;
     _selectedTime = null;
     _isFree = true;
+    _sellOnCampcon = false; // ✅ Add this
     notifyListeners();
   }
 
@@ -279,6 +292,8 @@ class EventProvider extends ChangeNotifier {
     double? ticketPrice,
     String? ticketLink,
     File? image,
+    bool sellOnCampcon = false, // ✅ New
+    int? ticketStock, // ✅ New
   }) async {
     if (title.trim().isEmpty ||
         description.trim().isEmpty ||
@@ -290,6 +305,14 @@ class EventProvider extends ChangeNotifier {
     if (!isFree && (ticketPrice == null || ticketPrice <= 0)) {
       _error = 'Please enter a valid ticket price';
       return false;
+    }
+
+    // ✅ Validate ticket stock if selling on CampCon
+    if (sellOnCampcon && !isFree) {
+      if (ticketStock == null || ticketStock <= 0) {
+        _error = 'Please enter valid ticket quantity';
+        return false;
+      }
     }
 
     startSilentUpload();
@@ -337,6 +360,9 @@ class EventProvider extends ChangeNotifier {
         isFree: isFree,
         createdAt: DateTime.now(),
         school: school,
+        sellOnCampcon: sellOnCampcon, // ✅ New
+        ticketStock: ticketStock, // ✅ New
+        soldTickets: 0, // ✅ New
       );
 
       await eventRef.set(event.toJson());

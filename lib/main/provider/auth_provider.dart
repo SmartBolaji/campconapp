@@ -7,7 +7,7 @@ import 'dart:async';
 import '../services/auth_service.dart';
 import '../services/secure_storage_service.dart'; // Add this import
 import '../models/user_model.dart';
-import '../../services/backblaze.dart';
+import '../services/backblaze.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();

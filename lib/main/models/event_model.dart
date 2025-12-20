@@ -18,7 +18,12 @@ class EventModel {
   final DateTime createdAt;
   final int interestedCount;
   final int attendingCount;
-  final String school; // ✅ Changed from campus to school
+  final String school;
+
+  // ✅ New ticket stock fields
+  final bool sellOnCampcon;
+  final int? ticketStock;
+  final int soldTickets;
 
   EventModel({
     required this.id,
@@ -38,8 +43,23 @@ class EventModel {
     required this.createdAt,
     this.interestedCount = 0,
     this.attendingCount = 0,
-    required this.school, // ✅ Changed from campus to school
+    required this.school,
+    this.sellOnCampcon = false, // ✅ New
+    this.ticketStock, // ✅ New
+    this.soldTickets = 0, // ✅ New
   });
+
+  // ✅ Calculate available tickets
+  int get availableTickets {
+    if (!sellOnCampcon || ticketStock == null) return 0;
+    return ticketStock! - soldTickets;
+  }
+
+  // ✅ Check if tickets are sold out
+  bool get isSoldOut {
+    if (!sellOnCampcon) return false;
+    return availableTickets <= 0;
+  }
 
   String get formattedPrice {
     if (isFree) return 'Free';
@@ -96,7 +116,10 @@ class EventModel {
           : DateTime.now(),
       interestedCount: json['interestedCount'] ?? 0,
       attendingCount: json['attendingCount'] ?? 0,
-      school: json['school'] ?? '', 
+      school: json['school'] ?? '',
+      sellOnCampcon: json['sellOnCampcon'] ?? false,
+      ticketStock: json['ticketStock'],
+      soldTickets: json['soldTickets'] ?? 0,
     );
   }
 
@@ -118,7 +141,10 @@ class EventModel {
       'createdAt': createdAt.toIso8601String(),
       'interestedCount': interestedCount,
       'attendingCount': attendingCount,
-      'school': school, // ✅ Changed from campus to school
+      'school': school,
+      'sellOnCampcon': sellOnCampcon,
+      'ticketStock': ticketStock,
+      'soldTickets': soldTickets,
     };
   }
 }

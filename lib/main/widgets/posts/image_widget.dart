@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/widgets/navigation_helper.dart';
 import 'package:campcon/main/widgets/posts/full_image_widget.dart';
-import 'package:campcon/services/cache.dart';
+import 'package:campcon/main/services/cache.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 

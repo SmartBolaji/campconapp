@@ -1,7 +1,7 @@
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/event_model.dart';
-import 'package:campcon/main/screens/bottonnavbarscreens/home_folder/events/event_description.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/home_folder/events/event_description.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
@@ -167,33 +167,58 @@ class EventCard extends StatelessWidget {
                     right: 8.w,
                     child: Container(
                       padding: EdgeInsets.symmetric(
-                        horizontal: 8.w,
-                        vertical: 4.h,
+                        horizontal: 10.w,
+                        vertical: 6.h,
                       ),
                       decoration: BoxDecoration(
                         color: event.isFree
                             ? AppTheme.success
-                            : AppTheme.primary.withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(6.r),
-                        boxShadow: [
-                          BoxShadow(
-                            color: (event.isFree
-                                    ? AppTheme.success
-                                    : AppTheme.primary)
-                                .withOpacity(0.3),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                            : event.isSoldOut
+                                ? AppTheme.error
+                                : AppTheme.primary.withValues(alpha: 0.95),
+                        borderRadius: BorderRadius.circular(8.r),
                       ),
-                      child: Text(
-                        event.formattedPrice,
-                        style: TextConstants.smallText.copyWith(
-                          fontSize: 10.sp,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.white,
-                        ),
-                      ),
+                      child: event.sellOnCampcon && !event.isFree
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Text(
+                                //   event.formattedPrice,
+                                //   style: TextConstants.mediumText.copyWith(
+                                //     fontSize: 12.sp,
+                                //     fontWeight: FontWeight.bold,
+                                //     color: AppTheme.white,
+                                //   ),
+                                // ),
+                                if (!event.isSoldOut) ...[
+                                  SizedBox(height: 2.h),
+                                  Text(
+                                    '${event.availableTickets} left',
+                                    style: TextConstants.smallText.copyWith(
+                                      fontSize: 10.sp,
+                                      color: AppTheme.white.withOpacity(0.9),
+                                    ),
+                                  ),
+                                ] else
+                                  Text(
+                                    'SOLD OUT',
+                                    style: TextConstants.smallText.copyWith(
+                                      fontSize: 10.sp,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.white,
+                                    ),
+                                  ),
+                              ],
+                            )
+                          : Text(
+                              event.formattedPrice,
+                              style: TextConstants.mediumText.copyWith(
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.white,
+                              ),
+                            ),
                     ),
                   ),
 
@@ -242,6 +267,26 @@ class EventCard extends StatelessWidget {
                   ),
                   SizedBox(height: 6.h),
 
+                  // Price
+                  Row(
+                    children: [
+                      Iconify(
+                        Ph.ticket,
+                        size: 12.sp,
+                        color: AppTheme.textLight,
+                      ),
+                      SizedBox(width: 4.w),
+                      Text(
+                        event.isFree ? 'Free' : event.formattedPrice,
+                        style: TextConstants.smallText.copyWith(
+                          fontSize: 11.sp,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 4.h),
+
                   // Time
                   Row(
                     children: [
@@ -284,26 +329,26 @@ class EventCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SizedBox(height: 6.h),
+                  // SizedBox(height: 6.h),
 
-                  // Stats
-                  Row(
-                    children: [
-                      Iconify(
-                        Ph.users,
-                        size: 12.sp,
-                        color: AppTheme.textLight,
-                      ),
-                      SizedBox(width: 4.w),
-                      Text(
-                        '${event.interestedCount} interested',
-                        style: TextConstants.smallText.copyWith(
-                          fontSize: 10.sp,
-                          color: AppTheme.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
+                  // // Stats
+                  // Row(
+                  //   children: [
+                  //     Iconify(
+                  //       Ph.users,
+                  //       size: 12.sp,
+                  //       color: AppTheme.textLight,
+                  //     ),
+                  //     SizedBox(width: 4.w),
+                  //     Text(
+                  //       '${event.interestedCount} interested',
+                  //       style: TextConstants.smallText.copyWith(
+                  //         fontSize: 10.sp,
+                  //         color: AppTheme.textSecondary,
+                  //       ),
+                  //     ),
+                  //   ],
+                  // ),
                 ],
               ),
             ),

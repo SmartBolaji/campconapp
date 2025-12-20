@@ -24,6 +24,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   final _ticketLinkController = TextEditingController();
+  final _ticketStockController = TextEditingController(); // ✅ New
 
   @override
   void initState() {
@@ -129,10 +130,19 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         _showError('Please enter a valid ticket price');
         return;
       }
+
+      if (eventProvider.sellOnCampcon) {
+        final stock = int.tryParse(_ticketStockController.text.trim());
+        if (stock == null || stock <= 0) {
+          _showError('Please enter valid ticket quantity');
+          return;
+        }
+      }
     }
 
     FocusScope.of(context).unfocus();
 
+    // ✅ CAPTURE ALL VALUES BEFORE CLEARING
     final title = _titleController.text.trim();
     final location = _locationController.text.trim();
     final description = _descriptionController.text.trim();
@@ -146,25 +156,30 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       eventProvider.selectedTime!.hour,
       eventProvider.selectedTime!.minute,
     );
-    final price = eventProvider.isFree
-        ? null
-        : double.tryParse(_priceController.text.trim());
+    final isFree = eventProvider.isFree; // ✅ CAPTURE BEFORE CLEAR
+    final sellOnCampcon = eventProvider.sellOnCampcon; // ✅ CAPTURE BEFORE CLEAR
+    final price = isFree ? null : double.tryParse(_priceController.text.trim());
     final ticketLink = _ticketLinkController.text.trim().isEmpty
         ? null
         : _ticketLinkController.text.trim();
+    final ticketStock = sellOnCampcon && !isFree
+        ? int.tryParse(_ticketStockController.text.trim())
+        : null;
 
-    // Clear text controllers
+    // NOW clear text controllers
     _titleController.clear();
     _locationController.clear();
     _descriptionController.clear();
     _priceController.clear();
     _ticketLinkController.clear();
+    _ticketStockController.clear();
 
-    // Clear form in provider
+    // NOW clear form in provider
     eventProvider.clearForm();
 
     Navigator.of(context).pop();
 
+    // ✅ USE CAPTURED VALUES
     final success = await eventProvider.createEventSilently(
       organizerId: currentUser.uid,
       organizerName: currentUser.username,
@@ -175,10 +190,12 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       eventTime: eventTime,
       category: category,
       school: school,
-      isFree: eventProvider.isFree,
+      isFree: isFree, // ✅ Use captured value
       ticketPrice: price,
       ticketLink: ticketLink,
       image: image,
+      sellOnCampcon: sellOnCampcon, // ✅ Use captured value
+      ticketStock: ticketStock,
     );
 
     debugPrint(success ? '✅ Event created' : '❌ Failed to create event');
@@ -225,10 +242,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                           controller: _locationController,
                           hint: 'e.g. Sports Complex, Main Hall',
                         ),
-                        SizedBox(height: 20.h),
-                        _buildDateTimeSection(eventProvider),
-                        SizedBox(height: 20.h),
-                        _buildPricingSection(eventProvider),
                         SizedBox(height: 16.h),
                         _buildTextField(
                           label: 'Description *',
@@ -237,8 +250,23 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                               'Describe your event, activities, what to expect...',
                           maxLines: 5,
                         ),
-                        SizedBox(height: 16.h),
-                        _buildTicketLinkSection(),
+                        SizedBox(height: 20.h),
+                        _buildDateTimeSection(eventProvider),
+                        SizedBox(height: 20.h),
+                        _buildPricingSection(eventProvider),
+
+                        // ✅ Add Ticket Stock Section
+                        if (!eventProvider.isFree) ...[
+                          SizedBox(height: 20.h),
+                          _buildTicketStockSection(eventProvider),
+                        ],
+
+                        // ✅ Only show external ticket link if NOT selling on CampCon
+                        if (!eventProvider.sellOnCampcon ||
+                            eventProvider.isFree) ...[
+                          SizedBox(height: 16.h),
+                          _buildTicketLinkSection(eventProvider),
+                        ],
                       ],
                     ),
                   ),
@@ -541,7 +569,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     _priceController.clear();
                   }
                 },
-                activeColor: AppTheme.success,
+                activeThumbColor: AppTheme.success,
               ),
             ],
           ),
@@ -621,7 +649,167 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     );
   }
 
-  Widget _buildTicketLinkSection() {
+  // ✅ New Widget: Ticket Stock Section
+  Widget _buildTicketStockSection(EventProvider eventProvider) {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: eventProvider.sellOnCampcon
+            ? AppTheme.primary.withOpacity(0.05)
+            : AppTheme.background,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(
+          color: eventProvider.sellOnCampcon
+              ? AppTheme.primary.withOpacity(0.3)
+              : AppTheme.border,
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Iconify(
+                Ph.storefront,
+                size: 20.sp,
+                color: eventProvider.sellOnCampcon
+                    ? AppTheme.primary
+                    : AppTheme.textSecondary,
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Sell Tickets via Campcon',
+                      style: TextConstants.mediumText.copyWith(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 2.h),
+                    Text(
+                      eventProvider.sellOnCampcon
+                          ? 'Enable in-app ticket sales — attendees can purchase securely on Campcon.'
+                          : 'Manage ticket sales externally. Paste the external purchase link below if you have one.',
+                      style: TextConstants.smallText.copyWith(
+                        fontSize: 12.sp,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: eventProvider.sellOnCampcon,
+                onChanged: (value) {
+                  eventProvider.toggleSellOnCampcon(value);
+                  if (!value) {
+                    _ticketStockController.clear();
+                  }
+                },
+                activeThumbColor: AppTheme.primary,
+              ),
+            ],
+          ),
+          if (eventProvider.sellOnCampcon) ...[
+            SizedBox(height: 16.h),
+
+            // Info box
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: AppTheme.success.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(
+                  color: AppTheme.success.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 16.sp,
+                    color: AppTheme.success,
+                  ),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Text(
+                      'Attendees will purchase tickets through Campcon and you\'ll receive payouts (minus any platform or payment processing fees).',
+                      style: TextConstants.smallText.copyWith(
+                        fontSize: 11.sp,
+                        color: AppTheme.textSecondary,
+                        height: 1.3,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            SizedBox(height: 16.h),
+
+            // Ticket quantity input
+            Row(
+              children: [
+                Text(
+                  'Ticket Quantity *',
+                  style: TextConstants.smallText.copyWith(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimary,
+                  ),
+                  textAlign: TextAlign.start,
+                ),
+              ],
+            ),
+            SizedBox(height: 8.h),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+              decoration: BoxDecoration(
+                color: AppTheme.buttonBorder,
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: AppTheme.border, width: 1),
+              ),
+              child: Row(
+                children: [
+                  Iconify(
+                    Ph.ticket,
+                    size: 20.sp,
+                    color: AppTheme.textSecondary,
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: TextField(
+                      controller: _ticketStockController,
+                      keyboardType: TextInputType.number,
+                      style: TextConstants.mediumText.copyWith(
+                        fontSize: 15.sp,
+                        color: AppTheme.textPrimary,
+                      ),
+                      decoration: InputDecoration(
+                        hintText:
+                            'Enter number of tickets available (e.g. 100)',
+                        hintStyle: TextConstants.smallText.copyWith(
+                          color: AppTheme.textLight,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(vertical: 12.h),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // ✅ Update Ticket Link Section
+  Widget _buildTicketLinkSection(EventProvider eventProvider) {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -634,14 +822,14 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         children: [
           Row(
             children: [
-              Iconify(
-                Ph.link,
-                size: 20.sp,
-                color: AppTheme.primary,
-              ),
-              SizedBox(width: 8.w),
+              // Iconify(
+              //   Ph.link,
+              //   size: 20.sp,
+              //   color: AppTheme.primary,
+              // ),
+              // SizedBox(width: 8.w),
               Text(
-                'External Ticket Link (Optional)',
+                'Ticket Link (Optional)',
                 style: TextConstants.mediumText.copyWith(
                   fontSize: 15.sp,
                   fontWeight: FontWeight.w600,
@@ -671,8 +859,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 SizedBox(width: 8.w),
                 Expanded(
                   child: Text(
-                    'If you have tickets on an external platform (Eventbrite, Selar, etc.), '
-                    'paste the link here. Otherwise, tickets will be sold through CampCon.',
+                    eventProvider.isFree
+                        ? 'Provide a registration or RSVP link so attendees can sign up (e.g. Google Forms, Typeform).'
+                        : 'Paste the external ticket URL (Eventbrite, Selar, etc.) so attendees can purchase tickets.',
                     style: TextConstants.smallText.copyWith(
                       fontSize: 12.sp,
                       color: AppTheme.textSecondary,
@@ -699,17 +888,19 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 color: AppTheme.textPrimary,
               ),
               decoration: InputDecoration(
-                hintText: 'https://eventbrite.com/your-event',
+                hintText: eventProvider.isFree
+                    ? 'https://forms.google.com/...'
+                    : 'https://eventbrite.com/your-event',
                 hintStyle: TextConstants.smallText.copyWith(
                   color: AppTheme.textLight,
                 ),
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.symmetric(vertical: 12.h),
-                prefixIcon: Icon(
-                  Icons.link,
-                  size: 18.sp,
-                  color: AppTheme.textLight,
-                ),
+                // prefixIcon: Icon(
+                //   Icons.link,
+                //   size: 18.sp,
+                //   color: AppTheme.textLight,
+                // ),
               ),
             ),
           ),
@@ -860,6 +1051,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     _descriptionController.dispose();
     _priceController.dispose();
     _ticketLinkController.dispose();
+    _ticketStockController.dispose(); // ✅ New
     super.dispose();
   }
 }
