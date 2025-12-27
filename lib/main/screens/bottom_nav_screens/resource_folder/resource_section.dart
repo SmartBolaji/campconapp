@@ -7,6 +7,8 @@ import 'package:campcon/main/widgets/resources/level_card.dart';
 import 'package:campcon/main/widgets/resources/faculty_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/ph.dart';
 import 'package:provider/provider.dart';
 
 class ResourceSection extends StatelessWidget {
@@ -79,8 +81,8 @@ class ResourceSection extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8.r),
                       border: Border.all(color: AppTheme.border),
                     ),
-                    child: Icon(
-                      Icons.arrow_back_ios_new,
+                    child: Iconify(
+                      Ph.arrow_left,
                       size: 18.sp,
                       color: AppTheme.textPrimary,
                     ),
@@ -143,8 +145,8 @@ class ResourceSection extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8.r),
                       border: Border.all(color: AppTheme.border),
                     ),
-                    child: Icon(
-                      Icons.arrow_back_ios_new,
+                    child: Iconify(
+                      Ph.arrow_left,
                       size: 18.sp,
                       color: AppTheme.textPrimary,
                     ),

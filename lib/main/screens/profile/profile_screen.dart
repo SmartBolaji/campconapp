@@ -3,10 +3,11 @@ import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/user_model.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/follow_provider.dart';
+import 'package:campcon/main/provider/profile_provider.dart';
 import 'package:campcon/main/screens/profile/edit_profile_screen.dart';
-import 'package:campcon/main/screens/profile/settings_screen.dart';
+import 'package:campcon/main/screens/profile/profile_option.dart';
+import 'package:campcon/main/screens/profile/menu_screen.dart';
 import 'package:campcon/main/widgets/profile_widget/profile_button.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
@@ -29,44 +30,62 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  UserModel? profileUser;
-  bool isLoading = true;
-  String? errorMessage;
-  int followersCount = 0;
-  int followingCount = 0;
-  bool isFollowing = false;
-  bool isFollowLoading = false;
-
-  // ✅ Text key to measure bio length
+  // Text key to measure bio length
   final GlobalKey _bioKey = GlobalKey();
-  bool _isBioLong = false;
+  late ProfileProvider _profileProvider;
 
   @override
   void initState() {
     super.initState();
-
-    if (widget.initialUserData != null) {
-      setState(() {
-        profileUser = widget.initialUserData;
-        isLoading = false;
-      });
-    }
+    _profileProvider = Provider.of<ProfileProvider>(context, listen: false);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadUserProfile();
-      _checkBioLength();
     });
   }
 
-  // ✅ Check if bio is longer than 2 lines
+  @override
+  void dispose() {
+    _profileProvider.clearProfile();
+    super.dispose();
+  }
+
+  Future<void> _loadUserProfile() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final followProvider = Provider.of<FollowProvider>(context, listen: false);
+
+    // Initialize with initial data if available
+    if (widget.initialUserData != null) {
+      _profileProvider.initProfile(
+        initialUserData: widget.initialUserData,
+        currentUserId: authProvider.currentUser?.uid,
+      );
+    }
+
+    // Load full profile
+    await _profileProvider.loadUserProfile(
+      userId: widget.userId,
+      initialUserData: widget.initialUserData ?? authProvider.currentUser,
+      currentUserId: authProvider.currentUser?.uid,
+      followProvider: followProvider,
+    );
+
+    // Check bio length after loading
+    _checkBioLength();
+  }
+
+  // Check if bio is longer than 2 lines
   void _checkBioLength() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_bioKey.currentContext != null) {
+      final profileProvider =
+          Provider.of<ProfileProvider>(context, listen: false);
+      if (_bioKey.currentContext != null &&
+          profileProvider.profileUser != null) {
         final RenderBox renderBox =
             _bioKey.currentContext!.findRenderObject() as RenderBox;
         final textPainter = TextPainter(
           text: TextSpan(
-            text: profileUser?.aboutMe ?? '',
+            text: profileProvider.profileUser?.aboutMe ?? '',
             style: TextConstants.smallText.copyWith(
               color: AppTheme.textPrimary,
               height: 1.5,
@@ -77,18 +96,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           textDirection: TextDirection.ltr,
         )..layout(maxWidth: renderBox.size.width);
 
-        final isOverflowing = textPainter.didExceedMaxLines;
-        if (isOverflowing != _isBioLong) {
-          setState(() {
-            _isBioLong = isOverflowing;
-          });
-        }
+        profileProvider.setBioLong(textPainter.didExceedMaxLines);
       }
     });
   }
 
-  // ✅ Show full bio in bottom sheet
-  void _showFullBio() {
+  // Show full bio in bottom sheet
+  void _showFullBio(UserModel user) {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppTheme.surface,
@@ -126,12 +140,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       CircleAvatar(
                         radius: 24.r,
                         backgroundColor: AppTheme.primary.withOpacity(0.1),
-                        backgroundImage: profileUser?.profileImageUrl != null &&
-                                profileUser!.profileImageUrl!.isNotEmpty
-                            ? NetworkImage(profileUser!.profileImageUrl!)
+                        backgroundImage: user.profileImageUrl != null &&
+                                user.profileImageUrl!.isNotEmpty
+                            ? NetworkImage(user.profileImageUrl!)
                             : null,
-                        child: profileUser?.profileImageUrl == null ||
-                                profileUser!.profileImageUrl!.isEmpty
+                        child: user.profileImageUrl == null ||
+                                user.profileImageUrl!.isEmpty
                             ? Iconify(
                                 Ph.user,
                                 size: 24.sp,
@@ -145,7 +159,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              profileUser?.name ?? "No Name",
+                              user.name ?? "No Name",
                               style: TextConstants.mediumText.copyWith(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16.sp,
@@ -155,7 +169,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               overflow: TextOverflow.ellipsis,
                             ),
                             Text(
-                              "@${profileUser?.username ?? ''}",
+                              "@${user.username ?? ''}",
                               style: TextConstants.smallText.copyWith(
                                 color: AppTheme.textLight,
                                 fontSize: 13.sp,
@@ -190,7 +204,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: SingleChildScrollView(
                       controller: scrollController,
                       child: Text(
-                        profileUser?.aboutMe ?? '',
+                        user.aboutMe ?? '',
                         style: TextConstants.mediumText.copyWith(
                           color: AppTheme.textPrimary,
                           height: 1.6,
@@ -208,118 +222,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Future<void> _loadUserProfile() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final followProvider = Provider.of<FollowProvider>(context, listen: false);
-
-    try {
-      String targetUserId = widget.userId ??
-          widget.initialUserData?.uid ??
-          authProvider.currentUser?.uid ??
-          '';
-
-      if (targetUserId.isEmpty) {
-        setState(() {
-          errorMessage = 'User not logged in or ID not provided.';
-          isLoading = false;
-        });
-        return;
-      }
-
-      bool needsFetch = widget.initialUserData == null ||
-          targetUserId == authProvider.currentUser?.uid;
-
-      if (needsFetch) {
-        if (targetUserId == authProvider.currentUser?.uid) {
-          setState(() {
-            profileUser = authProvider.currentUser;
-          });
-        } else {
-          DocumentSnapshot doc = await FirebaseFirestore.instance
-              .collection('users')
-              .doc(targetUserId)
-              .get();
-
-          if (doc.exists && doc.data() != null) {
-            setState(() {
-              profileUser =
-                  UserModel.fromMap(doc.data() as Map<String, dynamic>);
-            });
-          } else {
-            setState(() {
-              errorMessage = 'User profile not found.';
-              isLoading = false;
-            });
-            return;
-          }
-        }
-      }
-
-      final counts = await followProvider.getFollowCounts(targetUserId);
-      setState(() {
-        followersCount = counts['followers']!;
-        followingCount = counts['following']!;
-      });
-
-      if (targetUserId != authProvider.currentUser?.uid &&
-          authProvider.currentUser != null) {
-        final following = await followProvider.checkIfFollowing(
-          authProvider.currentUser!.uid,
-          targetUserId,
-        );
-        setState(() {
-          isFollowing = following;
-        });
-      }
-
-      setState(() {
-        isLoading = false;
-      });
-
-      // ✅ Recheck bio length after loading
-      _checkBioLength();
-    } catch (e) {
-      setState(() {
-        errorMessage = 'Error loading profile: ${e.toString()}';
-        isLoading = false;
-      });
-    }
-  }
-
   Future<void> _handleFollowToggle() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final followProvider = Provider.of<FollowProvider>(context, listen: false);
-
-    if (authProvider.currentUser == null || profileUser == null) return;
-
-    setState(() {
-      isFollowLoading = true;
-    });
-
-    final success = await followProvider.toggleFollow(
-      authProvider.currentUser!.uid,
-      profileUser!.uid,
-    );
-
-    if (success) {
-      setState(() {
-        isFollowing = !isFollowing;
-        followersCount += isFollowing ? 1 : -1;
-      });
-    }
-
-    setState(() {
-      isFollowLoading = false;
-    });
+    await _profileProvider.toggleFollow(followProvider: followProvider);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.background,
-      body: Consumer<AuthProvider>(
-        builder: (context, authProvider, child) {
-          if (profileUser == null) {
+      body: Consumer2<AuthProvider, ProfileProvider>(
+        builder: (context, authProvider, profileProvider, child) {
+          final profileUser = profileProvider.profileUser;
+          final isLoading = profileProvider.isLoading;
+          final errorMessage = profileProvider.errorMessage;
+
+          if (profileUser == null && isLoading) {
             return Center(
               child: CircularProgressIndicator(
                 color: AppTheme.primary,
@@ -339,7 +257,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   SizedBox(height: 16.h),
                   Text(
-                    errorMessage!,
+                    errorMessage,
                     style: TextConstants.smallText.copyWith(
                       color: AppTheme.textSecondary,
                     ),
@@ -350,8 +268,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
             );
           }
 
-          final user = profileUser!;
-          final bool isCurrentUser = user.uid == authProvider.currentUser?.uid;
+          if (profileUser == null) {
+            return Center(
+              child: CircularProgressIndicator(
+                color: AppTheme.primary,
+              ),
+            );
+          }
+
+          final user = profileUser;
+          final bool isCurrentUser = profileProvider.isCurrentUser;
+
+          // Dynamic height based on bio presence
+          final double expandedHeight = profileProvider.hasBio ? 340.h : 300.h;
 
           return DefaultTabController(
             length: 4,
@@ -359,7 +288,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               headerSliverBuilder: (context, innerBoxIsScrolled) {
                 return [
                   SliverAppBar(
-                    expandedHeight: 340.h, // ✅ Fixed height
+                    expandedHeight: expandedHeight,
                     floating: false,
                     pinned: true,
                     backgroundColor: AppTheme.surface,
@@ -401,7 +330,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             )
                                           : null,
                                     ),
-                                    // ✅ Loading indicator overlay while fetching full data
+                                    // Loading indicator overlay while fetching full data
                                     if (isLoading)
                                       Positioned.fill(
                                         child: Container(
@@ -454,11 +383,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                                 SizedBox(height: 12.h),
 
-                                // ✅ Bio with "See more" functionality
+                                // Bio with "See more" functionality
                                 if (user.aboutMe != null &&
                                     user.aboutMe!.isNotEmpty) ...[
                                   GestureDetector(
-                                    onTap: _isBioLong ? _showFullBio : null,
+                                    onTap: profileProvider.isBioLong
+                                        ? () => _showFullBio(user)
+                                        : null,
                                     child: Container(
                                       key: _bioKey,
                                       padding: EdgeInsets.symmetric(
@@ -476,7 +407,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 fontSize: 13.sp,
                                               ),
                                             ),
-                                            if (_isBioLong)
+                                            if (profileProvider.isBioLong)
                                               TextSpan(
                                                 text: '... ',
                                                 style: TextConstants.smallText
@@ -486,7 +417,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                   fontSize: 13.sp,
                                                 ),
                                               ),
-                                            if (_isBioLong)
+                                            if (profileProvider.isBioLong)
                                               TextSpan(
                                                 text: 'See more',
                                                 style: TextConstants.smallText
@@ -511,18 +442,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    // ✅ Show loading state for counts
                                     _buildStatItem(
                                       isLoading
-                                          ? "..."
-                                          : followersCount.toString(),
+                                          ? "0"
+                                          : profileProvider.followersCount
+                                              .toString(),
                                       "Followers",
                                     ),
                                     SizedBox(width: 32.w),
                                     _buildStatItem(
                                       isLoading
-                                          ? "..."
-                                          : followingCount.toString(),
+                                          ? "0"
+                                          : profileProvider.followingCount
+                                              .toString(),
                                       "Following",
                                     ),
                                   ],
@@ -532,124 +464,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                                 // Action Buttons
                                 if (isCurrentUser)
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      Expanded(
-                                        child: ProfileButton(
-                                          text: "Edit",
-                                          onTap: () {
-                                            showModalBottomSheet(
-                                              context: context,
-                                              isScrollControlled: true,
-                                              backgroundColor:
-                                                  AppTheme.background,
-                                              builder: (context) =>
-                                                  const Editprofile(),
-                                            ).then((updated) {
-                                              if (updated == true) {
-                                                setState(() {});
-                                                _loadUserProfile();
-                                              }
-                                            });
-                                          },
-                                        ),
-                                      ),
-                                      SizedBox(width: 12.w),
-                                      Expanded(
-                                        child: ProfileButton(
-                                          text: "Share",
-                                          onTap: () {
-                                            // Share profile logic
-                                          },
-                                        ),
-                                      ),
-                                      SizedBox(width: 12.w),
-                                      GestureDetector(
-                                        child: Container(
-                                          height: 40.h,
-                                          width: 40.w,
-                                          padding: EdgeInsets.all(8.w),
-                                          decoration: BoxDecoration(
-                                            color: AppTheme.buttonBorder,
-                                            borderRadius:
-                                                BorderRadius.circular(20.r),
-                                          ),
-                                          child: Iconify(
-                                            Ph.gear,
-                                            color: AppTheme.textPrimary,
-                                            size: 24.sp,
-                                          ),
-                                        ),
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            PageTransition(
-                                              type: PageTransitionType
-                                                  .rightToLeft,
-                                              child: const SettingsScreen(),
-                                              duration: const Duration(
-                                                  milliseconds: 300),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  )
+                                  _buildCurrentUserActions(authProvider)
                                 else
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Expanded(
-                                        child: ProfileButton(
-                                          text: isFollowLoading
-                                              ? "..."
-                                              : isFollowing
-                                                  ? "Following"
-                                                  : "Follow",
-                                          onTap: isFollowLoading || isLoading
-                                              ? null
-                                              : _handleFollowToggle,
-                                          backgroundColor: isFollowing
-                                              ? AppTheme.buttonBorder
-                                              : AppTheme.primary,
-                                          textColor: isFollowing
-                                              ? AppTheme.textPrimary
-                                              : AppTheme.white,
-                                        ),
-                                      ),
-                                      SizedBox(width: 12.w),
-                                      Expanded(
-                                        child: ProfileButton(
-                                          text: "Message",
-                                          onTap: () {
-                                            // Message logic
-                                          },
-                                        ),
-                                      ),
-                                      SizedBox(width: 12.w),
-                                      Container(
-                                        height: 40.h,
-                                        width: 40.w,
-                                        padding: EdgeInsets.all(10.w),
-                                        decoration: BoxDecoration(
-                                          color: AppTheme.surface,
-                                          border: Border.all(
-                                            color: AppTheme.border,
-                                          ),
-                                          borderRadius:
-                                              BorderRadius.circular(12.r),
-                                        ),
-                                        child: Iconify(
-                                          Ph.share_network,
-                                          color: AppTheme.textPrimary,
-                                          size: 18.sp,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                  _buildOtherUserActions(profileProvider),
                               ],
                             ),
                           ),
@@ -701,6 +518,145 @@ class _ProfileScreenState extends State<ProfileScreen> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildCurrentUserActions(AuthProvider authProvider) {
+    final followProvider = Provider.of<FollowProvider>(context, listen: false);
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: ProfileButton(
+            text: "Edit",
+            onTap: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: AppTheme.background,
+                builder: (context) => const Editprofile(),
+              ).then((updated) {
+                if (updated == true) {
+                  // Refresh profile with updated user from auth provider
+                  _profileProvider.refreshProfile(
+                    followProvider: followProvider,
+                    updatedCurrentUser: authProvider.currentUser,
+                  );
+                }
+              });
+            },
+          ),
+        ),
+        SizedBox(width: 12.w),
+        Expanded(
+          child: ProfileButton(
+            text: "Share",
+            onTap: () {
+              // Share profile logic
+            },
+          ),
+        ),
+        SizedBox(width: 12.w),
+        GestureDetector(
+          child: Container(
+            height: 40.h,
+            width: 40.w,
+            padding: EdgeInsets.all(8.w),
+            decoration: BoxDecoration(
+              color: AppTheme.buttonBorder,
+              borderRadius: BorderRadius.circular(20.r),
+            ),
+            child: Iconify(
+              Ph.dots_three,
+              color: AppTheme.textPrimary,
+              size: 18.sp,
+            ),
+          ),
+          onTap: () {
+            Navigator.push(
+              context,
+              PageTransition(
+                type: PageTransitionType.rightToLeft,
+                child: const MenuScreen(),
+                duration: const Duration(milliseconds: 300),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOtherUserActions(ProfileProvider profileProvider) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Expanded(
+          child: ProfileButton(
+            text: profileProvider.isLoading
+                ? "..."
+                : profileProvider.isFollowing
+                    ? "Following"
+                    : "Follow",
+            onTap: profileProvider.isFollowLoading || profileProvider.isLoading
+                ? null
+                : _handleFollowToggle,
+            backgroundColor: profileProvider.isFollowing
+                ? AppTheme.buttonBorder
+                : AppTheme.primary,
+            textColor: profileProvider.isFollowing
+                ? AppTheme.textPrimary
+                : AppTheme.white,
+          ),
+        ),
+        SizedBox(width: 12.w),
+        Expanded(
+          child: ProfileButton(
+            text: "Message",
+            onTap: () {
+              // Message logic
+            },
+          ),
+        ),
+        SizedBox(width: 12.w),
+        GestureDetector(
+          onTap: () => ProfileOptions.show(
+            context,
+            userName: profileProvider.profileUser?.name,
+            onShare: () {
+              // TODO: Implement share profile
+            },
+            onCopyLink: () {
+              // TODO: Implement copy link
+            },
+            onReport: () {
+              // TODO: Implement report user
+            },
+            onBlock: () {
+              // TODO: Implement block user
+            },
+          ),
+          child: Container(
+            height: 40.h,
+            width: 40.w,
+            padding: EdgeInsets.all(10.w),
+            decoration: BoxDecoration(
+              color: AppTheme.surface,
+              border: Border.all(
+                color: AppTheme.border,
+              ),
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Iconify(
+              Ph.dots_three,
+              color: AppTheme.textPrimary,
+              size: 18.sp,
+            ),
+          ),
+        ),
+      ],
     );
   }
 

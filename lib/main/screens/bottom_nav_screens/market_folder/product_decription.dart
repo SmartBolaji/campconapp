@@ -3,8 +3,8 @@ import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/product_model.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/product_provider.dart';
-import 'package:campcon/main/screens/bottom_nav_screens/market_folder/market_chat.dart';
 import 'package:campcon/main/widgets/custom_btn.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/market_folder/order_summary_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
@@ -1079,7 +1079,22 @@ class _ProductDecriptionState extends State<ProductDecription> {
                       : provider.canProceedToOrder
                           ? () {
                               if (provider.canProceedToOrder) {
-                                _showOrderConfirmation(provider, currentUserId);
+                                OrderSummarySheet.show(
+                                  context,
+                                  productName: widget.product.name,
+                                  quantity: provider.quantity,
+                                  unitPrice: widget.product.formattedPrice,
+                                  totalPrice: _formatPrice(provider.totalPrice),
+                                  pickupLocation:
+                                      provider.selectedPickupLocation!,
+                                  paymentMethod:
+                                      provider.selectedPaymentMethod!,
+                                  orderNotes: provider.orderNotes.isNotEmpty
+                                      ? provider.orderNotes
+                                      : null,
+                                  productProvider: provider,
+                                  buyerId: currentUserId,
+                                );
                               } else {
                                 _openChat(provider);
                               }
@@ -1105,173 +1120,18 @@ class _ProductDecriptionState extends State<ProductDecription> {
     );
   }
 
-  void _showOrderConfirmation(ProductProvider provider, String buyerId) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        title: Row(
-          children: [
-            Iconify(
-              Ph.shopping_cart,
-              color: AppTheme.primary,
-              size: 24.sp,
-            ),
-            SizedBox(width: 12.w),
-            Text(
-              'Confirm Order',
-              style: TextConstants.boldText.copyWith(
-                fontSize: 18.sp,
-                color: AppTheme.textPrimary,
-              ),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildOrderDetail('Item', widget.product.name),
-              _buildOrderDetail('Quantity', '${provider.quantity}'),
-              _buildOrderDetail('Unit Price', widget.product.formattedPrice),
-              _buildOrderDetail('Total', _formatPrice(provider.totalPrice),
-                  isTotal: true),
-              Divider(color: AppTheme.border, height: 24.h),
-              _buildOrderDetail('Pickup', provider.selectedPickupLocation!),
-              _buildOrderDetail(
-                'Payment',
-                provider.selectedPaymentMethod == 'online'
-                    ? 'Pay Online'
-                    : 'Pay on Pickup',
-              ),
-              if (provider.orderNotes.isNotEmpty) ...[
-                Divider(color: AppTheme.border, height: 24.h),
-                Text(
-                  'Notes:',
-                  style: TextConstants.smallText.copyWith(
-                    color: AppTheme.textSecondary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  provider.orderNotes,
-                  style: TextConstants.smallText.copyWith(
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextConstants.mediumText.copyWith(
-                color: AppTheme.textSecondary,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-
-              bool success = await provider.placeOrder(buyerId);
-
-              if (success && mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Row(
-                      children: [
-                        Iconify(
-                          Ph.check_circle,
-                          color: AppTheme.white,
-                          size: 20.sp,
-                        ),
-                        SizedBox(width: 12.w),
-                        const Expanded(
-                          child: Text('Order placed successfully!'),
-                        ),
-                      ],
-                    ),
-                    backgroundColor: AppTheme.success,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                  ),
-                );
-                Navigator.pop(context);
-              } else if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(provider.error ?? 'Failed to place order'),
-                    backgroundColor: AppTheme.error,
-                  ),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-            ),
-            child: const Text('Confirm'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOrderDetail(String label, String value, {bool isTotal = false}) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 8.h),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            '$label:',
-            style: TextConstants.smallText.copyWith(
-              color: AppTheme.textSecondary,
-              fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal,
-              fontSize: isTotal ? 15.sp : 13.sp,
-            ),
-          ),
-          Flexible(
-            child: Text(
-              value,
-              style: TextConstants.smallText.copyWith(
-                fontWeight: FontWeight.w600,
-                color: isTotal ? AppTheme.primary : AppTheme.textPrimary,
-                fontSize: isTotal ? 16.sp : 13.sp,
-              ),
-              textAlign: TextAlign.end,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _openChat(ProductProvider provider) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ChatScreen(
-          recipientName: provider.sellerData?.fullName ?? 'Seller',
-          productName: widget.product.name,
-          isOrderChat: true,
-          conversationId: widget.product.id,
-        ),
-      ),
-    );
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(
+    //     builder: (context) => ChatScreen(
+    //       recipientName: provider.sellerData?.fullName ?? 'Seller',
+    //       productName: widget.product.name,
+    //       isOrderChat: true,
+    //       conversationId: widget.product.id,
+    //     ),
+    //   ),
+    // );
   }
 
   String _getWageIcon(String wageType) {

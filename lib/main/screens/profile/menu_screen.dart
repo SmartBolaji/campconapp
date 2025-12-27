@@ -2,14 +2,16 @@ import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/screens/onboarding/onboarding.dart';
+import 'package:campcon/main/screens/profile/my_sales/sales_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ph.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 
-class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key});
+class MenuScreen extends StatelessWidget {
+  const MenuScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -31,23 +33,16 @@ class SettingsScreen extends StatelessWidget {
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Container(
-                      // padding: EdgeInsets.all(8.w),
-                      // decoration: BoxDecoration(
-                      //   color: AppTheme.background,
-                      //   borderRadius: BorderRadius.circular(8.r),
-                      // ),
-                      child: Iconify(
-                        Ph.arrow_left,
-                        color: AppTheme.textPrimary,
-                        size: 24.sp,
-                      ),
+                    child: Iconify(
+                      Ph.arrow_left,
+                      color: AppTheme.textPrimary,
+                      size: 24.sp,
                     ),
                   ),
                   Expanded(
                     child: Center(
                       child: Text(
-                        'Account Settings',
+                        'Manage Account',
                         style: TextConstants.mediumText.copyWith(
                           fontSize: 16.sp,
                           fontWeight: FontWeight.w600,
@@ -63,95 +58,130 @@ class SettingsScreen extends StatelessWidget {
 
             // Settings List
             Expanded(
-              child: Container(
-                // color: AppTheme.background,
-                child: ListView(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                  children: [
-                    SizedBox(height: 8.h),
+              child: ListView(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                children: [
+                  SizedBox(height: 8.h),
 
-                    // Account Section
-                    _buildSectionHeader('Account'),
-                    SizedBox(height: 8.h),
+                  // Account Section
+                  _buildSectionHeader('Account'),
+                  SizedBox(height: 8.h),
 
-                    _buildSettingsItem(
-                      context: context,
-                      icon: Ph.user,
-                      iconColor: AppTheme.primary,
-                      iconBgColor: AppTheme.primary.withOpacity(0.1),
-                      title: 'Account Information',
-                      subtitle: 'View and edit your profile',
-                      onTap: () {
-                        // Navigate to account information screen
-                      },
-                    ),
+                  _buildSettingsItem(
+                    context: context,
+                    icon: Ph.user,
+                    iconColor: AppTheme.primary,
+                    iconBgColor: AppTheme.primary.withOpacity(0.1),
+                    title: 'Account Information',
+                    subtitle: 'View and edit your profile',
+                    onTap: () {
+                      // Navigate to account information screen
+                    },
+                  ),
 
-                    SizedBox(height: 8.h),
+                  SizedBox(height: 8.h),
 
-                    _buildSettingsItem(
-                      context: context,
-                      icon: Ph.lock,
-                      iconColor: AppTheme.primary,
-                      iconBgColor: AppTheme.primary.withOpacity(0.1),
-                      title: 'Password & Security',
-                      subtitle: 'Manage your password',
-                      onTap: () {
-                        // Navigate to password screen
-                      },
-                    ),
+                  _buildSettingsItem(
+                    context: context,
+                    icon: Ph.lock,
+                    iconColor: AppTheme.primary,
+                    iconBgColor: AppTheme.primary.withOpacity(0.1),
+                    title: 'Password & Security',
+                    subtitle: 'Manage your password',
+                    onTap: () {
+                      // Navigate to password screen
+                    },
+                  ),
 
-                    SizedBox(height: 24.h),
+                  SizedBox(height: 24.h),
 
-                    // Professional Account Section
-                    _buildSectionHeader('Professional'),
-                    SizedBox(height: 8.h),
+                  // Marketplace Section
+                  _buildSectionHeader('Marketplace'),
+                  SizedBox(height: 8.h),
 
-                    _buildSettingsItem(
-                      context: context,
-                      icon: Ph.check_circle,
-                      iconColor: AppTheme.white,
-                      iconBgColor: AppTheme.primary,
-                      title: 'Professional Account',
-                      subtitle: 'Unlock business features',
-                      onTap: () {
-                        // Navigate to professional account screen
-                      },
-                    ),
+                  _buildSettingsItem(
+                    context: context,
+                    icon: Ph.storefront,
+                    iconColor: AppTheme.success,
+                    iconBgColor: AppTheme.success.withOpacity(0.1),
+                    title: 'My Sales',
+                    subtitle: 'Track orders and manage sales',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        PageTransition(
+                          type: PageTransitionType.rightToLeft,
+                          child: const SalesScreen(),
+                          duration: const Duration(milliseconds: 300),
+                        ),
+                      );
+                    },
+                  ),
 
-                    SizedBox(height: 24.h),
+                  SizedBox(height: 8.h),
 
-                    // Danger Zone Section
-                    _buildSectionHeader('Danger Zone'),
-                    SizedBox(height: 8.h),
+                  _buildSettingsItem(
+                    context: context,
+                    icon: Ph.shopping_bag,
+                    iconColor: Colors.orange,
+                    iconBgColor: Colors.orange.withOpacity(0.1),
+                    title: 'My Orders',
+                    subtitle: 'View your purchase history',
+                    onTap: () {
+                      // TODO: Navigate to my orders screen
+                    },
+                  ),
 
-                    _buildSettingsItem(
-                      context: context,
-                      icon: Ph.sign_out,
-                      iconColor: AppTheme.white,
-                      iconBgColor: AppTheme.error,
-                      title: 'Log Out',
-                      subtitle: 'Sign out of your account',
-                      titleColor: AppTheme.error,
-                      onTap: () => _showLogoutDialog(context),
-                      showArrow: false,
-                    ),
+                  SizedBox(height: 24.h),
 
-                    SizedBox(height: 8.h),
+                  // Professional Account Section
+                  _buildSectionHeader('Professional'),
+                  SizedBox(height: 8.h),
 
-                    _buildSettingsItem(
-                      context: context,
-                      icon: Ph.trash,
-                      iconColor: AppTheme.white,
-                      iconBgColor: AppTheme.error,
-                      title: 'Delete Account',
-                      subtitle: 'Permanently remove your account',
-                      titleColor: AppTheme.error,
-                      onTap: () => _showDeleteAccountDialog(context),
-                      showArrow: false,
-                    ),
-                  ],
-                ),
+                  _buildSettingsItem(
+                    context: context,
+                    icon: Ph.check_circle,
+                    iconColor: AppTheme.white,
+                    iconBgColor: AppTheme.primary,
+                    title: 'Professional Account',
+                    subtitle: 'Unlock business features',
+                    onTap: () {
+                      // Navigate to professional account screen
+                    },
+                  ),
+
+                  SizedBox(height: 24.h),
+
+                  // Danger Zone Section
+                  _buildSectionHeader('Danger Zone'),
+                  SizedBox(height: 8.h),
+
+                  _buildSettingsItem(
+                    context: context,
+                    icon: Ph.sign_out,
+                    iconColor: AppTheme.white,
+                    iconBgColor: AppTheme.error,
+                    title: 'Log Out',
+                    subtitle: 'Sign out of your account',
+                    titleColor: AppTheme.error,
+                    onTap: () => _showLogoutDialog(context),
+                    showArrow: false,
+                  ),
+
+                  SizedBox(height: 8.h),
+
+                  _buildSettingsItem(
+                    context: context,
+                    icon: Ph.trash,
+                    iconColor: AppTheme.white,
+                    iconBgColor: AppTheme.error,
+                    title: 'Delete Account',
+                    subtitle: 'Permanently remove your account',
+                    titleColor: AppTheme.error,
+                    onTap: () => _showDeleteAccountDialog(context),
+                    showArrow: false,
+                  ),
+                ],
               ),
             ),
           ],

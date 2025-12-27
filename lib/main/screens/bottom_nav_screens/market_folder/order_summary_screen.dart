@@ -1,23 +1,65 @@
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
+import 'package:campcon/main/provider/product_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/ph.dart';
 
 class OrderSummarySheet extends StatelessWidget {
-  final String itemName;
-  final String price;
+  final String productName;
+  final int quantity;
+  final String unitPrice;
+  final String totalPrice;
   final String pickupLocation;
   final String paymentMethod;
-  final VoidCallback onConfirm;
+  final String? orderNotes;
+  final ProductProvider productProvider;
+  final String buyerId;
 
   const OrderSummarySheet({
     Key? key,
-    required this.itemName,
-    required this.price,
+    required this.productName,
+    required this.quantity,
+    required this.unitPrice,
+    required this.totalPrice,
     required this.pickupLocation,
     required this.paymentMethod,
-    required this.onConfirm,
+    this.orderNotes,
+    required this.productProvider,
+    required this.buyerId,
   }) : super(key: key);
+
+  /// Show the order summary as a bottom sheet
+  static Future<bool?> show(
+    BuildContext context, {
+    required String productName,
+    required int quantity,
+    required String unitPrice,
+    required String totalPrice,
+    required String pickupLocation,
+    required String paymentMethod,
+    String? orderNotes,
+    required ProductProvider productProvider,
+    required String buyerId,
+  }) {
+    return showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => OrderSummarySheet(
+        productName: productName,
+        quantity: quantity,
+        unitPrice: unitPrice,
+        totalPrice: totalPrice,
+        pickupLocation: pickupLocation,
+        paymentMethod: paymentMethod,
+        orderNotes: orderNotes,
+        productProvider: productProvider,
+        buyerId: buyerId,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,27 +83,74 @@ class OrderSummarySheet extends StatelessWidget {
             ),
           ),
 
-          Text(
-            'Order Summary',
-            style: TextConstants.boldText.copyWith(
-              fontSize: 20.sp,
-              color: AppTheme.textPrimary,
-            ),
+          // Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Iconify(
+                Ph.shopping_cart,
+                color: AppTheme.primary,
+                size: 24.sp,
+              ),
+              SizedBox(width: 12.w),
+              Text(
+                'Confirm Order',
+                style: TextConstants.boldText.copyWith(
+                  fontSize: 20.sp,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+            ],
           ),
           SizedBox(height: 24.h),
 
-          _buildSummaryRow('Item', itemName),
-          _buildSummaryRow('Price', price),
-          _buildSummaryRow('Pickup Location', pickupLocation),
-          _buildSummaryRow('Payment', paymentMethod),
+          // Order details
+          _buildOrderDetail('Item', productName),
+          _buildOrderDetail('Quantity', '$quantity'),
+          _buildOrderDetail('Unit Price', unitPrice),
+          _buildOrderDetail('Total', totalPrice, isTotal: true),
+
+          Divider(color: AppTheme.border, height: 24.h),
+
+          _buildOrderDetail('Pickup', pickupLocation),
+          _buildOrderDetail(
+            'Payment',
+            paymentMethod == 'online' ? 'Pay Online' : 'Pay on Pickup',
+          ),
+
+          // Order notes (if any)
+          if (orderNotes != null && orderNotes!.isNotEmpty) ...[
+            Divider(color: AppTheme.border, height: 24.h),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Notes:',
+                style: TextConstants.smallText.copyWith(
+                  color: AppTheme.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            SizedBox(height: 4.h),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                orderNotes!,
+                style: TextConstants.smallText.copyWith(
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+            ),
+          ],
 
           SizedBox(height: 24.h),
 
+          // Action buttons
           Row(
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => Navigator.pop(context, false),
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: AppTheme.border),
                     padding: EdgeInsets.symmetric(vertical: 14.h),
@@ -72,6 +161,7 @@ class OrderSummarySheet extends StatelessWidget {
                   child: Text(
                     'Cancel',
                     style: TextConstants.mediumText.copyWith(
+                      fontSize: 16.sp,
                       color: AppTheme.textPrimary,
                     ),
                   ),
@@ -80,10 +170,7 @@ class OrderSummarySheet extends StatelessWidget {
               SizedBox(width: 12.w),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    onConfirm();
-                  },
+                  onPressed: () => _confirmOrder(context),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primary,
                     padding: EdgeInsets.symmetric(vertical: 14.h),
@@ -94,6 +181,7 @@ class OrderSummarySheet extends StatelessWidget {
                   child: Text(
                     'Confirm Order',
                     style: TextConstants.mediumText.copyWith(
+                      fontSize: 16.sp,
                       color: AppTheme.white,
                       fontWeight: FontWeight.w600,
                     ),
@@ -102,31 +190,83 @@ class OrderSummarySheet extends StatelessWidget {
               ),
             ],
           ),
+
+          // Bottom padding for safe area
+          SizedBox(height: MediaQuery.of(context).padding.bottom),
         ],
       ),
     );
   }
 
-  Widget _buildSummaryRow(String label, String value) {
+  Future<void> _confirmOrder(BuildContext context) async {
+    // Close the bottom sheet
+    Navigator.pop(context);
+
+    // Place the order
+    bool success = await productProvider.placeOrder(buyerId);
+
+    if (context.mounted) {
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Iconify(
+                  Ph.check_circle,
+                  color: AppTheme.white,
+                  size: 20.sp,
+                ),
+                SizedBox(width: 12.w),
+                const Expanded(
+                  child: Text('Order placed successfully!'),
+                ),
+              ],
+            ),
+            backgroundColor: AppTheme.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+          ),
+        );
+        // Navigate back to marketplace
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(productProvider.error ?? 'Failed to place order'),
+            backgroundColor: AppTheme.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildOrderDetail(String label, String value, {bool isTotal = false}) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 16.h),
+      padding: EdgeInsets.only(bottom: 8.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            label,
+            '$label:',
             style: TextConstants.smallText.copyWith(
-              fontSize: 14.sp,
               color: AppTheme.textSecondary,
+              fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal,
+              fontSize: isTotal ? 15.sp : 14.sp,
             ),
           ),
           Flexible(
             child: Text(
               value,
               style: TextConstants.mediumText.copyWith(
-                fontSize: 14.sp,
                 fontWeight: FontWeight.w600,
-                color: AppTheme.textPrimary,
+                color: isTotal ? AppTheme.primary : AppTheme.textPrimary,
+                fontSize: isTotal ? 16.sp : 14.sp,
               ),
               textAlign: TextAlign.end,
             ),

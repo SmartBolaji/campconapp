@@ -4,7 +4,9 @@ import 'package:campcon/main/models/notification_model.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/notify_provider.dart';
 import 'package:campcon/main/widgets/custom_top_bar.dart';
-import 'package:campcon/main/widgets/notification/notification_sort_filter_bar.dart';
+import 'package:campcon/main/widgets/notification/notification_tabbar.dart';
+// ✅ COMMENTED OUT - Sort/Filter bar
+// import 'package:campcon/main/widgets/notification/notification_sort_filter_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconly/iconly.dart';
@@ -78,7 +80,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                     floating: true,
                     snap: true,
                     pinned: true,
-                    expandedHeight: 80.h,
+                    expandedHeight: 100.h,
                     surfaceTintColor: AppTheme.surface,
                     flexibleSpace: FlexibleSpaceBar(
                       background: Padding(
@@ -95,7 +97,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       ),
                     ),
                     bottom: PreferredSize(
-                      preferredSize: Size.fromHeight(1.h),
+                      preferredSize: Size.fromHeight(50.h),
                       child: Container(
                         decoration: BoxDecoration(
                           color: AppTheme.surface,
@@ -106,23 +108,29 @@ class _NotificationScreenState extends State<NotificationScreen> {
                             ),
                           ),
                         ),
+                        child: NotificationTabBar(
+                          selectedTab: notifyProvider.selectedTab,
+                          onTabChanged: (index) {
+                            notifyProvider.changeTab(index);
+                          },
+                        ),
                       ),
                     ),
                   ),
 
-                  // ✅ Sort/Filter Bar
-                  SliverPersistentHeader(
-                    pinned: true,
-                    delegate: _FilterHeaderDelegate(
-                      minHeight: 90.h,
-                      maxHeight: 90.h,
-                      child: Container(
-                        color: AppTheme.surface,
-                        padding: EdgeInsets.symmetric(horizontal: 20.w),
-                        child: const NotificationSortFilterBar(),
-                      ),
-                    ),
-                  ),
+                  // ✅ COMMENTED OUT - Sort/Filter Bar
+                  // SliverPersistentHeader(
+                  //   pinned: true,
+                  //   delegate: _FilterHeaderDelegate(
+                  //     minHeight: 90.h,
+                  //     maxHeight: 90.h,
+                  //     child: Container(
+                  //       color: AppTheme.surface,
+                  //       padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  //       child: const NotificationSortFilterBar(),
+                  //     ),
+                  //   ),
+                  // ),
 
                   // ✅ Mark all as read button (if unread exists)
                   if (notifyProvider.unreadCount > 0)
@@ -131,7 +139,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                         color: AppTheme.surface,
                         padding: EdgeInsets.symmetric(
                           horizontal: 20.w,
-                          vertical: 8.h,
+                          vertical: 12.h,
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -251,8 +259,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
               Text(
                 notifyProvider.allNotifications.isEmpty
                     ? 'No notifications yet'
-                    : 'No ${notifyProvider.selectedFilter.toLowerCase()} notifications',
-                style: TextConstants.mediumText.copyWith(
+                    : 'No ${notifyProvider.currentTabLabel.toLowerCase()} notifications',
+                style: TextConstants.boldText.copyWith(
                   fontSize: 18.sp,
                   color: AppTheme.textPrimary,
                 ),
@@ -263,9 +271,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 child: Text(
                   notifyProvider.allNotifications.isEmpty
                       ? 'When you get notifications, they\'ll show up here'
-                      : 'Try changing your filter to see more notifications',
+                      : 'Try switching to another tab to see more notifications',
                   style: TextConstants.smallText.copyWith(
-                    color: AppTheme.textSecondary,
+                    fontSize: 14.sp,
+                    color: AppTheme.textLight,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -317,40 +326,40 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 }
 
-// ✅ Custom delegate for pinned filter header
-class _FilterHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final double minHeight;
-  final double maxHeight;
-  final Widget child;
-
-  _FilterHeaderDelegate({
-    required this.minHeight,
-    required this.maxHeight,
-    required this.child,
-  });
-
-  @override
-  double get minExtent => minHeight;
-
-  @override
-  double get maxExtent => maxHeight;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return SizedBox.expand(child: child);
-  }
-
-  @override
-  bool shouldRebuild(_FilterHeaderDelegate oldDelegate) {
-    return maxHeight != oldDelegate.maxHeight ||
-        minHeight != oldDelegate.minHeight ||
-        child != oldDelegate.child;
-  }
-}
+// ✅ COMMENTED OUT - Filter header delegate (not needed with tabs)
+// class _FilterHeaderDelegate extends SliverPersistentHeaderDelegate {
+//   final double minHeight;
+//   final double maxHeight;
+//   final Widget child;
+//
+//   _FilterHeaderDelegate({
+//     required this.minHeight,
+//     required this.maxHeight,
+//     required this.child,
+//   });
+//
+//   @override
+//   double get minExtent => minHeight;
+//
+//   @override
+//   double get maxExtent => maxHeight;
+//
+//   @override
+//   Widget build(
+//     BuildContext context,
+//     double shrinkOffset,
+//     bool overlapsContent,
+//   ) {
+//     return SizedBox.expand(child: child);
+//   }
+//
+//   @override
+//   bool shouldRebuild(_FilterHeaderDelegate oldDelegate) {
+//     return maxHeight != oldDelegate.maxHeight ||
+//         minHeight != oldDelegate.minHeight ||
+//         child != oldDelegate.child;
+//   }
+// }
 
 class _NotificationCard extends StatelessWidget {
   final NotificationModel notification;

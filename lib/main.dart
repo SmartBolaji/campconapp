@@ -8,11 +8,13 @@ import 'package:campcon/main/provider/follow_provider.dart';
 import 'package:campcon/main/provider/friends_provider.dart';
 import 'package:campcon/main/provider/market_provider.dart';
 import 'package:campcon/main/provider/media_provider.dart';
+import 'package:campcon/main/provider/message_provider.dart';
 import 'package:campcon/main/provider/post_provider.dart';
 import 'package:campcon/main/provider/market_post_provider.dart';
 import 'package:campcon/main/provider/product_provider.dart';
 import 'package:campcon/main/provider/resource_provider.dart';
 import 'package:campcon/main/provider/notify_provider.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/messaging_folder/message_cache.dart';
 import 'package:campcon/main/screens/onboarding/onboarding.dart';
 import 'package:campcon/main/screens/main_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -25,6 +27,9 @@ import 'package:month_year_picker/month_year_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
 import 'main/provider/chat_provider.dart';
+import 'main/provider/profile_provider.dart';
+import 'main/provider/sales_provider.dart';
+import 'main/provider/buyer_orders_provider.dart';
 
 Future<void> main() async {
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
@@ -41,6 +46,9 @@ Future<void> main() async {
   FirebaseFirestore.instance.settings = const Settings(
     persistenceEnabled: true,
   );
+
+  // Heavy initializations
+  await MessageCacheService.init();
 
   await dotenv.load(fileName: ".env");
   PhotoManager.clearFileCache();
@@ -62,6 +70,10 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => EventProvider()),
         ChangeNotifierProvider(create: (_) => ResourceProvider()),
         ChangeNotifierProvider(create: (_) => NotifyProvider()),
+        ChangeNotifierProvider(create: (_) => MessageProvider()),
+        ChangeNotifierProvider(create: (_) => ProfileProvider()),
+        ChangeNotifierProvider(create: (_) => SalesProvider()),
+        ChangeNotifierProvider(create: (_) => BuyerOrdersProvider()),
       ],
       child: const MyApp(),
     ),

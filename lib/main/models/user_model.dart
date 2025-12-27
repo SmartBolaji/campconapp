@@ -17,9 +17,11 @@ class UserModel {
   final List<String>? interests;
   final String? bio;
   final String? profileImage;
-  final int followersCount; // ✅ New
-  final int followingCount; // ✅ New
-  final String? campus; // ✅ Add this field
+  final int followersCount;
+  final int followingCount;
+  final String? campus;
+  final String role; // ✅ Add role field
+  final String? fcmToken; // ✅ Add fcmToken field
 
   UserModel({
     required this.uid,
@@ -38,9 +40,11 @@ class UserModel {
     this.interests,
     this.bio,
     this.profileImage,
-    this.followersCount = 0, // ✅ Default to 0
-    this.followingCount = 0, // ✅ Default to 0
-    this.campus, // ✅ Add this parameter
+    this.followersCount = 0,
+    this.followingCount = 0,
+    this.campus,
+    this.role = 'user', // ✅ Default to 'user'
+    this.fcmToken, // ✅ Add fcmToken parameter
   });
 
   // Add getter for fullName
@@ -53,7 +57,8 @@ class UserModel {
       name: map['name'],
       aboutMe: map['aboutMe'],
       username: map['username'] ?? '',
-      profileImageUrl: map['profileImageUrl'],
+      profileImageUrl: map['profileImageUrl'] ??
+          map['profileImg'], // ✅ Support both field names
       phoneNumber: map['phoneNumber'] ?? '',
       createdAt: map['createdAt'] != null
           ? DateTime.parse(map['createdAt'])
@@ -68,10 +73,13 @@ class UserModel {
       interests:
           map['interests'] != null ? List<String>.from(map['interests']) : null,
       bio: map['bio'],
-      profileImage: map['profileImage'],
-      followersCount: map['followersCount'] ?? 0, // ✅ Parse
-      followingCount: map['followingCount'] ?? 0, // ✅ Parse
-      campus: map['campus'], // ✅ Add this
+      profileImage: map['profileImage'] ??
+          map['profileImg'], // ✅ Support both field names
+      followersCount: map['followersCount'] ?? 0,
+      followingCount: map['followingCount'] ?? 0,
+      campus: map['campus'],
+      role: map['role'] ?? 'user', // ✅ Parse role
+      fcmToken: map['fcmToken'], // ✅ Parse fcmToken
     );
   }
 
@@ -98,9 +106,11 @@ class UserModel {
       'interests': interests,
       'bio': bio,
       'profileImage': profileImage,
-      'followersCount': followersCount, // ✅ Include
-      'followingCount': followingCount, // ✅ Include
-      'campus': campus, // ✅ Add this
+      'followersCount': followersCount,
+      'followingCount': followingCount,
+      'campus': campus,
+      'role': role, // ✅ Include role
+      'fcmToken': fcmToken, // ✅ Include fcmToken
     };
   }
 
@@ -128,7 +138,9 @@ class UserModel {
     String? profileImage,
     int? followersCount,
     int? followingCount,
-    String? campus, // ✅ Add this
+    String? campus,
+    String? role, // ✅ Add role
+    String? fcmToken, // ✅ Add fcmToken
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -149,7 +161,9 @@ class UserModel {
       profileImage: profileImage ?? this.profileImage,
       followersCount: followersCount ?? this.followersCount,
       followingCount: followingCount ?? this.followingCount,
-      campus: campus ?? this.campus, // ✅ Add this
+      campus: campus ?? this.campus,
+      role: role ?? this.role, // ✅ Add role
+      fcmToken: fcmToken ?? this.fcmToken, // ✅ Add fcmToken
     );
   }
 }

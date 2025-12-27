@@ -1,18 +1,22 @@
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
+import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/market_provider.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/market_folder/post_product_screen.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/market_folder/post_service_screen.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/market_folder/market_cart.dart';
+import 'package:campcon/main/provider/buyer_orders_provider.dart';
 import 'package:campcon/main/widgets/custom_top_bar.dart';
 import 'package:campcon/main/widgets/market/empty_state.dart';
 import 'package:campcon/main/widgets/market/market_tabbar.dart';
 import 'package:campcon/main/widgets/market/sort_filter_bar.dart';
-import 'package:campcon/main/screens/bottom_nav_screens/market_folder/post_product_screen.dart';
-import 'package:campcon/main/screens/bottom_nav_screens/market_folder/post_service_screen.dart';
 import 'package:campcon/main/widgets/market/product_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:iconly/iconly.dart';
 import 'package:provider/provider.dart';
+import 'package:page_transition/page_transition.dart';
 
 class MarketScreen extends StatefulWidget {
   const MarketScreen({super.key});
@@ -30,6 +34,7 @@ class _MarketScreenState extends State<MarketScreen> {
     // Load data on first render
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadInitialData();
+      _initializeBuyerOrders();
     });
   }
 
@@ -42,6 +47,16 @@ class _MarketScreenState extends State<MarketScreen> {
   Future<void> _loadInitialData() async {
     final provider = Provider.of<MarketplaceProvider>(context, listen: false);
     await provider.loadCurrentTab();
+  }
+
+  void _initializeBuyerOrders() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final buyerOrdersProvider =
+        Provider.of<BuyerOrdersProvider>(context, listen: false);
+    final buyerId = authProvider.currentUser?.uid;
+    if (buyerId != null) {
+      buyerOrdersProvider.initialize(buyerId);
+    }
   }
 
   Future<void> _onRefresh() async {
@@ -82,7 +97,21 @@ class _MarketScreenState extends State<MarketScreen> {
                             CustomTopBar(
                               centerText: 'Marketplace',
                               showAdd: true,
+                              showCart: true,
                               onAddTap: () => _showPostOptions(context),
+                              cartItemCount:
+                                  Provider.of<BuyerOrdersProvider>(context)
+                                      .activeOrdersCount,
+                              onCartTap: () {
+                                Navigator.push(
+                                  context,
+                                  PageTransition(
+                                    type: PageTransitionType.rightToLeft,
+                                    child: const MarketCartScreen(),
+                                    duration: const Duration(milliseconds: 300),
+                                  ),
+                                );
+                              },
                             ),
                             SizedBox(height: 20.h),
 

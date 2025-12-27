@@ -13,21 +13,36 @@ class NotifyProvider extends ChangeNotifier {
   String? _error;
   int _unreadCount = 0;
 
-  // Sort and filter state
-  String _sortBy = 'Recent';
-  String _selectedFilter = 'All';
+  // Tab state (replacing sort and filter)
+  int _selectedTab = 0;
+
+  // ✅ COMMENTED OUT - Sort and filter state
+  // String _sortBy = 'Recent';
+  // String _selectedFilter = 'All';
 
   StreamSubscription<QuerySnapshot>? _notificationSubscription;
 
-  // Sort options
-  final List<String> sortOptions = [
-    'Recent',
-    'Oldest First',
-    'Unread First',
-  ];
+  // ✅ COMMENTED OUT - Sort options
+  // final List<String> sortOptions = [
+  //   'Recent',
+  //   'Oldest First',
+  //   'Unread First',
+  // ];
 
-  // Filter options (based on notification types)
-  final List<String> filterOptions = [
+  // ✅ COMMENTED OUT - Filter options (based on notification types)
+  // final List<String> filterOptions = [
+  //   'All',
+  //   'Likes',
+  //   'Comments',
+  //   'Follows',
+  //   'Marketplace',
+  //   'Events',
+  //   'Mentions',
+  //   'Shares',
+  // ];
+
+  // Tab labels
+  final List<String> tabLabels = [
     'All',
     'Likes',
     'Comments',
@@ -39,78 +54,140 @@ class NotifyProvider extends ChangeNotifier {
   ];
 
   // Getters
-  List<NotificationModel> get notifications => _filteredAndSortedNotifications;
+  List<NotificationModel> get notifications => _filteredNotifications;
   List<NotificationModel> get allNotifications => _notifications;
   bool get isLoading => _isLoading;
   bool get hasLoaded => _hasLoaded;
   String? get error => _error;
   int get unreadCount => _unreadCount;
-  String get sortBy => _sortBy;
-  String get selectedFilter => _selectedFilter;
+  int get selectedTab => _selectedTab;
+  String get currentTabLabel => tabLabels[_selectedTab];
 
-  // Get filtered and sorted notifications
-  List<NotificationModel> get _filteredAndSortedNotifications {
+  // ✅ COMMENTED OUT - Old getters
+  // String get sortBy => _sortBy;
+  // String get selectedFilter => _selectedFilter;
+
+  // Get filtered notifications based on selected tab
+  List<NotificationModel> get _filteredNotifications {
     List<NotificationModel> filtered = List.from(_notifications);
 
-    // Apply filter
-    if (_selectedFilter != 'All') {
-      filtered = filtered.where((notification) {
-        switch (_selectedFilter) {
-          case 'Likes':
-            return notification.type == NotificationType.like;
-          case 'Comments':
-            return notification.type == NotificationType.comment ||
-                notification.type == NotificationType.reply;
-          case 'Follows':
-            return notification.type == NotificationType.follow;
-          case 'Marketplace':
-            return notification.type == NotificationType.marketplacePurchase ||
-                notification.type == NotificationType.marketplaceInterest;
-          case 'Events':
-            return notification.type == NotificationType.eventInterested ||
-                notification.type == NotificationType.eventAttending;
-          case 'Mentions':
-            return notification.type == NotificationType.mention;
-          case 'Shares':
-            return notification.type == NotificationType.share;
-          default:
-            return true;
-        }
-      }).toList();
+    // Apply filter based on tab
+    switch (_selectedTab) {
+      case 0: // All
+        break;
+      case 1: // Likes
+        filtered =
+            filtered.where((n) => n.type == NotificationType.like).toList();
+        break;
+      case 2: // Comments
+        filtered = filtered
+            .where((n) =>
+                n.type == NotificationType.comment ||
+                n.type == NotificationType.reply)
+            .toList();
+        break;
+      case 3: // Follows
+        filtered =
+            filtered.where((n) => n.type == NotificationType.follow).toList();
+        break;
+      case 4: // Marketplace
+        filtered = filtered
+            .where((n) =>
+                n.type == NotificationType.marketplacePurchase ||
+                n.type == NotificationType.marketplaceInterest)
+            .toList();
+        break;
+      case 5: // Events
+        filtered = filtered
+            .where((n) =>
+                n.type == NotificationType.eventInterested ||
+                n.type == NotificationType.eventAttending)
+            .toList();
+        break;
+      case 6: // Mentions
+        filtered =
+            filtered.where((n) => n.type == NotificationType.mention).toList();
+        break;
+      case 7: // Shares
+        filtered =
+            filtered.where((n) => n.type == NotificationType.share).toList();
+        break;
     }
 
-    // Apply sort
-    switch (_sortBy) {
-      case 'Recent':
-        filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-        break;
-      case 'Oldest First':
-        filtered.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-        break;
-      case 'Unread First':
-        filtered.sort((a, b) {
-          if (a.isRead == b.isRead) {
-            return b.createdAt.compareTo(a.createdAt);
-          }
-          return a.isRead ? 1 : -1;
-        });
-        break;
-    }
+    // Always sort by recent (newest first)
+    filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     return filtered;
   }
 
-  // Change sort option
-  void changeSortBy(String newSortBy) {
-    _sortBy = newSortBy;
+  // ✅ COMMENTED OUT - Old filtered and sorted getter
+  // List<NotificationModel> get _filteredAndSortedNotifications {
+  //   List<NotificationModel> filtered = List.from(_notifications);
+  //
+  //   // Apply filter
+  //   if (_selectedFilter != 'All') {
+  //     filtered = filtered.where((notification) {
+  //       switch (_selectedFilter) {
+  //         case 'Likes':
+  //           return notification.type == NotificationType.like;
+  //         case 'Comments':
+  //           return notification.type == NotificationType.comment ||
+  //               notification.type == NotificationType.reply;
+  //         case 'Follows':
+  //           return notification.type == NotificationType.follow;
+  //         case 'Marketplace':
+  //           return notification.type == NotificationType.marketplacePurchase ||
+  //               notification.type == NotificationType.marketplaceInterest;
+  //         case 'Events':
+  //           return notification.type == NotificationType.eventInterested ||
+  //               notification.type == NotificationType.eventAttending;
+  //         case 'Mentions':
+  //           return notification.type == NotificationType.mention;
+  //         case 'Shares':
+  //           return notification.type == NotificationType.share;
+  //         default:
+  //           return true;
+  //       }
+  //     }).toList();
+  //   }
+  //
+  //   // Apply sort
+  //   switch (_sortBy) {
+  //     case 'Recent':
+  //       filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  //       break;
+  //     case 'Oldest First':
+  //       filtered.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+  //       break;
+  //     case 'Unread First':
+  //       filtered.sort((a, b) {
+  //         if (a.isRead == b.isRead) {
+  //           return b.createdAt.compareTo(a.createdAt);
+  //         }
+  //         return a.isRead ? 1 : -1;
+  //       });
+  //       break;
+  //   }
+  //
+  //   return filtered;
+  // }
+
+  // Change tab
+  void changeTab(int index) {
+    _selectedTab = index;
     notifyListeners();
   }
 
-  // Change filter option
-  void changeFilter(String filter) {
-    _selectedFilter = filter;
-    notifyListeners();
-  }
+  // ✅ COMMENTED OUT - Old change methods
+  // void changeSortBy(String newSortBy) {
+  //   _sortBy = newSortBy;
+  //   notifyListeners();
+  // }
+  //
+  // void changeFilter(String filter) {
+  //   _selectedFilter = filter;
+  //   notifyListeners();
+  // }
 
   // Load notifications for a user
   Future<void> loadNotifications(String userId) async {
@@ -129,7 +206,7 @@ class NotifyProvider extends ChangeNotifier {
           .collection('notifications')
           .where('recipientId', isEqualTo: userId)
           .orderBy('createdAt', descending: true)
-          .limit(100) // Increased limit for better filtering
+          .limit(100)
           .get();
 
       _notifications = snapshot.docs
@@ -318,8 +395,10 @@ class NotifyProvider extends ChangeNotifier {
     _notifications.clear();
     _hasLoaded = false;
     _unreadCount = 0;
-    _sortBy = 'Recent';
-    _selectedFilter = 'All';
+    _selectedTab = 0;
+    // ✅ COMMENTED OUT - Old state reset
+    // _sortBy = 'Recent';
+    // _selectedFilter = 'All';
     notifyListeners();
   }
 
