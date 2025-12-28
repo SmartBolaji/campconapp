@@ -110,14 +110,14 @@ class _SalesScreenState extends State<SalesScreen>
               ),
             ),
           ),
-          GestureDetector(
-            onTap: () => _salesProvider.refresh(),
-            child: Iconify(
-              Ph.arrows_clockwise,
-              color: AppTheme.textPrimary,
-              size: 22.sp,
-            ),
-          ),
+          // GestureDetector(
+          //   onTap: () => _salesProvider.refresh(),
+          //   child: Iconify(
+          //     Ph.arrows_clockwise,
+          //     color: AppTheme.textPrimary,
+          //     size: 22.sp,
+          //   ),
+          // ),
         ],
       ),
     );
@@ -253,6 +253,8 @@ class _SalesScreenState extends State<SalesScreen>
     );
   }
 
+// ...existing code...
+
   Widget _buildTabBar() {
     return Container(
       decoration: BoxDecoration(
@@ -263,10 +265,13 @@ class _SalesScreenState extends State<SalesScreen>
       ),
       child: TabBar(
         controller: _tabController,
+        isScrollable: true,
+        tabAlignment: TabAlignment.start,
         indicatorColor: AppTheme.primary,
         indicatorWeight: 2,
         labelColor: AppTheme.primary,
         unselectedLabelColor: AppTheme.textLight,
+        labelPadding: EdgeInsets.symmetric(horizontal: 16.w),
         labelStyle: TextConstants.smallText.copyWith(
           fontWeight: FontWeight.w600,
           fontSize: 13.sp,
@@ -293,7 +298,6 @@ class _SalesScreenState extends State<SalesScreen>
   }
 
   Widget _buildError(String error) {
-    print(error);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -313,6 +317,13 @@ class _SalesScreenState extends State<SalesScreen>
           ),
           SizedBox(height: 16.h),
           TextButton(
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 10.h),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.r),
+                side: BorderSide(color: AppTheme.primary),
+              ),
+            ),
             onPressed: () => _salesProvider.refresh(),
             child: Text(
               'Retry',
@@ -377,6 +388,7 @@ class _SalesScreenState extends State<SalesScreen>
           Text(
             message,
             style: TextConstants.mediumText.copyWith(
+              fontSize: 14.sp,
               color: AppTheme.textSecondary,
             ),
           ),

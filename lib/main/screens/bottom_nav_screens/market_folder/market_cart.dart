@@ -110,14 +110,14 @@ class _MarketCartScreenState extends State<MarketCartScreen>
               ),
             ),
           ),
-          GestureDetector(
-            onTap: () => _buyerOrdersProvider.refresh(),
-            child: Iconify(
-              Ph.arrows_clockwise,
-              color: AppTheme.textPrimary,
-              size: 22.sp,
-            ),
-          ),
+          // GestureDetector(
+          //   onTap: () => _buyerOrdersProvider.refresh(),
+          //   child: Iconify(
+          //     Ph.arrows_clockwise,
+          //     color: AppTheme.textPrimary,
+          //     size: 22.sp,
+          //   ),
+          // ),
         ],
       ),
     );
@@ -146,8 +146,8 @@ class _MarketCartScreenState extends State<MarketCartScreen>
         ),
         tabs: [
           Tab(text: 'Active (${provider.activeOrders.length})'),
-          Tab(text: 'Completed'),
-          Tab(text: 'Cancelled'),
+          const Tab(text: 'Completed'),
+          const Tab(text: 'Cancelled'),
         ],
       ),
     );
@@ -162,6 +162,7 @@ class _MarketCartScreenState extends State<MarketCartScreen>
   }
 
   Widget _buildError(String error) {
+    print(error);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -175,13 +176,20 @@ class _MarketCartScreenState extends State<MarketCartScreen>
           Text(
             error,
             style: TextConstants.mediumText.copyWith(
+              fontSize: 14.sp,
               color: AppTheme.textSecondary,
             ),
           ),
           SizedBox(height: 16.h),
           TextButton(
             onPressed: () => _buyerOrdersProvider.refresh(),
-            child: const Text('Retry'),
+            child: Text(
+              'Retry',
+              style: TextConstants.mediumText.copyWith(
+                fontSize: 14.sp,
+                color: AppTheme.primary,
+              ),
+            ),
           ),
         ],
       ),
@@ -245,7 +253,8 @@ class _MarketCartScreenState extends State<MarketCartScreen>
           SizedBox(height: 16.h),
           Text(
             message,
-            style: TextConstants.mediumText.copyWith(
+            style: TextConstants.boldText.copyWith(
+              fontSize: 14.sp,
               color: AppTheme.textSecondary,
             ),
           ),
@@ -253,6 +262,7 @@ class _MarketCartScreenState extends State<MarketCartScreen>
           Text(
             'Your orders will appear here',
             style: TextConstants.smallText.copyWith(
+              fontSize: 13.sp,
               color: AppTheme.textLight,
             ),
           ),
@@ -676,7 +686,7 @@ class _MarketCartScreenState extends State<MarketCartScreen>
             child: OutlinedButton(
               onPressed: () => _showCancelDialog(order, provider),
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: AppTheme.error),
+                side: const BorderSide(color: AppTheme.error),
                 padding: EdgeInsets.symmetric(vertical: 10.h),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8.r),
@@ -1054,9 +1064,8 @@ class _MarketCartScreenState extends State<MarketCartScreen>
 
                         if (success && mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content:
-                                  const Text('Review submitted successfully!'),
+                            const SnackBar(
+                              content: Text('Review submitted successfully!'),
                               backgroundColor: AppTheme.success,
                             ),
                           );

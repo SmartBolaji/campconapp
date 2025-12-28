@@ -5,6 +5,7 @@ import 'package:campcon/main/screens/profile/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:iconly/iconly.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ph.dart';
@@ -144,9 +145,9 @@ class CustomTopBar extends StatelessWidget {
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
-                                IconlyLight.bag,
+                                FontAwesomeIcons.cartShopping,
                                 color: AppTheme.primary,
-                                size: 20.sp,
+                                size: 17.sp,
                               ),
                             ),
                             // Badge for cart count

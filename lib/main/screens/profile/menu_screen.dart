@@ -1,8 +1,10 @@
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/market_folder/market_cart.dart';
 import 'package:campcon/main/screens/onboarding/onboarding.dart';
 import 'package:campcon/main/screens/profile/my_sales/sales_screen.dart';
+import 'package:campcon/main/screens/profile/logistics/pickup_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
@@ -128,7 +130,39 @@ class MenuScreen extends StatelessWidget {
                     title: 'My Orders',
                     subtitle: 'View your purchase history',
                     onTap: () {
-                      // TODO: Navigate to my orders screen
+                      Navigator.push(
+                        context,
+                        PageTransition(
+                          type: PageTransitionType.rightToLeft,
+                          child: const MarketCartScreen(),
+                          duration: const Duration(milliseconds: 300),
+                        ),
+                      );
+                    },
+                  ),
+
+                  SizedBox(height: 24.h),
+
+                  // Logistics Section
+                  _buildSectionHeader('Logistics'),
+                  SizedBox(height: 8.h),
+
+                  _buildSettingsItem(
+                    context: context,
+                    icon: Ph.map_pin,
+                    iconColor: Colors.purple,
+                    iconBgColor: Colors.purple.withOpacity(0.1),
+                    title: 'Pickup Center',
+                    subtitle: 'Apply to become a pickup location',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        PageTransition(
+                          type: PageTransitionType.rightToLeft,
+                          child: const PickupScreen(),
+                          duration: const Duration(milliseconds: 300),
+                        ),
+                      );
                     },
                   ),
 

@@ -1,5 +1,6 @@
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
+import 'package:campcon/main/models/pickup_center_model.dart';
 import 'package:campcon/main/provider/product_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -11,7 +12,7 @@ class OrderSummarySheet extends StatelessWidget {
   final int quantity;
   final String unitPrice;
   final String totalPrice;
-  final String pickupLocation;
+  final PickupCenterModel pickupCenter;
   final String paymentMethod;
   final String? orderNotes;
   final ProductProvider productProvider;
@@ -23,7 +24,7 @@ class OrderSummarySheet extends StatelessWidget {
     required this.quantity,
     required this.unitPrice,
     required this.totalPrice,
-    required this.pickupLocation,
+    required this.pickupCenter,
     required this.paymentMethod,
     this.orderNotes,
     required this.productProvider,
@@ -37,7 +38,7 @@ class OrderSummarySheet extends StatelessWidget {
     required int quantity,
     required String unitPrice,
     required String totalPrice,
-    required String pickupLocation,
+    required PickupCenterModel pickupCenter,
     required String paymentMethod,
     String? orderNotes,
     required ProductProvider productProvider,
@@ -52,7 +53,7 @@ class OrderSummarySheet extends StatelessWidget {
         quantity: quantity,
         unitPrice: unitPrice,
         totalPrice: totalPrice,
-        pickupLocation: pickupLocation,
+        pickupCenter: pickupCenter,
         paymentMethod: paymentMethod,
         orderNotes: orderNotes,
         productProvider: productProvider,
@@ -112,7 +113,11 @@ class OrderSummarySheet extends StatelessWidget {
 
           Divider(color: AppTheme.border, height: 24.h),
 
-          _buildOrderDetail('Pickup', pickupLocation),
+          // Pickup center details
+          _buildPickupCenterSection(),
+
+          Divider(color: AppTheme.border, height: 24.h),
+
           _buildOrderDetail(
             'Payment',
             paymentMethod == 'online' ? 'Pay Online' : 'Pay on Pickup',
@@ -193,6 +198,86 @@ class OrderSummarySheet extends StatelessWidget {
 
           // Bottom padding for safe area
           SizedBox(height: MediaQuery.of(context).padding.bottom),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPickupCenterSection() {
+    return Container(
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: AppTheme.primary.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: AppTheme.primary.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Iconify(
+                Ph.map_pin,
+                size: 18.sp,
+                color: AppTheme.primary,
+              ),
+              SizedBox(width: 8.w),
+              Text(
+                'Pickup Location',
+                style: TextConstants.smallText.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.primary,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            pickupCenter.name,
+            style: TextConstants.mediumText.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            pickupCenter.fullAddress,
+            style: TextConstants.smallText.copyWith(
+              color: AppTheme.textSecondary,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Row(
+            children: [
+              Iconify(
+                Ph.phone,
+                size: 14.sp,
+                color: AppTheme.textLight,
+              ),
+              SizedBox(width: 4.w),
+              Text(
+                pickupCenter.phoneNumber,
+                style: TextConstants.smallText.copyWith(
+                  fontSize: 12.sp,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+              SizedBox(width: 16.w),
+              Iconify(
+                Ph.clock,
+                size: 14.sp,
+                color: AppTheme.textLight,
+              ),
+              SizedBox(width: 4.w),
+              Text(
+                pickupCenter.operatingHours,
+                style: TextConstants.smallText.copyWith(
+                  fontSize: 12.sp,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );

@@ -1,7 +1,7 @@
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/product_model.dart';
-import 'package:campcon/main/screens/bottom_nav_screens/market_folder/product_decription.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/market_folder/product/product_decription.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
