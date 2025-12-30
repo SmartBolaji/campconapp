@@ -2,9 +2,9 @@
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/provider/resource_provider.dart';
-import 'package:campcon/main/widgets/resources/dept_card.dart';
-import 'package:campcon/main/widgets/resources/level_card.dart';
-import 'package:campcon/main/widgets/resources/faculty_card.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/resource_folder/widgets/dept_card.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/resource_folder/widgets/level_card.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/resource_folder/widgets/faculty_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';

@@ -2,9 +2,9 @@ import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/event_provider.dart';
-import 'package:campcon/main/screens/other_screen/create_event_screen.dart';
-import 'package:campcon/main/widgets/event/event_card.dart';
-import 'package:campcon/main/widgets/event/event_sort_filter_bar.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/home_folder/events/create_event_screen.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/home_folder/events/widgets/event_card.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/home_folder/events/widgets/event_sort_filter_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
@@ -185,10 +185,10 @@ class _EventsScreenState extends State<EventsScreen> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.only(top: 0.h, left: 20.w, right: 20.w),
-                  child: Column(
+                  child: const Column(
                     children: [
                       // SizedBox(height: 16.h),
-                      const EventSortFilterBar(),
+                      EventSortFilterBar(),
                     ],
                   ),
                 ),

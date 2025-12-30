@@ -5,7 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:io';
 import 'dart:async';
 import '../services/auth_service.dart';
-import '../services/secure_storage_service.dart'; // Add this import
+import '../services/secure_storage_service.dart';
+import '../services/email_otp_service.dart';
 import '../models/user_model.dart';
 import '../services/backblaze.dart';
 
@@ -38,10 +39,10 @@ class AuthProvider extends ChangeNotifier {
   UserModel? _currentUser;
 
   // Email verification state
-  Timer? _verificationTimer;
   bool _isEmailVerified = false;
   int _resendCountdown = 0;
   Timer? _resendTimer;
+  String? _pendingEmail; // Store email until account is created
 
   // Username availability state
   bool _isCheckingUsername = false;
@@ -61,6 +62,7 @@ class AuthProvider extends ChangeNotifier {
   bool get isEmailVerified => _isEmailVerified;
   int get resendCountdown => _resendCountdown;
   bool get canResend => _resendCountdown == 0;
+  String? get pendingEmail => _pendingEmail;
 
   // Getters for username state
   bool get isCheckingUsername => _isCheckingUsername;
@@ -92,8 +94,12 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Create account with email only (no password required from user)
-  Future<bool> createAccount() async {
+  // =====================================================
+  // NEW OTP-BASED EMAIL VERIFICATION FLOW
+  // =====================================================
+
+  /// Send OTP to email (Step 1 - from create_account screen)
+  Future<bool> sendEmailOTP() async {
     if (emailController.text.trim().isEmpty) {
       setError('Please enter your email');
       return false;
@@ -108,63 +114,49 @@ class AuthProvider extends ChangeNotifier {
     clearError();
 
     try {
-      UserCredential? result = await _authService.signUpWithEmail(
-        emailController.text.trim(),
-      );
+      final email = emailController.text.trim();
 
-      if (result != null && result.user != null) {
-        _isEmailVerified = false;
+      // Check if email already exists in Firebase
+      final methods =
+          await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
+
+      if (methods.isNotEmpty) {
+        setLoading(false);
+        setError('An account with this email already exists. Please sign in.');
+        return false;
+      }
+
+      // Send OTP
+      bool sent = await EmailOTPService.sendOTP(email);
+
+      if (sent) {
+        _pendingEmail = email;
+        _startResendTimer();
         setLoading(false);
         return true;
       } else {
         setLoading(false);
-        setError('Failed to create account. Please try again.');
+        setError('Failed to send verification code. Please try again.');
         return false;
       }
     } catch (e) {
       setLoading(false);
-      print('Error creating account: $e');
-
-      if (e is FirebaseAuthException) {
-        setError(_getErrorMessage(e.code));
-      } else {
-        setError(
-            'Failed to create account. Please check your internet connection.');
-      }
+      debugPrint('Error sending OTP: $e');
+      setError(
+          'Failed to send verification code. Please check your internet connection.');
       return false;
     }
   }
 
-  // Start checking email verification status
-  void startEmailVerificationCheck() {
-    _verificationTimer?.cancel();
-    _verificationTimer =
-        Timer.periodic(const Duration(seconds: 3), (timer) async {
-      await checkEmailVerified();
-    });
-  }
-
-  // Check if email is verified
-  Future<bool> checkEmailVerified() async {
-    try {
-      bool verified = await _authService.checkEmailVerified();
-      if (verified) {
-        _isEmailVerified = true;
-        _verificationTimer?.cancel();
-        notifyListeners();
-        return true;
-      }
-      return false;
-    } catch (e) {
-      print('Error checking verification: $e');
+  /// Verify OTP code (Step 2 - from verification screen)
+  Future<bool> verifyEmailOTP(String otp) async {
+    if (_pendingEmail == null) {
+      setError('Session expired. Please start over.');
       return false;
     }
-  }
 
-  // Resend verification email
-  Future<bool> resendVerificationEmail() async {
-    if (!canResend) {
-      setError('Please wait before resending');
+    if (otp.length != 6) {
+      setError('Please enter the complete 6-digit code');
       return false;
     }
 
@@ -172,23 +164,107 @@ class AuthProvider extends ChangeNotifier {
     clearError();
 
     try {
-      await _authService.resendVerificationEmail();
-      _startResendTimer();
-      setLoading(false);
-      return true;
+      bool isValid = EmailOTPService.verifyOTP(_pendingEmail!, otp);
+
+      if (isValid) {
+        _isEmailVerified = true;
+        setLoading(false);
+        return true;
+      } else {
+        setLoading(false);
+        if (EmailOTPService.isOTPExpired()) {
+          setError('Code expired. Please request a new one.');
+        } else {
+          setError('Invalid verification code. Please try again.');
+        }
+        return false;
+      }
     } catch (e) {
       setLoading(false);
-      print('Error resending verification: $e');
+      debugPrint('Error verifying OTP: $e');
+      setError('Verification failed. Please try again.');
+      return false;
+    }
+  }
 
-      if (e is FirebaseAuthException) {
-        if (e.code == 'too-many-requests') {
-          setError('Too many requests. Please try again later.');
-        } else {
-          setError('Failed to send verification email. Please try again.');
-        }
+  /// Resend OTP code
+  Future<bool> resendOTP() async {
+    if (!canResend) {
+      setError('Please wait before resending');
+      return false;
+    }
+
+    if (_pendingEmail == null) {
+      setError('Session expired. Please start over.');
+      return false;
+    }
+
+    setLoading(true);
+    clearError();
+
+    try {
+      bool sent = await EmailOTPService.sendOTP(_pendingEmail!);
+
+      if (sent) {
+        _startResendTimer();
+        setLoading(false);
+        return true;
       } else {
-        setError('Failed to send verification email. Please try again.');
+        setLoading(false);
+        setError('Failed to resend code. Please try again.');
+        return false;
       }
+    } catch (e) {
+      setLoading(false);
+      debugPrint('Error resending OTP: $e');
+      setError('Failed to resend code. Please try again.');
+      return false;
+    }
+  }
+
+  /// Create Firebase account with password (Step 3 - from account setup)
+  Future<bool> createAccountWithPassword() async {
+    if (_pendingEmail == null || !_isEmailVerified) {
+      setError('Please verify your email first');
+      return false;
+    }
+
+    if (passwordController.text.isEmpty) {
+      setError('Please enter a password');
+      return false;
+    }
+
+    setLoading(true);
+    clearError();
+
+    try {
+      // Create account in Firebase
+      UserCredential result =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _pendingEmail!,
+        password: passwordController.text,
+      );
+
+      if (result.user != null) {
+        // Mark email as verified in Firebase (since we verified via OTP)
+        // Note: This requires admin SDK, so we'll skip for now
+        // The user profile will be created in completeProfileSetup
+
+        setLoading(false);
+        return true;
+      } else {
+        setLoading(false);
+        setError('Failed to create account. Please try again.');
+        return false;
+      }
+    } on FirebaseAuthException catch (e) {
+      setLoading(false);
+      setError(_getErrorMessage(e.code));
+      return false;
+    } catch (e) {
+      setLoading(false);
+      debugPrint('Error creating account: $e');
+      setError('Failed to create account. Please try again.');
       return false;
     }
   }
@@ -208,15 +284,16 @@ class AuthProvider extends ChangeNotifier {
     });
   }
 
-  // Stop verification check
-  void stopVerificationCheck() {
-    _verificationTimer?.cancel();
-    _verificationTimer = null;
-  }
+  // =====================================================
+  // EXISTING METHODS (Updated)
+  // =====================================================
 
   // Initialize user from secure storage
   Future<void> initializeUser() async {
     try {
+      // Initialize OTP service
+      EmailOTPService.configure();
+
       // Check if user is authenticated in secure storage
       bool isAuth = await SecureStorageService.isAuthenticated();
 
@@ -230,8 +307,6 @@ class AuthProvider extends ChangeNotifier {
       User? firebaseUser = _authService.currentUser;
 
       if (firebaseUser == null) {
-        // Firebase user is null but secure storage says authenticated
-        // Clear storage and require re-login
         await SecureStorageService.clearAuthData();
         _isInitialized = true;
         notifyListeners();
@@ -242,25 +317,17 @@ class AuthProvider extends ChangeNotifier {
       _currentUser = await _authService.getUserData(firebaseUser.uid);
 
       if (_currentUser != null) {
-        // Update secure storage with latest data
         await SecureStorageService.saveAuthStatus(
           userId: _currentUser!.uid,
           email: _currentUser!.email,
           userData: _currentUser!.toMap(),
         );
-      } else {
-        // User data not found in Firestore
-        await SecureStorageService.clearAuthData();
-        await _authService.signOut();
       }
 
       _isInitialized = true;
       notifyListeners();
     } catch (e) {
-      print('Error initializing user: $e');
-      await SecureStorageService.clearAuthData();
-      await _authService.signOut();
-      _currentUser = null;
+      debugPrint('Error initializing user: $e');
       _isInitialized = true;
       notifyListeners();
     }
@@ -269,8 +336,8 @@ class AuthProvider extends ChangeNotifier {
   // Sign in with email and password
   Future<bool> signIn() async {
     if (emailController.text.trim().isEmpty ||
-        passwordController.text.trim().isEmpty) {
-      setError('Please fill in all fields');
+        passwordController.text.isEmpty) {
+      setError('Please enter email and password');
       return false;
     }
 
@@ -280,14 +347,13 @@ class AuthProvider extends ChangeNotifier {
     try {
       UserCredential? result = await _authService.signInWithEmailAndPassword(
         email: emailController.text.trim(),
-        password: passwordController.text.trim(),
+        password: passwordController.text,
       );
 
       if (result != null && result.user != null) {
         _currentUser = await _authService.getUserData(result.user!.uid);
 
         if (_currentUser != null) {
-          // Save to secure storage
           await SecureStorageService.saveAuthStatus(
             userId: _currentUser!.uid,
             email: _currentUser!.email,
@@ -295,25 +361,23 @@ class AuthProvider extends ChangeNotifier {
           );
         }
 
+        _clearControllers();
         setLoading(false);
         return true;
+      } else {
+        setLoading(false);
+        setError('Failed to sign in. Please try again.');
+        return false;
       }
-
-      setLoading(false);
-      return false;
     } catch (e) {
       setLoading(false);
-      String userFacingMessage = 'An unknown sign-in error occurred.';
+      debugPrint('Error signing in: $e');
 
       if (e is FirebaseAuthException) {
-        userFacingMessage = _getErrorMessage(e.code);
+        setError(_getErrorMessage(e.code));
       } else {
-        userFacingMessage =
-            'A network connection error occurred. Please try again.';
+        setError('Failed to sign in. Please check your credentials.');
       }
-
-      print('Sign in error: $e');
-      setError(userFacingMessage);
       return false;
     }
   }
@@ -324,13 +388,12 @@ class AuthProvider extends ChangeNotifier {
     clearError();
 
     try {
-      UserCredential? result = await _authService.signInWithGoogle();
+      final result = await _authService.signInWithGoogle(createProfile: true);
 
       if (result != null && result.user != null) {
         _currentUser = await _authService.getUserData(result.user!.uid);
 
         if (_currentUser != null) {
-          // Save to secure storage
           await SecureStorageService.saveAuthStatus(
             userId: _currentUser!.uid,
             email: _currentUser!.email,
@@ -340,20 +403,14 @@ class AuthProvider extends ChangeNotifier {
 
         setLoading(false);
         return true;
+      } else {
+        setLoading(false);
+        return false;
       }
-
-      setLoading(false);
-      return false;
     } catch (e) {
       setLoading(false);
-      String userFacingMessage = 'Failed to sign in with Google.';
-
-      if (e is FirebaseAuthException) {
-        userFacingMessage = _getErrorMessage(e.code);
-      }
-
-      print('Google sign in error: $e');
-      setError(userFacingMessage);
+      debugPrint('Error signing in with Google: $e');
+      setError('Failed to sign in with Google. Please try again.');
       return false;
     }
   }
@@ -364,48 +421,36 @@ class AuthProvider extends ChangeNotifier {
     clearError();
 
     try {
-      UserCredential? result =
-          await _authService.signInWithGoogle(createProfile: false);
+      final result = await _authService.signInWithGoogle(createProfile: false);
 
       if (result != null && result.user != null) {
         bool needsSetup =
             await _authService.needsProfileSetup(result.user!.uid);
 
-        if (needsSetup) {
-          _prefillGoogleData(result.user!);
-        } else {
+        if (!needsSetup) {
           _currentUser = await _authService.getUserData(result.user!.uid);
 
           if (_currentUser != null) {
-            // Save to secure storage
             await SecureStorageService.saveAuthStatus(
               userId: _currentUser!.uid,
               email: _currentUser!.email,
               userData: _currentUser!.toMap(),
             );
           }
+        } else {
+          _prefillGoogleData(result.user!);
         }
 
         setLoading(false);
-        return {
-          'success': true,
-          'needsProfileSetup': needsSetup,
-          'user': result.user,
-        };
+        return {'success': true, 'needsProfileSetup': needsSetup};
+      } else {
+        setLoading(false);
+        return {'success': false, 'needsProfileSetup': false};
       }
-
-      setLoading(false);
-      return {'success': false, 'needsProfileSetup': false};
     } catch (e) {
       setLoading(false);
-      String userFacingMessage = 'Failed to sign up with Google.';
-
-      if (e is FirebaseAuthException) {
-        userFacingMessage = _getErrorMessage(e.code);
-      }
-
-      print('Google sign up error: $e');
-      setError(userFacingMessage);
+      debugPrint('Error with Google sign up: $e');
+      setError('Failed to continue with Google. Please try again.');
       return {'success': false, 'needsProfileSetup': false};
     }
   }
@@ -421,20 +466,27 @@ class AuthProvider extends ChangeNotifier {
     }
 
     if (usernameController.text.isEmpty) {
-      String suggestion = user.email?.split('@')[0].toLowerCase() ??
-          user.displayName?.toLowerCase().replaceAll(' ', '') ??
-          'user';
-      usernameController.text = suggestion;
+      String suggestedUsername = user.email?.split('@')[0].toLowerCase() ?? '';
+      suggestedUsername =
+          suggestedUsername.replaceAll(RegExp(r'[^a-z0-9_]'), '');
+      usernameController.text = suggestedUsername;
     }
 
     notifyListeners();
   }
 
-  // Complete user profile setup with Backblaze upload
+  // Complete user profile setup
   Future<bool> completeProfileSetup() async {
+    User? firebaseUser = _authService.currentUser;
+
+    if (firebaseUser == null) {
+      setError('Session expired. Please sign in again.');
+      return false;
+    }
+
     if (nameController.text.trim().isEmpty ||
         usernameController.text.trim().isEmpty) {
-      setError('Please fill in all fields');
+      setError('Please fill in all required fields');
       return false;
     }
 
@@ -442,72 +494,37 @@ class AuthProvider extends ChangeNotifier {
     clearError();
 
     try {
-      User? firebaseUser = _authService.currentUser;
-      if (firebaseUser == null) {
-        setError('Authentication error. Please try again.');
-        setLoading(false);
-        return false;
-      }
-
-      // Check username availability
-      bool usernameAvailable = await _authService
-          .isUsernameAvailable(usernameController.text.trim());
-      if (!usernameAvailable) {
-        setError('Username is already taken');
-        setLoading(false);
-        return false;
-      }
-
       String? profileImageUrl;
 
-      // Upload profile image to Backblaze if exists
+      // Upload profile image if selected
       if (_profileImage != null) {
         try {
-          debugPrint('📸 Compressing and uploading profile image...');
-
-          // Compress the image first
-          File compressedImage =
-              await _backblazeService.compressImage(_profileImage!);
-
-          debugPrint('✅ Image compressed successfully');
-
-          // Upload compressed image to Backblaze
-          profileImageUrl = await _backblazeService.uploadFile(compressedImage);
-
-          debugPrint('✅ Image uploaded to Backblaze: $profileImageUrl');
-
-          // Clean up compressed file if it's different from original
-          if (compressedImage.path != _profileImage!.path) {
-            try {
-              await compressedImage.delete();
-            } catch (e) {
-              debugPrint('Warning: Could not delete temp file: $e');
-            }
-          }
+          profileImageUrl = await _backblazeService.uploadFile(
+            _profileImage!,
+     
+          );
         } catch (e) {
-          debugPrint('❌ Error uploading image: $e');
-          // Don't fail the entire profile setup if image upload fails
-          // User can update profile picture later
-          setError(
-              'Profile created but image upload failed. You can update it later.');
+          debugPrint('Error uploading profile image: $e');
         }
       }
 
       // Create user model
       UserModel newUser = UserModel(
         uid: firebaseUser.uid,
-        email: firebaseUser.email ?? emailController.text.trim(),
-        phoneNumber: firebaseUser.phoneNumber ?? '',
+        email: firebaseUser.email ?? _pendingEmail ?? '',
         name: nameController.text.trim(),
         username: usernameController.text.trim().toLowerCase(),
+        phoneNumber: '',
+        profileImageUrl: profileImageUrl ?? firebaseUser.photoURL,
         aboutMe: aboutmeController.text.trim(),
-        profileImageUrl: profileImageUrl,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
 
-      // Save user data to Firestore
+      // Save to Firestore
       await _authService.saveUserData(newUser);
+
+      // Update local state
       _currentUser = newUser;
 
       // Save to secure storage
@@ -517,23 +534,71 @@ class AuthProvider extends ChangeNotifier {
         userData: newUser.toMap(),
       );
 
+      // Clear pending email and controllers
+      _pendingEmail = null;
+      _isEmailVerified = false;
+      _clearControllers();
+
       setLoading(false);
       return true;
     } catch (e) {
       setLoading(false);
-      debugPrint('❌ Error in completeProfileSetup: $e');
-      setError(_getErrorMessage(e));
+      debugPrint('Error completing profile setup: $e');
+      setError('Failed to complete setup. Please try again.');
       return false;
     }
   }
 
-  // Pick profile image from camera or gallery
+  // Check username availability
+  Future<void> checkUsernameAvailability(String username) async {
+    if (_lastCheckedUsername == username.toLowerCase()) {
+      return;
+    }
+
+    _isCheckingUsername = true;
+    _isUsernameAvailable = null;
+    notifyListeners();
+
+    try {
+      _lastCheckedUsername = username.toLowerCase();
+
+      // Check current user's username
+      if (_currentUser != null &&
+          _currentUser!.username.toLowerCase() == username.toLowerCase()) {
+        _isUsernameAvailable = true;
+        _isCheckingUsername = false;
+        notifyListeners();
+        return;
+      }
+
+      bool available = await _authService.isUsernameAvailable(username);
+
+      _isUsernameAvailable = available;
+      _isCheckingUsername = false;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error checking username: $e');
+      _isCheckingUsername = false;
+      _isUsernameAvailable = null;
+      notifyListeners();
+    }
+  }
+
+  // Reset username availability state
+  void resetUsernameCheck() {
+    _isUsernameAvailable = null;
+    _lastCheckedUsername = null;
+    _isCheckingUsername = false;
+    notifyListeners();
+  }
+
+  // Pick profile image
   Future<void> pickProfileImage({bool fromCamera = false}) async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(
       source: fromCamera ? ImageSource.camera : ImageSource.gallery,
-      maxWidth: 800,
-      maxHeight: 800,
+      maxWidth: 512,
+      maxHeight: 512,
       imageQuality: 80,
     );
 
@@ -550,11 +615,9 @@ class AuthProvider extends ChangeNotifier {
       await SecureStorageService.clearAuthData();
       _currentUser = null;
       _clearControllers();
-      _verificationTimer?.cancel();
-      _resendTimer?.cancel();
       notifyListeners();
     } catch (e) {
-      setError(_getErrorMessage(e));
+      debugPrint('Error signing out: $e');
     }
   }
 
@@ -574,57 +637,80 @@ class AuthProvider extends ChangeNotifier {
       return true;
     } catch (e) {
       setLoading(false);
-      setError(_getErrorMessage(e));
+      setError('Failed to send reset email. Please try again.');
       return false;
     }
   }
 
-  // Check username availability with debouncing
-  Future<void> checkUsernameAvailability(String username) async {
-    // Prevent checking the same username multiple times
-    if (_lastCheckedUsername == username.toLowerCase()) {
-      return;
+  // Update user profile
+  Future<bool> updateProfile({
+    required String name,
+    required String username,
+    required String aboutMe,
+    File? newProfileImage,
+    String? originalUsername,
+  }) async {
+    if (_currentUser == null) {
+      setError('User not found');
+      return false;
     }
 
-    _isCheckingUsername = true;
-    _isUsernameAvailable = null;
-    notifyListeners();
+    setLoading(true);
+    clearError();
 
     try {
-      // Wait a bit to avoid too many requests while typing
-      await Future.delayed(const Duration(milliseconds: 500));
+      String? newProfileImageUrl;
 
-      // Check if the username changed while waiting
-      if (usernameController.text.trim().toLowerCase() !=
-          username.toLowerCase()) {
-        _isCheckingUsername = false;
-        notifyListeners();
-        return;
+      if (newProfileImage != null) {
+        newProfileImageUrl = await _backblazeService.uploadFile(
+          newProfileImage,
+  
+        );
       }
 
-      bool available = await _authService.isUsernameAvailable(username);
+      Map<String, dynamic> updateData = {
+        'name': name.trim(),
+        'username': username.trim().toLowerCase(),
+        'aboutMe': aboutMe.trim(),
+        'updatedAt': DateTime.now().toIso8601String(),
+      };
 
-      _isUsernameAvailable = available;
-      _lastCheckedUsername = username.toLowerCase();
-      _isCheckingUsername = false;
-      notifyListeners();
+      if (newProfileImageUrl != null) {
+        updateData['profileImageUrl'] = newProfileImageUrl;
+      }
+
+      await _firestore
+          .collection('users')
+          .doc(_currentUser!.uid)
+          .update(updateData);
+
+      // Update local user
+      _currentUser = _currentUser!.copyWith(
+        name: name.trim(),
+        username: username.trim().toLowerCase(),
+        aboutMe: aboutMe.trim(),
+        profileImageUrl: newProfileImageUrl ?? _currentUser!.profileImageUrl,
+        updatedAt: DateTime.now(),
+      );
+
+      // Update secure storage
+      await SecureStorageService.saveAuthStatus(
+        userId: _currentUser!.uid,
+        email: _currentUser!.email,
+        userData: _currentUser!.toMap(),
+      );
+
+      setLoading(false);
+      return true;
     } catch (e) {
-      _isCheckingUsername = false;
-      _isUsernameAvailable = null;
-      notifyListeners();
-      print('Error checking username: $e');
+      setLoading(false);
+      debugPrint('Error updating profile: $e');
+      setError('Failed to update profile. Please try again.');
+      return false;
     }
   }
 
-  // Reset username availability state
-  void resetUsernameCheck() {
-    _isUsernameAvailable = null;
-    _lastCheckedUsername = null;
-    _isCheckingUsername = false;
-    notifyListeners();
-  }
-
-  // Update user type (student or not) with student details
+    // Update user type (student or not) with student details
   Future<bool> updateUserType(
     bool isStudent, {
     Map<String, String>? studentDetails,
@@ -674,195 +760,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // Update user password
-  Future<bool> updatePassword(String newPassword) async {
-    setLoading(true);
-    clearError();
-
-    try {
-      User? user = _authService.currentUser;
-      if (user == null) {
-        setError('No user is currently signed in');
-        setLoading(false);
-        return false;
-      }
-
-      await user.updatePassword(newPassword);
-      setLoading(false);
-      return true;
-    } catch (e) {
-      setLoading(false);
-      print('Error updating password: $e');
-
-      if (e is FirebaseAuthException) {
-        if (e.code == 'requires-recent-login') {
-          setError(
-              'For security reasons, please sign out and sign in again before changing your password.');
-        } else {
-          setError(_getErrorMessage(e));
-        }
-      } else {
-        setError('Failed to update password. Please try again.');
-      }
-      return false;
-    }
-  }
-
-  /// Update user profile with new data and optional profile image
-  Future<bool> updateProfile({
-    required String name,
-    required String username,
-    required String aboutMe,
-    File? newProfileImage,
-    String? originalUsername,
-  }) async {
-    if (_currentUser == null) {
-      setError('User not found');
-      return false;
-    }
-
-    setLoading(true);
-    clearError();
-
-    try {
-      // Check if username changed and is available
-      if (username.trim().toLowerCase() != originalUsername?.toLowerCase()) {
-        final usernameQuery = await FirebaseFirestore.instance
-            .collection('users')
-            .where('username', isEqualTo: username.trim().toLowerCase())
-            .get();
-
-        if (usernameQuery.docs.isNotEmpty) {
-          setLoading(false);
-          setError('Username already taken');
-          return false;
-        }
-      }
-
-      String? newImageUrl;
-
-      // Upload new profile image if changed
-      if (newProfileImage != null) {
-        try {
-          debugPrint('📸 Compressing and uploading new profile image...');
-
-          File compressedImage =
-              await _backblazeService.compressImage(newProfileImage);
-          newImageUrl = await _backblazeService.uploadFile(compressedImage);
-
-          debugPrint('✅ New profile image uploaded: $newImageUrl');
-
-          // Clean up temp file
-          if (compressedImage.path != newProfileImage.path) {
-            try {
-              await compressedImage.delete();
-            } catch (e) {
-              debugPrint('Warning: Could not delete temp file: $e');
-            }
-          }
-        } catch (e) {
-          debugPrint('❌ Error uploading image: $e');
-          setLoading(false);
-          setError('Failed to upload image');
-          return false;
-        }
-      }
-
-      // Update Firestore
-      Map<String, dynamic> updates = {
-        'name': name.trim(),
-        'username': username.trim().toLowerCase(),
-        'aboutMe': aboutMe.trim(),
-        'updatedAt': DateTime.now().toIso8601String(),
-      };
-
-      if (newImageUrl != null) {
-        updates['profileImageUrl'] = newImageUrl;
-      }
-
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(_currentUser!.uid)
-          .update(updates);
-
-      // Update local user model
-      _currentUser = _currentUser!.copyWith(
-        name: name.trim(),
-        username: username.trim().toLowerCase(),
-        aboutMe: aboutMe.trim(),
-        profileImageUrl: newImageUrl ?? _currentUser!.profileImageUrl,
-        updatedAt: DateTime.now(),
-      );
-
-      // Update secure storage
-      await SecureStorageService.saveAuthStatus(
-        userId: _currentUser!.uid,
-        email: _currentUser!.email,
-        userData: _currentUser!.toMap(),
-      );
-
-      setLoading(false);
-      notifyListeners();
-      return true;
-    } catch (e) {
-      setLoading(false);
-      debugPrint('❌ Error updating profile: $e');
-      setError('Failed to update profile');
-      return false;
-    }
-  }
-
-  // Delete user account
-  Future<bool> deleteAccount(String password) async {
-    if (_currentUser == null) {
-      setError('No user found');
-      return false;
-    }
-
-    setLoading(true);
-    clearError();
-
-    try {
-      // Re-authenticate user
-      bool authenticated = await _authService.reauthenticateUser(password);
-
-      if (!authenticated) {
-        setLoading(false);
-        setError('Incorrect password');
-        return false;
-      }
-
-      // Delete account
-      await _authService.deleteUserAccount(_currentUser!.uid);
-
-      // Clear secure storage
-      await SecureStorageService.clearAuthData();
-
-      // Clear local state
-      _currentUser = null;
-      _clearControllers();
-
-      setLoading(false);
-      return true;
-    } catch (e) {
-      setLoading(false);
-      debugPrint('❌ Error deleting account: $e');
-
-      if (e is FirebaseAuthException) {
-        if (e.code == 'requires-recent-login') {
-          setError(
-              'Please sign out and sign in again before deleting your account');
-        } else {
-          setError(_getErrorMessage(e));
-        }
-      } else {
-        setError('Failed to delete account. Please try again.');
-      }
-      return false;
-    }
-  }
-
-  // ✅ Update user campus
+    // ✅ Update user campus
   Future<void> updateCampus(String campus) async {
     if (_currentUser == null) return;
 
@@ -887,28 +785,25 @@ class AuthProvider extends ChangeNotifier {
   }
 
   String _getErrorMessage(dynamic error) {
-    if (error is FirebaseAuthException) {
-      switch (error.code) {
-        case 'user-not-found':
-          return 'No user found with this email.';
-        case 'wrong-password':
-          return 'Wrong password provided.';
+    if (error is String) {
+      switch (error) {
         case 'email-already-in-use':
           return 'An account already exists with this email.';
-        case 'weak-password':
-          return 'The password provided is too weak.';
         case 'invalid-email':
-          return 'The email address is not valid.';
-        case 'network-request-failed':
-          return 'Network error. Please check your connection.';
+          return 'Please enter a valid email address.';
+        case 'weak-password':
+          return 'Password is too weak. Please use a stronger password.';
+        case 'user-not-found':
+          return 'No account found with this email.';
+        case 'wrong-password':
+          return 'Incorrect password. Please try again.';
         case 'too-many-requests':
           return 'Too many attempts. Please try again later.';
+        case 'network-request-failed':
+          return 'Network error. Please check your connection.';
         default:
           return 'An error occurred. Please try again.';
       }
-    }
-    if (error is String) {
-      return error;
     }
     return 'An unexpected error occurred.';
   }
@@ -920,23 +815,17 @@ class AuthProvider extends ChangeNotifier {
     usernameController.clear();
     aboutmeController.clear();
     _profileImage = null;
-    _isEmailVerified = false;
-    _resendCountdown = 0;
-    // Reset username check state
-    _isCheckingUsername = false;
-    _isUsernameAvailable = null;
-    _lastCheckedUsername = null;
+    resetUsernameCheck();
   }
 
   @override
   void dispose() {
+    _resendTimer?.cancel();
     emailController.dispose();
     passwordController.dispose();
     nameController.dispose();
     usernameController.dispose();
     aboutmeController.dispose();
-    _verificationTimer?.cancel();
-    _resendTimer?.cancel();
     super.dispose();
   }
 }

@@ -78,17 +78,18 @@ class FeedProvider with ChangeNotifier {
       // Load posts once
       final postsWithAuthors = await getPostsWithAuthors().first;
 
-      // Initialize post states silently
+      // Initialize post states silently - ✅ ADDED checkIfReposted
       for (var postWithAuthor in postsWithAuthors) {
         await Future.wait([
           checkIfLiked(postWithAuthor.post.postId, currentUserId),
           checkIfBookmarked(postWithAuthor.post.postId, currentUserId),
+          checkIfReposted(postWithAuthor.post.postId, currentUserId), // ✅ NEW
         ]);
       }
 
       _forYouPosts = postsWithAuthors;
       _isLoadingForYou = false;
-      _forYouLoaded = true; // ✅ Mark as loaded
+      _forYouLoaded = true;
       notifyListeners();
 
       // Listen for updates
@@ -139,11 +140,12 @@ class FeedProvider with ChangeNotifier {
 
       final postsWithAuthors = await getPostsWithAuthors().first;
 
-      // Re-initialize post states
+      // Re-initialize post states - ✅ ADDED checkIfReposted
       for (var postWithAuthor in postsWithAuthors) {
         await Future.wait([
           checkIfLiked(postWithAuthor.post.postId, currentUserId),
           checkIfBookmarked(postWithAuthor.post.postId, currentUserId),
+          checkIfReposted(postWithAuthor.post.postId, currentUserId), // ✅ NEW
         ]);
       }
 
@@ -182,17 +184,18 @@ class FeedProvider with ChangeNotifier {
       // Load posts from following users
       final postsWithAuthors = await getFollowingFeed(currentUserId).first;
 
-      // Initialize post states silently
+      // Initialize post states silently - ✅ ADDED checkIfReposted
       for (var postWithAuthor in postsWithAuthors) {
         await Future.wait([
           checkIfLiked(postWithAuthor.post.postId, currentUserId),
           checkIfBookmarked(postWithAuthor.post.postId, currentUserId),
+          checkIfReposted(postWithAuthor.post.postId, currentUserId), // ✅ NEW
         ]);
       }
 
       _friendsPosts = postsWithAuthors;
       _isLoadingFriends = false;
-      _friendsLoaded = true; // ✅ Mark as loaded
+      _friendsLoaded = true;
       notifyListeners();
 
       // Listen for updates
@@ -243,11 +246,12 @@ class FeedProvider with ChangeNotifier {
 
       final postsWithAuthors = await getFollowingFeed(currentUserId).first;
 
-      // Re-initialize post states
+      // Re-initialize post states - ✅ ADDED checkIfReposted
       for (var postWithAuthor in postsWithAuthors) {
         await Future.wait([
           checkIfLiked(postWithAuthor.post.postId, currentUserId),
           checkIfBookmarked(postWithAuthor.post.postId, currentUserId),
+          checkIfReposted(postWithAuthor.post.postId, currentUserId), // ✅ NEW
         ]);
       }
 
@@ -287,11 +291,12 @@ class FeedProvider with ChangeNotifier {
       // Load posts from campus
       final postsWithAuthors = await getCampusFeed(campus).first;
 
-      // Initialize post states silently
+      // Initialize post states silently - ✅ ADDED checkIfReposted
       for (var postWithAuthor in postsWithAuthors) {
         await Future.wait([
           checkIfLiked(postWithAuthor.post.postId, currentUserId),
           checkIfBookmarked(postWithAuthor.post.postId, currentUserId),
+          checkIfReposted(postWithAuthor.post.postId, currentUserId), // ✅ NEW
         ]);
       }
 
@@ -348,11 +353,12 @@ class FeedProvider with ChangeNotifier {
 
       final postsWithAuthors = await getCampusFeed(campus).first;
 
-      // Re-initialize post states
+      // Re-initialize post states - ✅ ADDED checkIfReposted
       for (var postWithAuthor in postsWithAuthors) {
         await Future.wait([
           checkIfLiked(postWithAuthor.post.postId, currentUserId),
           checkIfBookmarked(postWithAuthor.post.postId, currentUserId),
+          checkIfReposted(postWithAuthor.post.postId, currentUserId), // ✅ NEW
         ]);
       }
 
@@ -468,6 +474,7 @@ class FeedProvider with ChangeNotifier {
           int likesCount = 0;
           int bookmarksCount = 0;
           int commentsCount = 0;
+          int repostsCount = 0; // ✅ NEW
 
           try {
             final counts = await Future.wait([
@@ -489,11 +496,18 @@ class FeedProvider with ChangeNotifier {
                   .collection('comments')
                   .count()
                   .get(),
+              _firestore
+                  .collection('posts')
+                  .doc(post.postId)
+                  .collection('reposts')
+                  .count()
+                  .get(), // ✅ NEW
             ]);
 
             likesCount = counts[0].count ?? 0;
             bookmarksCount = counts[1].count ?? 0;
             commentsCount = counts[2].count ?? 0;
+            repostsCount = counts[3].count ?? 0; // ✅ NEW
           } catch (e) {
             debugPrint('Error getting counts for ${post.postId}: $e');
           }
@@ -504,13 +518,15 @@ class FeedProvider with ChangeNotifier {
               likesCount: likesCount,
               bookmarksCount: bookmarksCount,
               repliesCount: commentsCount,
+              repostsCount: post.shares, // ✅ Use post.shares for repost count
             );
           } else {
-            // Update counts from Firestore (preserve like/bookmark state)
+            // Update counts from Firestore (preserve like/bookmark/repost state)
             final currentState = _posts[post.postId]!;
             currentState.likesCount = likesCount;
             currentState.bookmarksCount = bookmarksCount;
             currentState.repliesCount = commentsCount;
+            currentState.repostsCount = post.shares; // ✅ Use post.shares
           }
 
           postsWithAuthors.add(PostWithAuthor(
@@ -584,6 +600,7 @@ class FeedProvider with ChangeNotifier {
             int likesCount = 0;
             int bookmarksCount = 0;
             int commentsCount = 0;
+            int repostsCount = 0; // ✅ NEW
 
             try {
               final counts = await Future.wait([
@@ -605,11 +622,18 @@ class FeedProvider with ChangeNotifier {
                     .collection('comments')
                     .count()
                     .get(),
+                _firestore
+                    .collection('posts')
+                    .doc(post.postId)
+                    .collection('reposts')
+                    .count()
+                    .get(), // ✅ NEW
               ]);
 
               likesCount = counts[0].count ?? 0;
               bookmarksCount = counts[1].count ?? 0;
               commentsCount = counts[2].count ?? 0;
+              repostsCount = counts[3].count ?? 0; // ✅ NEW
             } catch (e) {
               debugPrint('Error getting counts for ${post.postId}: $e');
             }
@@ -620,6 +644,7 @@ class FeedProvider with ChangeNotifier {
                 likesCount: likesCount,
                 bookmarksCount: bookmarksCount,
                 repliesCount: commentsCount,
+                repostsCount: repostsCount, // ✅ NEW
               );
             }
 
@@ -679,6 +704,7 @@ class FeedProvider with ChangeNotifier {
           int likesCount = 0;
           int bookmarksCount = 0;
           int commentsCount = 0;
+          int repostsCount = 0; // ✅ NEW
 
           try {
             final counts = await Future.wait([
@@ -700,11 +726,18 @@ class FeedProvider with ChangeNotifier {
                   .collection('comments')
                   .count()
                   .get(),
+              _firestore
+                  .collection('posts')
+                  .doc(post.postId)
+                  .collection('reposts')
+                  .count()
+                  .get(), // ✅ NEW
             ]);
 
             likesCount = counts[0].count ?? 0;
             bookmarksCount = counts[1].count ?? 0;
             commentsCount = counts[2].count ?? 0;
+            repostsCount = counts[3].count ?? 0; // ✅ NEW
           } catch (e) {
             debugPrint('Error getting counts for ${post.postId}: $e');
           }
@@ -715,12 +748,14 @@ class FeedProvider with ChangeNotifier {
               likesCount: likesCount,
               bookmarksCount: bookmarksCount,
               repliesCount: commentsCount,
+              repostsCount: repostsCount, // ✅ NEW
             );
           } else {
             final currentState = _posts[post.postId]!;
             currentState.likesCount = likesCount;
             currentState.bookmarksCount = bookmarksCount;
             currentState.repliesCount = commentsCount;
+            currentState.repostsCount = repostsCount; // ✅ NEW
           }
 
           postsWithAuthors.add(PostWithAuthor(
@@ -743,16 +778,16 @@ class FeedProvider with ChangeNotifier {
   // Check if current user liked a post
   Future<bool> checkIfLiked(String postId, String userId) async {
     try {
-      final doc = await _firestore
+      final likeDoc = await _firestore
           .collection('posts')
           .doc(postId)
           .collection('likes')
           .doc(userId)
           .get();
 
-      final isLiked = doc.exists;
+      final isLiked = likeDoc.exists;
 
-      // Update state silently (no notify)
+      // Update local state
       if (!_posts.containsKey(postId)) {
         _posts[postId] = PostState();
       }
@@ -768,16 +803,16 @@ class FeedProvider with ChangeNotifier {
   // Check if current user bookmarked a post
   Future<bool> checkIfBookmarked(String postId, String userId) async {
     try {
-      final doc = await _firestore
+      final bookmarkDoc = await _firestore
           .collection('posts')
           .doc(postId)
           .collection('bookmarks')
           .doc(userId)
           .get();
 
-      final isBookmarked = doc.exists;
+      final isBookmarked = bookmarkDoc.exists;
 
-      // Update state silently (no notify)
+      // Update local state
       if (!_posts.containsKey(postId)) {
         _posts[postId] = PostState();
       }
@@ -786,6 +821,31 @@ class FeedProvider with ChangeNotifier {
       return isBookmarked;
     } catch (e) {
       debugPrint('Error checking bookmark status: $e');
+      return false;
+    }
+  }
+
+  // ✅ NEW: Check if current user reposted a post
+  Future<bool> checkIfReposted(String postId, String userId) async {
+    try {
+      final repostDoc = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('reposts')
+          .doc(postId)
+          .get();
+
+      final isReposted = repostDoc.exists;
+
+      // Update local state
+      if (!_posts.containsKey(postId)) {
+        _posts[postId] = PostState();
+      }
+      _posts[postId]!.isReposted = isReposted;
+
+      return isReposted;
+    } catch (e) {
+      debugPrint('Error checking repost status: $e');
       return false;
     }
   }
@@ -913,6 +973,68 @@ class FeedProvider with ChangeNotifier {
     }
   }
 
+  // ✅ NEW: Toggle repost with optimistic updates
+  Future<void> toggleRepost(String postId, String userId) async {
+    // Ensure post state exists
+    if (!_posts.containsKey(postId)) {
+      _posts[postId] = PostState();
+    }
+
+    final post = _posts[postId]!;
+    final wasReposted = post.isReposted;
+
+    // Optimistically update UI IMMEDIATELY
+    post.isReposted = !wasReposted;
+    post.repostsCount =
+        (post.repostsCount + (wasReposted ? -1 : 1)).clamp(0, 999999999);
+    notifyListeners();
+
+    try {
+      final userRepostDoc = _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('reposts')
+          .doc(postId);
+
+      final postRef = _firestore.collection('posts').doc(postId);
+
+      await _firestore.runTransaction((transaction) async {
+        final repostSnapshot = await transaction.get(userRepostDoc);
+
+        if (!repostSnapshot.exists && !wasReposted) {
+          // Add repost
+          transaction.set(userRepostDoc, {
+            'postRef': postRef,
+            'timestamp': FieldValue.serverTimestamp(),
+          });
+
+          // Update shares count on the post
+          transaction.update(postRef, {
+            'shares': FieldValue.increment(1),
+          });
+        } else if (repostSnapshot.exists && wasReposted) {
+          // Remove repost
+          transaction.delete(userRepostDoc);
+
+          // Update shares count on the post
+          transaction.update(postRef, {
+            'shares': FieldValue.increment(-1),
+          });
+        }
+      });
+
+      debugPrint('✅ Repost synced successfully: $postId');
+    } catch (e) {
+      // Revert on error
+      post.isReposted = wasReposted;
+      post.repostsCount =
+          (post.repostsCount + (wasReposted ? 1 : -1)).clamp(0, 999999999);
+      notifyListeners();
+      debugPrint('❌ Error toggling repost: $e');
+      rethrow;
+    }
+  }
+
   // Update replies count
   void updateRepliesCount(String postId, int increment) {
     if (!_posts.containsKey(postId)) {
@@ -934,24 +1056,29 @@ class FeedProvider with ChangeNotifier {
   void dispose() {
     _forYouSubscription?.cancel();
     _friendsSubscription?.cancel();
-    _campusSubscription?.cancel(); // ✅ Added
+    _campusSubscription?.cancel();
     super.dispose();
   }
 }
 
+// ✅ UPDATED: PostState with repost support
 class PostState {
   int likesCount;
   int bookmarksCount;
   int repliesCount;
+  int repostsCount; // ✅ NEW
   bool isLiked;
   bool isBookmarked;
+  bool isReposted; // ✅ NEW
 
   PostState({
     this.likesCount = 0,
     this.bookmarksCount = 0,
     this.repliesCount = 0,
+    this.repostsCount = 0, // ✅ NEW
     this.isLiked = false,
     this.isBookmarked = false,
+    this.isReposted = false, // ✅ NEW
   });
 }
 

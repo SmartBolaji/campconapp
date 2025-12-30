@@ -4,7 +4,8 @@ import 'package:campcon/main/provider/resource_provider.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/resource_folder/resource_section.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/resource_folder/camplist_section.dart';
 import 'package:campcon/main/widgets/custom_top_bar.dart';
-import 'package:campcon/main/widgets/resources/resource_tabbar.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/resource_folder/widgets/resource_tabbar.dart';
+import 'package:campcon/main/widgets/action_search_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconly/iconly.dart';
@@ -81,45 +82,13 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
                             ),
                             SizedBox(height: 20.h),
 
-                            // Search Bar
-                            Container(
-                              padding: EdgeInsets.symmetric(horizontal: 15.w),
-                              decoration: BoxDecoration(
-                                color: AppTheme.buttonBorder,
-                                borderRadius: BorderRadius.circular(30.r),
-                                border: Border.all(
-                                  color: AppTheme.border,
-                                  width: 1,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.03),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: TextField(
-                                decoration: InputDecoration(
-                                  prefixIcon: Icon(
-                                    IconlyLight.search,
-                                    size: 25.sp,
-                                    color: AppTheme.textLight,
-                                  ),
-                                  hintText: 'Search resources',
-                                  hintStyle: TextConstants.smallText.copyWith(
-                                    color: AppTheme.textLight,
-                                  ),
-                                  filled: true,
-                                  fillColor: AppTheme.buttonBorder,
-                                  border: InputBorder.none,
-                                  contentPadding:
-                                      EdgeInsets.symmetric(vertical: 10.h),
-                                ),
-                                onChanged: (value) {
-                                  // TODO: Implement search
-                                },
-                              ),
+                            // ✅ Search Bar using ActionSearchBar - navigates to search screen
+                            ActionSearchBar.navigate(
+                              hintText: 'Search resources',
+                              onTap: () {
+                                // TODO: Navigate to ResourceSearchScreen
+                                debugPrint('Navigate to resource search');
+                              },
                             ),
                           ],
                         ),

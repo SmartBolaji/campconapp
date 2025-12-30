@@ -5,7 +5,7 @@ import 'package:campcon/main/models/user_model.dart';
 import 'package:campcon/main/provider/feed_provider.dart';
 import 'package:campcon/main/screens/profile/profile_screen.dart';
 import 'package:campcon/main/widgets/format_time.dart';
-import 'package:campcon/main/widgets/posts/image_widget.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/image_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -221,10 +221,15 @@ class PostWidget extends StatelessWidget {
                     onTap: onComment,
                   ),
                   SizedBox(width: 16.w),
+    
                   _buildActionButton(
                     icon: FeatherIcons.repeat,
-                    count: post.shares,
+                    count:
+                        postState.repostsCount, 
                     onTap: onRepost,
+                    isActive: postState.isReposted,
+                    activeColor:
+                        AppTheme.primary,
                   ),
                   SizedBox(width: 16.w),
                   _buildActionButton(

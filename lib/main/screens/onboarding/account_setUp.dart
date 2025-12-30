@@ -3,15 +3,20 @@ import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/widgets/custom_btn.dart';
 import 'package:campcon/main/widgets/custom_toast.dart';
-import 'package:campcon/main/widgets/sign_upflow.dart/set_password.dart';
-import 'package:campcon/main/widgets/sign_upflow.dart/personal_details.dart';
-import 'package:campcon/main/widgets/sign_upflow.dart/profile_pic.dart';
+import 'package:campcon/main/screens/onboarding/widgets/set_password.dart';
+import 'package:campcon/main/screens/onboarding/widgets/personal_details.dart';
+import 'package:campcon/main/screens/onboarding/widgets/profile_pic.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
 class AccountSetup extends StatefulWidget {
-  const AccountSetup({super.key});
+  final bool isGoogleSignUp;
+
+  const AccountSetup({
+    this.isGoogleSignUp = false,
+    super.key,
+  });
 
   @override
   State<AccountSetup> createState() => _AccountSetupState();
@@ -20,19 +25,32 @@ class AccountSetup extends StatefulWidget {
 class _AccountSetupState extends State<AccountSetup> {
   final PageController _pageController = PageController();
   int _currentStep = 0;
-  final int _totalSteps = 3;
+  late int _totalSteps;
 
   final _personalDetailsFormKey = GlobalKey<FormState>();
   final _setPasswordFormKey = GlobalKey<FormState>();
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-  //     statusBarColor: Constants.background,
-  //     statusBarIconBrightness: Brightness.dark,
-  //   ));
-  // }
+  @override
+  void initState() {
+    super.initState();
+    // Skip password step for Google sign-up (they already have auth)
+    _totalSteps = widget.isGoogleSignUp ? 2 : 3;
+  }
+
+  List<Widget> _buildSteps() {
+    if (widget.isGoogleSignUp) {
+      return [
+        PersonalDetails(formKey: _personalDetailsFormKey),
+        const ProfilePic(),
+      ];
+    } else {
+      return [
+        PersonalDetails(formKey: _personalDetailsFormKey),
+        PasswordSettings(formKey: _setPasswordFormKey),
+        const ProfilePic(),
+      ];
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,11 +124,7 @@ class _AccountSetupState extends State<AccountSetup> {
                   physics: const NeverScrollableScrollPhysics(),
                   onPageChanged: (index) =>
                       setState(() => _currentStep = index),
-                  children: [
-                    PersonalDetails(formKey: _personalDetailsFormKey),
-                    PasswordSettings(formKey: _setPasswordFormKey),
-                    const ProfilePic(),
-                  ],
+                  children: _buildSteps(),
                 ),
               ),
 
@@ -142,7 +156,7 @@ class _AccountSetupState extends State<AccountSetup> {
                             : () => _handleContinue(context, provider),
                         backgroundColor: Constants.primaryDark,
                         textColor: Constants.black,
-                        // useWidth: false,
+                        useWidth: false,
                       ),
                       SizedBox(height: 20.h),
                       if (isLastStep && !provider.isLoading)
@@ -186,37 +200,33 @@ class _AccountSetupState extends State<AccountSetup> {
         );
       }
     } else if (_currentStep == 1) {
-      // Validate and update password
-      if (_setPasswordFormKey.currentState?.validate() ?? false) {
-        bool success = await authProvider.updatePassword(
-          authProvider.passwordController.text,
-        );
+      if (widget.isGoogleSignUp) {
+        // For Google sign-up, this is the last step (profile pic)
+        await _handleFinish(context, authProvider);
+      } else {
+        // For email sign-up, this is the password step
+        if (_setPasswordFormKey.currentState?.validate() ?? false) {
+          // Create the Firebase account with the password
+          bool success = await authProvider.createAccountWithPassword();
 
-        if (success) {
-          // if (mounted) {
-          //   showCustomToast(
-          //     context,
-          //     'Password updated successfully!',
-          //     type: ToastType.success,
-          //   );
-          // }
-
-          _pageController.nextPage(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-          );
-        } else {
-          if (mounted && authProvider.errorMessage != null) {
-            showCustomToast(
-              context,
-              authProvider.errorMessage!,
-              type: ToastType.error,
+          if (success) {
+            _pageController.nextPage(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
             );
+          } else {
+            if (mounted && authProvider.errorMessage != null) {
+              showCustomToast(
+                context,
+                authProvider.errorMessage!,
+                type: ToastType.error,
+              );
+            }
           }
         }
       }
     } else if (_currentStep == _totalSteps - 1) {
-      // Complete setup
+      // Complete setup (profile pic step for email sign-up)
       await _handleFinish(context, authProvider);
     }
   }
@@ -229,7 +239,6 @@ class _AccountSetupState extends State<AccountSetup> {
 
     if (success) {
       if (mounted) {
-        // Navigate to main screen
         _navigateToMain(context);
       }
     } else {
@@ -255,12 +264,7 @@ class _AccountSetupState extends State<AccountSetup> {
   }
 
   void _navigateToMain(BuildContext context) {
-    // Pop the account setup screen
-    Navigator.of(context).pop();
-
-    // Pop the create account bottom sheet
-    Navigator.of(context).pop();
-
-    // The AuthenticationWrapper will automatically navigate to MainScreen
+    // Pop all screens back to root
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 }

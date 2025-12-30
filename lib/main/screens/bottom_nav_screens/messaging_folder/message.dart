@@ -546,7 +546,7 @@ class MessageState extends State<Message> {
                               const SizedBox(height: 16),
                               Text(
                                 "No messages yet",
-                                style: TextConstants.mediumText.copyWith(
+                                style: TextConstants.boldText.copyWith(
                                   fontSize: 16,
                                   color: AppTheme.textSecondary,
                                 ),

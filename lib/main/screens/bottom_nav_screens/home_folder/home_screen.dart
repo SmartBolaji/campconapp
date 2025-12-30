@@ -5,6 +5,7 @@ import 'package:campcon/main/screens/bottom_nav_screens/home_folder/events/event
 import 'package:campcon/main/screens/bottom_nav_screens/home_folder/for_you_screen.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/home_folder/friends_screen.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/new_post.dart';
+import 'package:campcon/main/widgets/action_search_bar.dart';
 import 'package:campcon/main/widgets/custom_top_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -54,8 +55,17 @@ class _HomeScreenState extends State<HomeScreen>
                             const CustomTopBar(),
                             SizedBox(height: 20.h),
 
-                            // Create Post Button
-                            _buildCreatePostButton(),
+                            // ✅ Create Post Button using ActionSearchBar
+                            ActionSearchBar.post(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const NewPostScreen(),
+                                  ),
+                                );
+                              },
+                            ),
                             SizedBox(height: 20.h),
                           ],
                         ),
@@ -81,56 +91,6 @@ class _HomeScreenState extends State<HomeScreen>
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCreatePostButton() {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const NewPostScreen(),
-          ),
-        );
-      },
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-        decoration: BoxDecoration(
-          color: AppTheme.buttonBorder,
-          borderRadius: BorderRadius.circular(30.r),
-          border: Border.all(
-            color: AppTheme.border,
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.camera_alt_outlined,
-              color: AppTheme.textLight,
-              size: 25.sp,
-            ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Text(
-                'What\'s on your mind?',
-                style: TextConstants.smallText.copyWith(
-                  fontSize: 14.sp,
-                  color: AppTheme.textLight,
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );

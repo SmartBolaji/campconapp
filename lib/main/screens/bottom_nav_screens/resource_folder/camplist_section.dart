@@ -1,7 +1,7 @@
 // lib/main/screens/bottonnavbarscreens/resource_folder/camplist_section.dart
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/provider/resource_provider.dart';
-import 'package:campcon/main/widgets/resources/camplist_item_widget.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/resource_folder/widgets/camplist_item_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';

@@ -1,12 +1,16 @@
 import 'package:campcon/main/constants/app_colors.dart';
+import 'package:campcon/main/models/post_model.dart';
+import 'package:campcon/main/models/user_model.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/feed_provider.dart';
-import 'package:campcon/main/screens/bottom_nav_screens/post_folder/post_comments_screen.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/post_options.dart';
 import 'package:campcon/main/widgets/floating_widget.dart';
-import 'package:campcon/main/widgets/posts/post_widget.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/post_widget.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/post_view_widget.dart';
+import 'package:campcon/main/widgets/navigate_profile_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 
 class MyForYouScreen extends StatefulWidget {
@@ -128,7 +132,17 @@ class _MyForYouScreenState extends State<MyForYouScreen> {
                 postState: postState,
                 currentUserId: currentUserId,
                 onTap: () {
-                  debugPrint('Post tapped: ${post.postId}');
+                  // Navigate to post view when post is tapped
+                  navigateToPostView(
+                    context: context,
+                    post: post,
+                    author: author,
+                    postState: postState,
+                    currentUserId: currentUserId,
+                    feedProvider: feedProvider,
+                    isMyPost: isMyPost,
+                    focusComment: false,
+                  );
                 },
                 onLike: () async {
                   try {
@@ -144,16 +158,33 @@ class _MyForYouScreenState extends State<MyForYouScreen> {
                   }
                 },
                 onComment: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => CommentsScreen(
-                        postId: post.postId,
-                      ),
-                    ),
+                  // Navigate to post view with comment focus
+                  navigateToPostView(
+                    context: context,
+                    post: post,
+                    author: author,
+                    postState: postState,
+                    currentUserId: currentUserId,
+                    feedProvider: feedProvider,
+                    isMyPost: isMyPost,
+                    focusComment: true, // Focus the comment input
                   );
                 },
-                onRepost: () {
-                  debugPrint('Repost: ${post.postId}');
+                onRepost: () async {
+                  try {
+                    await feedProvider.toggleRepost(post.postId, currentUserId);
+                    if (mounted) {
+                      final state = feedProvider.getPostState(post.postId);
+                      showFloatingSnackBar(
+                        context,
+                        state.isReposted ? 'Reposted!' : 'Repost removed',
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      showFloatingSnackBar(context, 'Failed to repost');
+                    }
+                  }
                 },
                 onShare: () {
                   PostOptionsWidget.showShareOptions(

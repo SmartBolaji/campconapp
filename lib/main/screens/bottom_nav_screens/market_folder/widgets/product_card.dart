@@ -46,11 +46,13 @@ class ProductGridView extends StatelessWidget {
 class ProductCard extends StatelessWidget {
   final Product product;
   final double imageHeight;
+  final bool showOwnerBadge; // NEW
 
   const ProductCard({
     Key? key,
     required this.product,
     required this.imageHeight,
+    this.showOwnerBadge = false, // NEW - default false
   }) : super(key: key);
 
   @override
@@ -250,6 +252,29 @@ class ProductCard extends StatelessWidget {
                         ),
                         child: Text(
                           _getWageTypeLabel(product.wageType!),
+                          style: TextConstants.smallText.copyWith(
+                            fontSize: 10.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.white,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  // Owner Badge
+                  if (showOwnerBadge)
+                    Positioned(
+                      top: 8.w,
+                      left: 8.w,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 8.w, vertical: 4.h),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary,
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        child: Text(
+                          'Your listing',
                           style: TextConstants.smallText.copyWith(
                             fontSize: 10.sp,
                             fontWeight: FontWeight.w600,

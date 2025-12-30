@@ -6,6 +6,9 @@ import 'dart:async';
 class MarketplaceProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  // Current user ID for prioritizing their products
+  String? _currentUserId;
+
   int selectedTab = 0;
   String sortBy = 'Recent';
   String selectedCategory = 'All';
@@ -60,6 +63,7 @@ class MarketplaceProvider extends ChangeNotifier {
   bool get isLoading => selectedTab == 0 ? _isLoadingItems : _isLoadingServices;
   bool get hasLoaded => selectedTab == 0 ? _hasLoadedItems : _hasLoadedServices;
   String? get error => _error;
+  String? get currentUserId => _currentUserId;
 
   List<Product> get currentList =>
       selectedTab == 0 ? _allProducts : _allServices;
@@ -67,7 +71,28 @@ class MarketplaceProvider extends ChangeNotifier {
   List<String> get currentCategories =>
       selectedTab == 0 ? itemCategories : serviceCategories;
 
-  // Get filtered and sorted list
+  // Get current user's products from the current list
+  List<Product> get myProducts {
+    if (_currentUserId == null) return [];
+    return currentList.where((p) => p.sellerId == _currentUserId).toList();
+  }
+
+  // Get other users' products from the current list
+  List<Product> get otherProducts {
+    if (_currentUserId == null) return currentList;
+    return currentList.where((p) => p.sellerId != _currentUserId).toList();
+  }
+
+  // Check if current user has any products in current tab
+  bool get hasMyProducts => myProducts.isNotEmpty;
+
+  // Set current user ID (call this from UI on init)
+  void setCurrentUserId(String? userId) {
+    _currentUserId = userId;
+    notifyListeners();
+  }
+
+  // Get filtered and sorted list with user's products first
   List<Product> get filteredList {
     List<Product> list = List.from(currentList);
 
@@ -88,16 +113,71 @@ class MarketplaceProvider extends ChangeNotifier {
         list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
         break;
       case 'Most Popular':
-        // ✅ Safe handling with null-coalescing
         list.sort((a, b) => (b.views ?? 0).compareTo(a.views ?? 0));
         break;
       case 'Closest to me':
         // TODO: Implement location-based sorting
-        // For now, just keep the current order
         break;
     }
 
+    // Prioritize current user's products (move to front)
+    if (_currentUserId != null) {
+      final myItems = list.where((p) => p.sellerId == _currentUserId).toList();
+      final otherItems =
+          list.where((p) => p.sellerId != _currentUserId).toList();
+      list = [...myItems, ...otherItems];
+    }
+
     return list;
+  }
+
+  // Get filtered list separated into sections
+  Map<String, List<Product>> get filteredListSectioned {
+    List<Product> list = List.from(currentList);
+
+    // Filter by category
+    if (selectedCategory != 'All') {
+      list = list.where((p) => p.category == selectedCategory).toList();
+    }
+
+    // Sort function
+    int Function(Product, Product) sortFunction;
+    switch (sortBy) {
+      case 'Price: Low to High':
+        sortFunction = (a, b) => a.price.compareTo(b.price);
+        break;
+      case 'Price: High to Low':
+        sortFunction = (a, b) => b.price.compareTo(a.price);
+        break;
+      case 'Recent':
+        sortFunction = (a, b) => b.createdAt.compareTo(a.createdAt);
+        break;
+      case 'Most Popular':
+        sortFunction = (a, b) => (b.views ?? 0).compareTo(a.views ?? 0);
+        break;
+      default:
+        sortFunction = (a, b) => b.createdAt.compareTo(a.createdAt);
+    }
+
+    if (_currentUserId != null) {
+      final myItems = list.where((p) => p.sellerId == _currentUserId).toList()
+        ..sort(sortFunction);
+      final otherItems = list
+          .where((p) => p.sellerId != _currentUserId)
+          .toList()
+        ..sort(sortFunction);
+
+      return {
+        'my': myItems,
+        'other': otherItems,
+      };
+    }
+
+    list.sort(sortFunction);
+    return {
+      'my': [],
+      'other': list,
+    };
   }
 
   // Load items once (called on first tab visit)

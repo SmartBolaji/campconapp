@@ -13,7 +13,7 @@ void showFloatingSnackBar(
       message,
       style: TextConstants.smallText.copyWith(
         fontWeight: FontWeight.w600,
-        color: AppTheme.textSecondary,
+        color: textColor,
       ),
     ),
     behavior: SnackBarBehavior.floating,

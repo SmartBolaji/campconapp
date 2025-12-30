@@ -67,10 +67,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     SizedBox(height: 25.h),
                     CustomButton(
-                      text: authProvider.isLoading ? "Sending..." : "Continue",
+                      text: authProvider.isLoading
+                          ? "Sending code..."
+                          : "Continue",
                       onPressed: authProvider.isLoading
                           ? () {}
-                          : () => _handleCreateAccount(context, authProvider),
+                          : () => _handleSendOTP(context, authProvider),
                       backgroundColor: AppTheme.primaryDark,
                       textColor: AppTheme.textPrimary,
                       useWidth: false,
@@ -99,7 +101,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const AccountSetup(),
+                                builder: (context) => const AccountSetup(
+                                  // isGoogleSignUp: true,
+                                ),
                               ),
                             );
                           } else {
@@ -160,26 +164,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Future<void> _handleCreateAccount(
+  Future<void> _handleSendOTP(
       BuildContext context, AuthProvider authProvider) async {
     if (_formKey.currentState!.validate()) {
       authProvider.clearError();
-
-      bool success = await authProvider.createAccount();
-
-      // remove the focus from text fields
       FocusScope.of(context).unfocus();
 
-      if (success) {
-        // Show success toast
-        // showCustomToast(
-        //   context,
-        //   'Verification email sent! Check your inbox.',
-        //   type: ToastType.success,
-        // );
+      bool success = await authProvider.sendEmailOTP();
 
-        // Navigate to verification screen
-        await Future.delayed(const Duration(milliseconds: 500));
+      if (success) {
         if (mounted) {
           Navigator.push(
             context,

@@ -387,24 +387,31 @@ class _MessagingScreenState extends State<MessagingScreen> {
                             ),
                           ],
                         ),
-                        child: TextField(
-                          controller: _searchController,
-                          decoration: InputDecoration(
-                            prefixIcon: Icon(
+                        child: Row(
+                          children: [
+                            Icon(
                               IconlyLight.search,
-                              size: 25.sp,
+                              size: 22.sp,
                               color: AppTheme.textLight,
                             ),
-                            hintText: 'Search conversations',
-                            hintStyle: TextConstants.smallText.copyWith(
-                              color: AppTheme.textLight,
+                            SizedBox(width: 10.w),
+                            Expanded(
+                              child: TextField(
+                                controller: _searchController,
+                                decoration: InputDecoration(
+                                  hintText: 'Search conversations',
+                                  hintStyle: TextConstants.smallText.copyWith(
+                                    color: AppTheme.textLight,
+                                  ),
+                                  filled: true,
+                                  fillColor: AppTheme.buttonBorder,
+                                  border: InputBorder.none,
+                                  contentPadding:
+                                      EdgeInsets.symmetric(vertical: 10.h),
+                                ),
+                              ),
                             ),
-                            filled: true,
-                            fillColor: AppTheme.buttonBorder,
-                            border: InputBorder.none,
-                            contentPadding:
-                                EdgeInsets.symmetric(vertical: 10.h),
-                          ),
+                          ],
                         ),
                       ),
                     ],

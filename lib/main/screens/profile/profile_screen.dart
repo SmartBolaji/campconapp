@@ -2,12 +2,15 @@ import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/user_model.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
+import 'package:campcon/main/provider/feed_provider.dart';
 import 'package:campcon/main/provider/follow_provider.dart';
 import 'package:campcon/main/provider/profile_provider.dart';
 import 'package:campcon/main/screens/profile/edit_profile_screen.dart';
 import 'package:campcon/main/screens/profile/profile_option.dart';
 import 'package:campcon/main/screens/profile/menu_screen.dart';
-import 'package:campcon/main/widgets/profile_widget/profile_button.dart';
+import 'package:campcon/main/screens/profile/widgets/profile_button_widget.dart';
+import 'package:campcon/main/screens/profile/widgets/profile_header_widget.dart';
+import 'package:campcon/main/screens/profile/widgets/profile_posts_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
@@ -169,7 +172,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               overflow: TextOverflow.ellipsis,
                             ),
                             Text(
-                              "@${user.username ?? ''}",
+                              "@${user.username}",
                               style: TextConstants.smallText.copyWith(
                                 color: AppTheme.textLight,
                                 fontSize: 13.sp,
@@ -230,12 +233,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: AppTheme.surface,
       body: Consumer2<AuthProvider, ProfileProvider>(
         builder: (context, authProvider, profileProvider, child) {
           final profileUser = profileProvider.profileUser;
           final isLoading = profileProvider.isLoading;
           final errorMessage = profileProvider.errorMessage;
+          final currentUserId = authProvider.currentUser?.uid ?? '';
 
           if (profileUser == null && isLoading) {
             return Center(
@@ -279,240 +283,227 @@ class _ProfileScreenState extends State<ProfileScreen> {
           final user = profileUser;
           final bool isCurrentUser = profileProvider.isCurrentUser;
 
-          // Dynamic height based on bio presence
-          final double expandedHeight = profileProvider.hasBio ? 340.h : 300.h;
-
           return DefaultTabController(
             length: 4,
             child: NestedScrollView(
+              physics: const ClampingScrollPhysics(),
               headerSliverBuilder: (context, innerBoxIsScrolled) {
                 return [
-                  SliverAppBar(
-                    expandedHeight: expandedHeight,
-                    floating: false,
-                    pinned: true,
-                    backgroundColor: AppTheme.surface,
-                    elevation: 0,
-                    leading: IconButton(
-                      icon: Iconify(
-                        Ph.arrow_left,
-                        color: AppTheme.textPrimary,
-                        size: 24.sp,
+                  SliverOverlapAbsorber(
+                    handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
+                        context),
+                    sliver: SliverAppBar(
+                      expandedHeight: profileProvider.hasBio ? 360.h : 330.h,
+                      floating: false,
+                      pinned: true,
+                      backgroundColor: AppTheme.surface,
+                      elevation: 0,
+                      forceElevated: innerBoxIsScrolled,
+                      leading: IconButton(
+                        icon: Iconify(
+                          Ph.arrow_left,
+                          color: AppTheme.textPrimary,
+                          size: 24.sp,
+                        ),
+                        onPressed: () => Navigator.pop(context),
                       ),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    flexibleSpace: FlexibleSpaceBar(
-                      background: Container(
-                        color: AppTheme.surface,
-                        child: SafeArea(
-                          child: Padding(
-                            padding: EdgeInsets.fromLTRB(24.w, 30.h, 24.w, 0),
-                            child: Column(
+                      // Add title that appears when collapsed
+                      title: innerBoxIsScrolled
+                          ? Row(
                               children: [
-                                // Profile Image
-                                Stack(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 40.r,
-                                      backgroundColor:
-                                          AppTheme.primary.withOpacity(0.1),
-                                      backgroundImage: user.profileImageUrl !=
-                                                  null &&
+                                CircleAvatar(
+                                  radius: 16.r,
+                                  backgroundColor:
+                                      AppTheme.primary.withOpacity(0.1),
+                                  backgroundImage:
+                                      user.profileImageUrl != null &&
                                               user.profileImageUrl != ''
                                           ? NetworkImage(user.profileImageUrl!)
                                           : null,
-                                      child: user.profileImageUrl == null ||
-                                              user.profileImageUrl == ''
-                                          ? Iconify(
-                                              Ph.user,
-                                              size: 40.sp,
-                                              color: AppTheme.primary,
-                                            )
-                                          : null,
-                                    ),
-                                    // Loading indicator overlay while fetching full data
-                                    if (isLoading)
-                                      Positioned.fill(
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            color:
-                                                Colors.black.withOpacity(0.3),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: Center(
-                                            child: SizedBox(
-                                              width: 20.w,
-                                              height: 20.h,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                valueColor:
-                                                    AlwaysStoppedAnimation<
-                                                        Color>(
-                                                  AppTheme.white,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
+                                  child: user.profileImageUrl == null ||
+                                          user.profileImageUrl == ''
+                                      ? Iconify(
+                                          Ph.user,
+                                          size: 16.sp,
+                                          color: AppTheme.primary,
+                                        )
+                                      : null,
+                                ),
+                                SizedBox(width: 12.w),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        user.name ?? "No Name",
+                                        style:
+                                            TextConstants.mediumText.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16.sp,
+                                          color: AppTheme.textPrimary,
                                         ),
-                                      ),
-                                  ],
-                                ),
-
-                                SizedBox(height: 16.h),
-
-                                // Name & Username
-                                Text(
-                                  user.name ?? "No Name",
-                                  style: TextConstants.mediumText.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20.sp,
-                                    color: AppTheme.textPrimary,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                SizedBox(height: 4.h),
-                                Text(
-                                  "@${user.username}",
-                                  style: TextConstants.smallText.copyWith(
-                                    color: AppTheme.textLight,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-
-                                SizedBox(height: 12.h),
-
-                                // Bio with "See more" functionality
-                                if (user.aboutMe != null &&
-                                    user.aboutMe!.isNotEmpty) ...[
-                                  GestureDetector(
-                                    onTap: profileProvider.isBioLong
-                                        ? () => _showFullBio(user)
-                                        : null,
-                                    child: Container(
-                                      key: _bioKey,
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 20.w),
-                                      child: RichText(
-                                        textAlign: TextAlign.center,
-                                        text: TextSpan(
-                                          children: [
-                                            TextSpan(
-                                              text: user.aboutMe!,
-                                              style: TextConstants.smallText
-                                                  .copyWith(
-                                                color: AppTheme.textPrimary,
-                                                height: 1.5,
-                                                fontSize: 13.sp,
-                                              ),
-                                            ),
-                                            if (profileProvider.isBioLong)
-                                              TextSpan(
-                                                text: '... ',
-                                                style: TextConstants.smallText
-                                                    .copyWith(
-                                                  color: AppTheme.textPrimary,
-                                                  height: 1.5,
-                                                  fontSize: 13.sp,
-                                                ),
-                                              ),
-                                            if (profileProvider.isBioLong)
-                                              TextSpan(
-                                                text: 'See more',
-                                                style: TextConstants.smallText
-                                                    .copyWith(
-                                                  color: AppTheme.primary,
-                                                  height: 1.5,
-                                                  fontSize: 13.sp,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                          ],
-                                        ),
-                                        maxLines: 2,
+                                        maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                    ),
+                                      Text(
+                                        "@${user.username}",
+                                        style: TextConstants.smallText.copyWith(
+                                          color: AppTheme.textLight,
+                                          fontSize: 11.sp,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
                                   ),
-                                  SizedBox(height: 12.h),
-                                ],
-
-                                // Followers & Following
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    _buildStatItem(
-                                      isLoading
-                                          ? "0"
-                                          : profileProvider.followersCount
-                                              .toString(),
-                                      "Followers",
-                                    ),
-                                    SizedBox(width: 32.w),
-                                    _buildStatItem(
-                                      isLoading
-                                          ? "0"
-                                          : profileProvider.followingCount
-                                              .toString(),
-                                      "Following",
-                                    ),
-                                  ],
                                 ),
-
-                                SizedBox(height: 16.h),
-
-                                // Action Buttons
-                                if (isCurrentUser)
-                                  _buildCurrentUserActions(authProvider)
-                                else
-                                  _buildOtherUserActions(profileProvider),
                               ],
+                            )
+                          : null,
+                      flexibleSpace: FlexibleSpaceBar(
+                        collapseMode: CollapseMode.parallax,
+                        background: Container(
+                          color: AppTheme.surface,
+                          child: SafeArea(
+                            child: ProfileHeaderWidget(
+                              user: user,
+                              isLoading: isLoading,
+                              isCurrentUser: isCurrentUser,
+                              profileProvider: profileProvider,
+                              bioKey: _bioKey,
+                              onShowFullBio: () => _showFullBio(user),
+                              currentUserActions:
+                                  _buildCurrentUserActions(authProvider),
+                              otherUserActions:
+                                  _buildOtherUserActions(profileProvider),
+                              followersCount: isLoading
+                                  ? "0"
+                                  : profileProvider.followersCount.toString(),
+                              followingCount: isLoading
+                                  ? "0"
+                                  : profileProvider.followingCount.toString(),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    bottom: PreferredSize(
-                      preferredSize: Size.fromHeight(48.h),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(
-                              color: AppTheme.border,
-                              width: 1,
+                      bottom: PreferredSize(
+                        preferredSize: Size.fromHeight(48.h),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                color: AppTheme.border,
+                                width: 1,
+                              ),
                             ),
+                            color: AppTheme.surface,
                           ),
-                          color: AppTheme.surface,
-                        ),
-                        child: TabBar(
-                          indicatorColor: AppTheme.primary,
-                          indicatorWeight: 2,
-                          labelColor: AppTheme.primary,
-                          unselectedLabelColor: AppTheme.textLight,
-                          labelStyle: TextConstants.smallText.copyWith(
-                            fontWeight: FontWeight.w600,
+                          child: TabBar(
+                            indicatorColor: AppTheme.primary,
+                            indicatorWeight: 2,
+                            labelColor: AppTheme.primary,
+                            unselectedLabelColor: AppTheme.textLight,
+                            labelStyle: TextConstants.smallText.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                            unselectedLabelStyle: TextConstants.smallText,
+                            tabs: const [
+                              Tab(text: "Posts"),
+                              Tab(text: 'Reposts'),
+                              Tab(text: "Media"),
+                              Tab(text: "Saved"),
+                            ],
                           ),
-                          unselectedLabelStyle: TextConstants.smallText,
-                          tabs: const [
-                            Tab(text: "Posts"),
-                            Tab(text: 'Reposts'),
-                            Tab(text: "Media"),
-                            Tab(text: "Saved"),
-                          ],
                         ),
                       ),
                     ),
                   ),
                 ];
               },
-              body: TabBarView(
-                children: [
-                  _buildTabContent("No posts yet"),
-                  _buildTabContent("No reposts yet"),
-                  _buildTabContent("No media yet"),
-                  _buildTabContent("No saved items yet"),
-                ],
+              body: Consumer2<ProfileProvider, FeedProvider>(
+                builder: (context, profileProvider, feedProvider, child) {
+                  return Padding(
+                    padding: EdgeInsets.only(top: 135.h),
+                    child: TabBarView(
+                      children: [
+                        // Posts tab
+                        RefreshIndicator(
+                          onRefresh: () =>
+                              profileProvider.loadUserPosts(refresh: true),
+                          color: AppTheme.primary,
+                          child: CustomScrollView(
+                            slivers: ProfilePostsList.buildSlivers(
+                              context: context,
+                              tabType: ProfileTabType.posts,
+                              currentUserId: currentUserId,
+                              provider: profileProvider,
+                              feedProvider: feedProvider,
+                              scrollController: ScrollController(),
+                              onRefresh: () =>
+                                  profileProvider.loadUserPosts(refresh: true),
+                            ),
+                          ),
+                        ),
+                        // Reposts tab
+                        RefreshIndicator(
+                          onRefresh: () =>
+                              profileProvider.loadUserReposts(refresh: true),
+                          color: AppTheme.primary,
+                          child: CustomScrollView(
+                            slivers: ProfilePostsList.buildSlivers(
+                              context: context,
+                              tabType: ProfileTabType.reposts,
+                              currentUserId: currentUserId,
+                              provider: profileProvider,
+                              feedProvider: feedProvider,
+                              scrollController: ScrollController(),
+                              onRefresh: () => profileProvider.loadUserReposts(
+                                  refresh: true),
+                            ),
+                          ),
+                        ),
+                        // Media tab
+                        RefreshIndicator(
+                          onRefresh: () =>
+                              profileProvider.loadUserMedia(refresh: true),
+                          color: AppTheme.primary,
+                          child: CustomScrollView(
+                            slivers: ProfilePostsList.buildSlivers(
+                              context: context,
+                              tabType: ProfileTabType.media,
+                              currentUserId: currentUserId,
+                              provider: profileProvider,
+                              feedProvider: feedProvider,
+                              scrollController: ScrollController(),
+                              onRefresh: () =>
+                                  profileProvider.loadUserMedia(refresh: true),
+                            ),
+                          ),
+                        ),
+                        // Saved tab
+                        RefreshIndicator(
+                          onRefresh: () =>
+                              profileProvider.loadSavedPosts(refresh: true),
+                          color: AppTheme.primary,
+                          child: CustomScrollView(
+                            slivers: ProfilePostsList.buildSlivers(
+                              context: context,
+                              tabType: ProfileTabType.saved,
+                              currentUserId: currentUserId,
+                              provider: profileProvider,
+                              feedProvider: feedProvider,
+                              scrollController: ScrollController(),
+                              onRefresh: () =>
+                                  profileProvider.loadSavedPosts(refresh: true),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
           );
@@ -532,17 +523,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: ProfileButton(
             text: "Edit",
             onTap: () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: AppTheme.background,
-                builder: (context) => const Editprofile(),
+              Navigator.push<bool>(
+                context,
+                PageTransition(
+                  type: PageTransitionType.rightToLeft,
+                  child: const EditProfileScreen(),
+                  duration: const Duration(milliseconds: 300),
+                ),
               ).then((updated) {
                 if (updated == true) {
-                  // Refresh profile with updated user from auth provider
+                  // refresh profile (same logic you had)
                   _profileProvider.refreshProfile(
                     followProvider: followProvider,
-                    updatedCurrentUser: authProvider.currentUser,
+                    updatedCurrentUser:
+                        Provider.of<AuthProvider>(context, listen: false)
+                            .currentUser,
                   );
                 }
               });
@@ -657,54 +652,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildStatItem(String count, String label) {
-    return Row(
-      children: [
-        Text(
-          count,
-          style: TextConstants.mediumText.copyWith(
-            fontWeight: FontWeight.bold,
-            fontSize: 18.sp,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        SizedBox(width: 5.h),
-        Text(
-          label,
-          style: TextConstants.smallText.copyWith(
-            color: AppTheme.textSecondary,
-            fontSize: 12.sp,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTabContent(String emptyMessage) {
-    return Container(
-      color: AppTheme.background,
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.inbox_outlined,
-              size: 64.sp,
-              color: AppTheme.textLight,
-            ),
-            SizedBox(height: 16.h),
-            Text(
-              emptyMessage,
-              style: TextConstants.smallText.copyWith(
-                color: AppTheme.textSecondary,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

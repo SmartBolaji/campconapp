@@ -56,7 +56,7 @@ class _MarketCartScreenState extends State<MarketCartScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: AppTheme.surface,
       body: SafeArea(
         child: Consumer<BuyerOrdersProvider>(
           builder: (context, provider, child) {

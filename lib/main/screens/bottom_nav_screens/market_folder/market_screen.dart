@@ -7,14 +7,16 @@ import 'package:campcon/main/screens/bottom_nav_screens/market_folder/market_car
 import 'package:campcon/main/provider/buyer_orders_provider.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/market_folder/product/post_service_screen.dart';
 import 'package:campcon/main/widgets/custom_top_bar.dart';
-import 'package:campcon/main/widgets/market/empty_state.dart';
-import 'package:campcon/main/widgets/market/market_tabbar.dart';
-import 'package:campcon/main/widgets/market/sort_filter_bar.dart';
-import 'package:campcon/main/widgets/market/product_card.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/market_folder/widgets/empty_state.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/market_folder/widgets/market_tabbar.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/market_folder/widgets/sort_filter_bar.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/market_folder/widgets/product_card.dart';
+import 'package:campcon/main/widgets/action_search_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:iconly/iconly.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/ph.dart';
 import 'package:provider/provider.dart';
 import 'package:page_transition/page_transition.dart';
 
@@ -31,10 +33,10 @@ class _MarketScreenState extends State<MarketScreen> {
   @override
   void initState() {
     super.initState();
-    // Load data on first render
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadInitialData();
       _initializeBuyerOrders();
+      _setCurrentUser();
     });
   }
 
@@ -42,6 +44,13 @@ class _MarketScreenState extends State<MarketScreen> {
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _setCurrentUser() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final marketProvider =
+        Provider.of<MarketplaceProvider>(context, listen: false);
+    marketProvider.setCurrentUserId(authProvider.currentUser?.uid);
   }
 
   Future<void> _loadInitialData() async {
@@ -115,45 +124,13 @@ class _MarketScreenState extends State<MarketScreen> {
                             ),
                             SizedBox(height: 20.h),
 
-                            // Search Bar
-                            Container(
-                              padding: EdgeInsets.symmetric(horizontal: 15.w),
-                              decoration: BoxDecoration(
-                                color: AppTheme.buttonBorder,
-                                borderRadius: BorderRadius.circular(30.r),
-                                border: Border.all(
-                                  color: AppTheme.border,
-                                  width: 1,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.03),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: TextField(
-                                decoration: InputDecoration(
-                                  prefixIcon: Icon(
-                                    IconlyLight.search,
-                                    size: 25.sp,
-                                    color: AppTheme.textLight,
-                                  ),
-                                  hintText: 'Search marketplace',
-                                  hintStyle: TextConstants.smallText.copyWith(
-                                    color: AppTheme.textLight,
-                                  ),
-                                  filled: true,
-                                  fillColor: AppTheme.buttonBorder,
-                                  border: InputBorder.none,
-                                  contentPadding:
-                                      EdgeInsets.symmetric(vertical: 10.h),
-                                ),
-                                onChanged: (value) {
-                                  // TODO: Implement search
-                                },
-                              ),
+                            // Search Bar using ActionSearchBar - navigates to search screen
+                            ActionSearchBar.navigate(
+                              hintText: 'Search products & services',
+                              onTap: () {
+                                // TODO: Navigate to MarketSearchScreen
+                                debugPrint('Navigate to market search');
+                              },
                             ),
                           ],
                         ),
@@ -205,7 +182,7 @@ class _MarketScreenState extends State<MarketScreen> {
                   ),
 
                   // ✅ Content Section
-                  _buildSliverContent(provider),
+                  ..._buildSliverContent(provider),
                 ],
               ),
             ),
@@ -215,79 +192,215 @@ class _MarketScreenState extends State<MarketScreen> {
     );
   }
 
-  Widget _buildSliverContent(MarketplaceProvider provider) {
+  List<Widget> _buildSliverContent(MarketplaceProvider provider) {
     // Loading state
     if (provider.isLoading) {
-      return SliverFillRemaining(
-        child: Center(
-          child: CircularProgressIndicator(
-            color: AppTheme.primary,
+      return [
+        SliverFillRemaining(
+          child: Center(
+            child: CircularProgressIndicator(
+              color: AppTheme.primary,
+            ),
           ),
         ),
-      );
+      ];
     }
 
     // Error state
     if (provider.error != null) {
-      return SliverFillRemaining(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 64.sp,
-                color: AppTheme.error,
-              ),
-              SizedBox(height: 16.h),
-              Text(
-                provider.error!,
-                style: TextConstants.mediumText.copyWith(
-                  color: AppTheme.textSecondary,
+      return [
+        SliverFillRemaining(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 64.sp,
+                  color: AppTheme.error,
                 ),
-              ),
-              SizedBox(height: 8.h),
-              TextButton(
-                onPressed: () async {
-                  await provider.refreshCurrentTab();
-                },
-                child: const Text('Retry'),
-              ),
-            ],
+                SizedBox(height: 16.h),
+                Text(
+                  provider.error!,
+                  style: TextConstants.mediumText.copyWith(
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                TextButton(
+                  onPressed: () async {
+                    await provider.refreshCurrentTab();
+                  },
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ];
+    }
+
+    final sections = provider.filteredListSectioned;
+    final myProducts = sections['my'] ?? [];
+    final otherProducts = sections['other'] ?? [];
+
+    // Empty state
+    if (myProducts.isEmpty && otherProducts.isEmpty) {
+      return [
+        SliverFillRemaining(
+          child: EmptyStateWidget(
+            isItem: provider.selectedTab == 0,
+            onAddPressed: () => _showPostOptions(context),
+          ),
+        ),
+      ];
+    }
+
+    List<Widget> slivers = [];
+
+    // My Products Section
+    if (myProducts.isNotEmpty) {
+      slivers.add(
+        SliverToBoxAdapter(
+          child: _buildSectionHeader(
+            icon: Ph.storefront,
+            title: provider.selectedTab == 0 ? 'My Listings' : 'My Services',
+            count: myProducts.length,
+            color: AppTheme.primary,
+          ),
+        ),
+      );
+
+      slivers.add(
+        SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          sliver: SliverMasonryGrid.count(
+            crossAxisCount: 2,
+            mainAxisSpacing: 12.h,
+            crossAxisSpacing: 12.w,
+            childCount: myProducts.length,
+            itemBuilder: (context, index) {
+              return ProductCard(
+                product: myProducts[index],
+                imageHeight: _calculateImageHeight(index),
+                showOwnerBadge: true,
+              );
+            },
+          ),
+        ),
+      );
+
+      // Divider between sections
+      if (otherProducts.isNotEmpty) {
+        slivers.add(
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+              child: Divider(color: AppTheme.border, thickness: 1),
+            ),
+          ),
+        );
+      }
+    }
+
+    // Other Products Section
+    if (otherProducts.isNotEmpty) {
+      slivers.add(
+        SliverToBoxAdapter(
+          child: _buildSectionHeader(
+            icon: Ph.buildings,
+            title: myProducts.isNotEmpty
+                ? 'Explore More'
+                : (provider.selectedTab == 0 ? 'All Items' : 'All Services'),
+            count: otherProducts.length,
+            color: AppTheme.textSecondary,
+          ),
+        ),
+      );
+
+      slivers.add(
+        SliverPadding(
+          padding: EdgeInsets.only(
+            left: 20.w,
+            right: 20.w,
+            bottom: 60.h,
+          ),
+          sliver: SliverMasonryGrid.count(
+            crossAxisCount: 2,
+            mainAxisSpacing: 12.h,
+            crossAxisSpacing: 12.w,
+            childCount: otherProducts.length,
+            itemBuilder: (context, index) {
+              return ProductCard(
+                product: otherProducts[index],
+                imageHeight: _calculateImageHeight(index),
+              );
+            },
           ),
         ),
       );
     }
 
-    // Empty state
-    final filteredProducts = provider.filteredList;
-    if (filteredProducts.isEmpty) {
-      return SliverFillRemaining(
-        child: EmptyStateWidget(
-          isItem: provider.selectedTab == 0,
-          onAddPressed: () => _showPostOptions(context),
+    // Add bottom padding if only my products
+    if (myProducts.isNotEmpty && otherProducts.isEmpty) {
+      slivers.add(
+        SliverToBoxAdapter(
+          child: SizedBox(height: 60.h),
         ),
       );
     }
 
-    // ✅ Success - Show products in masonry grid
-    return SliverPadding(
-      padding: EdgeInsets.only(
-          left: 20.w,
-          right: 20.w,
-          bottom: 60.h,
-          top: 8.h), // ✅ Adjusted padding
-      sliver: SliverMasonryGrid.count(
-        crossAxisCount: 2,
-        mainAxisSpacing: 12.h,
-        crossAxisSpacing: 12.w,
-        childCount: filteredProducts.length,
-        itemBuilder: (context, index) {
-          return ProductCard(
-            product: filteredProducts[index],
-            imageHeight: _calculateImageHeight(index),
-          );
-        },
+    return slivers;
+  }
+
+  Widget _buildSectionHeader({
+    required String icon,
+    required String title,
+    required int count,
+    required Color color,
+  }) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(6.w),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(6.r),
+            ),
+            child: Iconify(
+              icon,
+              size: 16.sp,
+              color: color,
+            ),
+          ),
+          SizedBox(width: 10.w),
+          Text(
+            title,
+            style: TextConstants.mediumText.copyWith(
+              fontSize: 15.sp,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          SizedBox(width: 8.w),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+            child: Text(
+              '$count',
+              style: TextConstants.smallText.copyWith(
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

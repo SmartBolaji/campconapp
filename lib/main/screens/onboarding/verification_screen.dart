@@ -3,9 +3,11 @@ import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/screens/onboarding/account_setUp.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/widgets/custom_btn.dart';
+import 'package:campcon/main/widgets/custom_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:pinput/pinput.dart';
 import 'package:provider/provider.dart';
 
 class VerificationScreen extends StatefulWidget {
@@ -16,8 +18,8 @@ class VerificationScreen extends StatefulWidget {
 }
 
 class _VerificationScreenState extends State<VerificationScreen> {
-  bool _isChecking = false;
-  AuthProvider? _authProvider; // Store reference here
+  final TextEditingController _otpController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
@@ -27,17 +29,16 @@ class _VerificationScreenState extends State<VerificationScreen> {
       statusBarIconBrightness: Brightness.dark,
     ));
 
-    // Start auto-checking in background
+    // Auto-focus the OTP input
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _authProvider = Provider.of<AuthProvider>(context, listen: false);
-      _authProvider?.startEmailVerificationCheck();
+      _focusNode.requestFocus();
     });
   }
 
   @override
   void dispose() {
-    // Stop checking when leaving screen using stored reference
-    _authProvider?.stopVerificationCheck();
+    _otpController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -47,18 +48,6 @@ class _VerificationScreenState extends State<VerificationScreen> {
       backgroundColor: Constants.background,
       body: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {
-          // Auto-navigate when verified
-          if (authProvider.isEmailVerified) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const AccountSetup()),
-                );
-              }
-            });
-          }
-
           return SingleChildScrollView(
             child: Container(
               margin: EdgeInsets.only(top: 70.sp),
@@ -66,12 +55,13 @@ class _VerificationScreenState extends State<VerificationScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   children: [
+                    // Header
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         InkWell(
                           onTap: () {
-                            authProvider.stopVerificationCheck();
+                            authProvider.clearError();
                             Navigator.pop(context);
                           },
                           child: Icon(
@@ -81,37 +71,21 @@ class _VerificationScreenState extends State<VerificationScreen> {
                           ),
                         ),
                         Text(
-                          "Check Your Email",
+                          "Enter Verification Code",
                           style: TextConstants.boldText.copyWith(
                             fontSize: 20.sp,
                           ),
                         ),
-                        const SizedBox(
-                            width: 24), // Match the back button width
+                        const SizedBox(width: 24),
                       ],
                     ),
                     SizedBox(height: 40.h),
 
-                    // Email Icon
-                    Icon(
-                      Icons.mark_email_read_outlined,
-                      size: 100.sp,
-                      color: Constants.primaryColors,
-                    ),
-                    SizedBox(height: 30.h),
-
-                    // // Instruction Text
-                    // Text(
-                    //   "Verification Link Sent!",
-                    //   style: TextConstants.boldText.copyWith(fontSize: 24.sp),
-                    //   textAlign: TextAlign.center,
-                    // ),
-                    // SizedBox(height: 15.h),
-
+                    // Instruction Text
                     RichText(
                       textAlign: TextAlign.center,
                       text: TextSpan(
-                        text: "We've sent a verification link to\n",
+                        text: "We sent a 6-digit code to\n",
                         style: TextConstants.smallText.copyWith(
                           color: Constants.textLight,
                           fontSize: 15.sp,
@@ -128,50 +102,91 @@ class _VerificationScreenState extends State<VerificationScreen> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 15.h),
 
-                    Text(
-                      "Click the link in the email to verify your account",
-                      style: TextConstants.smallText.copyWith(
-                        color: Constants.textLight,
-                        fontSize: 14.sp,
+                    SizedBox(height: 35.h),
+
+                    // OTP Input using Pinput
+                    Pinput(
+                      controller: _otpController,
+                      focusNode: _focusNode,
+                      length: 6,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      defaultPinTheme: PinTheme(
+                        width: 50.w,
+                        height: 55.h,
+                        textStyle: TextConstants.boldText.copyWith(
+                          fontSize: 22.sp,
+                          color: Constants.textPrimary,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Constants.primarybackground.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(12.r),
+                          border: Border.all(
+                            color: Constants.border,
+                            width: 1,
+                          ),
+                        ),
                       ),
-                      textAlign: TextAlign.center,
+                      focusedPinTheme: PinTheme(
+                        width: 50.w,
+                        height: 55.h,
+                        textStyle: TextConstants.boldText.copyWith(
+                          fontSize: 22.sp,
+                          color: Constants.textPrimary,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Constants.white,
+                          borderRadius: BorderRadius.circular(12.r),
+                          border: Border.all(
+                            color: Constants.primaryColors,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      submittedPinTheme: PinTheme(
+                        width: 50.w,
+                        height: 55.h,
+                        textStyle: TextConstants.boldText.copyWith(
+                          fontSize: 22.sp,
+                          color: Constants.primaryColors,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryBackground,
+                          borderRadius: BorderRadius.circular(12.r),
+                          border: Border.all(
+                            color: Constants.primaryColors,
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                      errorPinTheme: PinTheme(
+                        width: 50.w,
+                        height: 55.h,
+                        textStyle: TextConstants.boldText.copyWith(
+                          fontSize: 22.sp,
+                          color: Constants.error,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Constants.error.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12.r),
+                          border: Border.all(
+                            color: Constants.error,
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                      onCompleted: (code) {
+                        // Auto-verify when 6 digits entered
+                        _handleVerifyOTP(authProvider);
+                      },
                     ),
-                    SizedBox(height: 40.h),
-
-                    // Checking status indicator (only show when NOT manually checking)
-                    if (!_isChecking)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            width: 16.w,
-                            height: 16.h,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Constants.primaryColors,
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 10.w),
-                          Text(
-                            "Checking verification status...",
-                            style: TextConstants.smallText.copyWith(
-                              color: Constants.textLight,
-                              fontSize: 13.sp,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                    SizedBox(height: 30.h),
+                    SizedBox(height: 20.h),
 
                     // Error message
                     if (authProvider.errorMessage != null)
                       Padding(
-                        padding: EdgeInsets.only(bottom: 20.h),
+                        padding: EdgeInsets.only(bottom: 15.h),
                         child: Container(
                           padding: EdgeInsets.all(12.sp),
                           decoration: BoxDecoration(
@@ -197,66 +212,78 @@ class _VerificationScreenState extends State<VerificationScreen> {
                         ),
                       ),
 
-                    // I've Verified Button (Primary Action)
-                    CustomButton(
-                      text: _isChecking
-                          ? "Checking..."
-                          : "I've Verified My Email",
-                      onPressed: _isChecking
-                          ? () {} // Disabled when checking
-                          : () => _handleCheckVerification(authProvider),
-                      backgroundColor: Constants.primaryDark,
-                      textColor: Constants.black,
-                    ),
                     SizedBox(height: 15.h),
 
-                    // Resend Link Button (Secondary Action)
+                    // Resend Code section
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Didn't receive the code? ",
+                          style: TextConstants.smallText.copyWith(
+                            color: Constants.textLight,
+                            fontSize: 14.sp,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap:
+                              authProvider.canResend && !authProvider.isLoading
+                                  ? () => _handleResendOTP(authProvider)
+                                  : null,
+                          child: Text(
+                            authProvider.canResend
+                                ? "Resend"
+                                : "Resend in ${authProvider.resendCountdown}s",
+                            style: TextConstants.smallText.copyWith(
+                              color: authProvider.canResend
+                                  ? Constants.primaryColors
+                                  : Constants.textLight,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: 40.h),
+
+                    // Verify Button
                     CustomButton(
-                      text: authProvider.isLoading
-                          ? "Sending..."
-                          : authProvider.canResend
-                              ? "Resend"
-                              : "Resend in ${authProvider.resendCountdown}s",
-                      onPressed: () {
-                        if (authProvider.canResend &&
-                            !authProvider.isLoading &&
-                            !_isChecking) {
-                          _handleResendVerification(authProvider);
-                        }
-                      },
-                      backgroundColor: authProvider.canResend
-                          ? Constants.primarybackground
-                          : Constants.border,
-                      textColor: authProvider.canResend
-                          ? Constants.textPrimary
-                          : Constants.textLight,
+                      text: authProvider.isLoading ? "Verifying..." : "Verify",
+                      onPressed: authProvider.isLoading
+                          ? () {}
+                          : () => _handleVerifyOTP(authProvider),
+                      backgroundColor: Constants.primaryDark,
+                      textColor: Constants.black,
+                      useWidth: false,
                     ),
                     SizedBox(height: 25.h),
 
                     // Help text
-                    Container(
-                      padding: EdgeInsets.all(15.sp),
-                      decoration: BoxDecoration(
-                        color: Constants.primarybackground.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.info_outline,
-                              color: Constants.primaryColors, size: 20.sp),
-                          SizedBox(width: 10.w),
-                          Expanded(
-                            child: Text(
-                              "Check your spam folder if you don't see the email",
-                              style: TextConstants.smallText.copyWith(
-                                fontSize: 12.sp,
-                                color: Constants.textSecondary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    // Container(
+                    //   padding: EdgeInsets.all(15.sp),
+                    //   decoration: BoxDecoration(
+                    //     color: Constants.primarybackground.withOpacity(0.3),
+                    //     borderRadius: BorderRadius.circular(12.r),
+                    //   ),
+                    //   child: Row(
+                    //     children: [
+                    //       Icon(Icons.info_outline,
+                    //           color: Constants.primaryColors, size: 20.sp),
+                    //       SizedBox(width: 10.w),
+                    //       Expanded(
+                    //         child: Text(
+                    //           "The verification code will arrive within a few seconds. If you don't see it, check your spam folder.",
+                    //           style: TextConstants.smallText.copyWith(
+                    //             fontSize: 12.sp,
+                    //             color: Constants.textSecondary,
+                    //           ),
+                    //         ),
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
@@ -267,42 +294,25 @@ class _VerificationScreenState extends State<VerificationScreen> {
     );
   }
 
-  Future<void> _handleCheckVerification(AuthProvider authProvider) async {
-    if (!mounted) return;
+  Future<void> _handleVerifyOTP(AuthProvider authProvider) async {
+    String otp = _otpController.text.trim();
 
-    setState(() => _isChecking = true);
+    if (otp.length != 6) {
+      authProvider.setError('Please enter the complete 6-digit code');
+      return;
+    }
+
     authProvider.clearError();
 
-    // Check verification status
-    bool isVerified = await authProvider.checkEmailVerified();
+    bool success = await authProvider.verifyEmailOTP(otp);
 
-    if (!mounted) return;
-
-    setState(() => _isChecking = false);
-
-    if (isVerified) {
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 10.w),
-              const Expanded(
-                child: Text('Email verified successfully!'),
-              ),
-            ],
-          ),
-          backgroundColor: Constants.success,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10.r),
-          ),
-          duration: const Duration(seconds: 2),
-        ),
+    if (success && mounted) {
+      showCustomToast(
+        context,
+        'Email verified successfully!',
+        type: ToastType.success,
       );
 
-      // Navigate to account setup
       await Future.delayed(const Duration(milliseconds: 500));
 
       if (mounted) {
@@ -312,59 +322,25 @@ class _VerificationScreenState extends State<VerificationScreen> {
         );
       }
     } else {
-      // Show error message
-      authProvider.setError(
-          'Email not verified yet. Please check your email and click the verification link.');
-
-      // if (mounted) {
-      //   ScaffoldMessenger.of(context).showSnackBar(
-      //     SnackBar(
-      //       content: Row(
-      //         children: [
-      //           const Icon(Icons.error_outline, color: Colors.white),
-      //           SizedBox(width: 10.w),
-      //           const Expanded(
-      //             child: Text(
-      //                 'Email not verified yet. Please check your email first.'),
-      //           ),
-      //         ],
-      //       ),
-      //       backgroundColor: Constants.error,
-      //       behavior: SnackBarBehavior.floating,
-      //       shape: RoundedRectangleBorder(
-      //         borderRadius: BorderRadius.circular(10.r),
-      //       ),
-      //       duration: const Duration(seconds: 3),
-      //     ),
-      //   );
-      // }
+      // Clear the OTP field on error
+      _otpController.clear();
+      _focusNode.requestFocus();
     }
   }
 
-  Future<void> _handleResendVerification(AuthProvider authProvider) async {
+  Future<void> _handleResendOTP(AuthProvider authProvider) async {
     authProvider.clearError();
+    _otpController.clear();
 
-    bool success = await authProvider.resendVerificationEmail();
+    bool success = await authProvider.resendOTP();
 
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.email, color: Colors.white),
-              SizedBox(width: 10.w),
-              const Expanded(
-                child: Text('Verification email sent successfully!'),
-              ),
-            ],
-          ),
-          backgroundColor: Constants.primaryColors,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10.r),
-          ),
-        ),
+      showCustomToast(
+        context,
+        'Verification code sent!',
+        type: ToastType.success,
       );
+      _focusNode.requestFocus();
     }
   }
 }

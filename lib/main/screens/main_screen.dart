@@ -1,12 +1,12 @@
 import 'package:campcon/main/screens/bottom_nav_screens/messaging_folder/message_screen.dart';
-import 'package:campcon/main/widgets/event/event_upload_bar.dart'; // ✅ Add this
-import 'package:campcon/main/widgets/market/market_upload_bar.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/home_folder/events/widgets/event_upload_bar.dart'; // ✅ Add this
+import 'package:campcon/main/screens/bottom_nav_screens/market_folder/widgets/market_upload_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/resource_folder/resource_screen.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/home_folder/home_screen.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/market_folder/market_screen.dart';
-import 'package:campcon/main/screens/bottom_nav_screens/notification_screen.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/notification_folder/notification_screen.dart';
 import 'package:campcon/main/widgets/dialogs/user_type_dialog.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/animated_provider.dart';

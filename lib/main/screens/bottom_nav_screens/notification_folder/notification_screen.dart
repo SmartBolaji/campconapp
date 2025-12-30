@@ -3,10 +3,8 @@ import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/notification_model.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/notify_provider.dart';
+import 'package:campcon/main/widgets/action_search_bar.dart';
 import 'package:campcon/main/widgets/custom_top_bar.dart';
-import 'package:campcon/main/widgets/notification/notification_tabbar.dart';
-// ✅ COMMENTED OUT - Sort/Filter bar
-// import 'package:campcon/main/widgets/notification/notification_sort_filter_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconly/iconly.dart';
@@ -21,6 +19,8 @@ class NotificationScreen extends StatefulWidget {
 
 class _NotificationScreenState extends State<NotificationScreen> {
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -33,6 +33,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -56,6 +57,197 @@ class _NotificationScreenState extends State<NotificationScreen> {
     }
   }
 
+  void _showFilterBottomSheet(BuildContext context) {
+    final notifyProvider = Provider.of<NotifyProvider>(context, listen: false);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 20.w),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Drag indicator
+                  Center(
+                    child: Container(
+                      width: 40.w,
+                      height: 4.h,
+                      decoration: BoxDecoration(
+                        color: AppTheme.border,
+                        borderRadius: BorderRadius.circular(2.r),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20.h),
+
+                  // Title
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Filter Notifications',
+                        style: TextConstants.boldText.copyWith(
+                          fontSize: 18.sp,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                      if (notifyProvider.selectedTab != 0)
+                        TextButton(
+                          onPressed: () {
+                            notifyProvider.changeTab(0);
+                            setModalState(() {});
+                          },
+                          child: Text(
+                            'Clear',
+                            style: TextConstants.smallText.copyWith(
+                              color: AppTheme.primary,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  SizedBox(height: 16.h),
+
+                  // Filter options
+                  Wrap(
+                    spacing: 10.w,
+                    runSpacing: 10.h,
+                    children: List.generate(
+                      notifyProvider.tabLabels.length,
+                      (index) {
+                        final isSelected = notifyProvider.selectedTab == index;
+                        return GestureDetector(
+                          onTap: () {
+                            notifyProvider.changeTab(index);
+                            setModalState(() {});
+                          },
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 16.w,
+                              vertical: 10.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? AppTheme.primary
+                                  : AppTheme.background,
+                              borderRadius: BorderRadius.circular(20.r),
+                              border: Border.all(
+                                color: isSelected
+                                    ? AppTheme.primary
+                                    : AppTheme.border,
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  _getFilterIcon(index),
+                                  size: 16.sp,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : AppTheme.textSecondary,
+                                ),
+                                SizedBox(width: 6.w),
+                                Text(
+                                  notifyProvider.tabLabels[index],
+                                  style: TextConstants.smallText.copyWith(
+                                    fontSize: 13.sp,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w600
+                                        : FontWeight.w400,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : AppTheme.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  SizedBox(height: 20.h),
+
+                  // Apply button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                      ),
+                      child: Text(
+                        'Apply Filter',
+                        style: TextConstants.mediumText.copyWith(
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 10.h),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  IconData _getFilterIcon(int index) {
+    switch (index) {
+      case 0:
+        return IconlyLight.category;
+      case 1:
+        return IconlyLight.heart;
+      case 2:
+        return IconlyLight.chat;
+      case 3:
+        return IconlyLight.add_user;
+      case 4:
+        return IconlyLight.bag;
+      case 5:
+        return IconlyLight.calendar;
+      case 6:
+        return IconlyLight.message;
+      case 7:
+        return IconlyLight.send;
+      default:
+        return IconlyLight.category;
+    }
+  }
+
+  // Filter notifications based on search query
+  List<NotificationModel> _getFilteredNotifications(
+      NotifyProvider notifyProvider) {
+    final notifications = notifyProvider.notifications;
+    if (_searchQuery.isEmpty) {
+      return notifications;
+    }
+    return notifications.where((notification) {
+      final query = _searchQuery.toLowerCase();
+      return notification.actorName.toLowerCase().contains(query) ||
+          notification.body.toLowerCase().contains(query) ||
+          notification.title.toLowerCase().contains(query);
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
@@ -73,14 +265,14 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 controller: _scrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
-                  // ✅ Floating App Bar
+                  // ✅ Floating App Bar with Search
                   SliverAppBar(
                     backgroundColor: AppTheme.surface,
                     elevation: 0,
                     floating: true,
                     snap: true,
                     pinned: true,
-                    expandedHeight: 100.h,
+                    expandedHeight: 120.h,
                     surfaceTintColor: AppTheme.surface,
                     flexibleSpace: FlexibleSpaceBar(
                       background: Padding(
@@ -89,48 +281,126 @@ class _NotificationScreenState extends State<NotificationScreen> {
                           children: [
                             SizedBox(height: 10.h),
                             // Top Bar
-                            const CustomTopBar(
+                            CustomTopBar(
                               centerText: 'Notifications',
+                              showSearch: false,
+                              showCustom: true,
+                              customIcon: // Filter Icon
+                                  GestureDetector(
+                                onTap: () => _showFilterBottomSheet(context),
+                                child: Container(
+                                  padding: EdgeInsets.all(8.w),
+                                  decoration: BoxDecoration(
+                                    color: notifyProvider.selectedTab != 0
+                                        ? AppTheme.primary.withOpacity(0.1)
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(8.r),
+                                  ),
+                                  child: Stack(
+                                    children: [
+                                      Icon(
+                                        IconlyLight.filter,
+                                        size: 22.sp,
+                                        color: notifyProvider.selectedTab != 0
+                                            ? AppTheme.primary
+                                            : AppTheme.textLight,
+                                      ),
+                                      // Active filter indicator
+                                      if (notifyProvider.selectedTab != 0)
+                                        Positioned(
+                                          right: 0,
+                                          top: 0,
+                                          child: Container(
+                                            width: 8.w,
+                                            height: 8.w,
+                                            decoration: BoxDecoration(
+                                              color: AppTheme.primary,
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color: AppTheme.surface,
+                                                width: 1.5,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 20.h),
+
+                            // ✅ Search Bar using ActionSearchBar
+                            ActionSearchBar.search(
+                              controller: _searchController,
+                              hintText: 'Search notifications',
+                              onChanged: (value) {
+                                setState(() {
+                                  _searchQuery = value;
+                                });
+                              },
                             ),
                           ],
                         ),
                       ),
                     ),
-                    bottom: PreferredSize(
-                      preferredSize: Size.fromHeight(50.h),
+                  ),
+
+                  // ✅ Active Filter Chip (if filter is applied)
+                  if (notifyProvider.selectedTab != 0)
+                    SliverToBoxAdapter(
                       child: Container(
-                        decoration: BoxDecoration(
-                          color: AppTheme.surface,
-                          border: Border(
-                            bottom: BorderSide(
-                              color: AppTheme.border,
-                              width: 1,
-                            ),
-                          ),
+                        color: AppTheme.surface,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 20.w,
+                          vertical: 8.h,
                         ),
-                        child: NotificationTabBar(
-                          selectedTab: notifyProvider.selectedTab,
-                          onTabChanged: (index) {
-                            notifyProvider.changeTab(index);
-                          },
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 12.w,
+                                vertical: 6.h,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(16.r),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    _getFilterIcon(notifyProvider.selectedTab),
+                                    size: 14.sp,
+                                    color: AppTheme.primary,
+                                  ),
+                                  SizedBox(width: 6.w),
+                                  Text(
+                                    notifyProvider.currentTabLabel,
+                                    style: TextConstants.smallText.copyWith(
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppTheme.primary,
+                                    ),
+                                  ),
+                                  SizedBox(width: 6.w),
+                                  GestureDetector(
+                                    onTap: () {
+                                      notifyProvider.changeTab(0);
+                                    },
+                                    child: Icon(
+                                      Icons.close,
+                                      size: 14.sp,
+                                      color: AppTheme.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  ),
-
-                  // ✅ COMMENTED OUT - Sort/Filter Bar
-                  // SliverPersistentHeader(
-                  //   pinned: true,
-                  //   delegate: _FilterHeaderDelegate(
-                  //     minHeight: 90.h,
-                  //     maxHeight: 90.h,
-                  //     child: Container(
-                  //       color: AppTheme.surface,
-                  //       padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  //       child: const NotificationSortFilterBar(),
-                  //     ),
-                  //   ),
-                  // ),
 
                   // ✅ Mark all as read button (if unread exists)
                   if (notifyProvider.unreadCount > 0)
@@ -243,8 +513,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
       );
     }
 
+    // Get filtered notifications (by search and tab filter)
+    final filteredNotifications = _getFilteredNotifications(notifyProvider);
+
     // Empty state (after filtering)
-    if (notifyProvider.notifications.isEmpty) {
+    if (filteredNotifications.isEmpty) {
       return SliverFillRemaining(
         child: Center(
           child: Column(
@@ -257,9 +530,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
               ),
               SizedBox(height: 16.h),
               Text(
-                notifyProvider.allNotifications.isEmpty
-                    ? 'No notifications yet'
-                    : 'No ${notifyProvider.currentTabLabel.toLowerCase()} notifications',
+                _searchQuery.isNotEmpty
+                    ? 'No results found'
+                    : notifyProvider.allNotifications.isEmpty
+                        ? 'No notifications yet'
+                        : 'No ${notifyProvider.currentTabLabel.toLowerCase()} notifications',
                 style: TextConstants.boldText.copyWith(
                   fontSize: 18.sp,
                   color: AppTheme.textPrimary,
@@ -269,9 +544,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 40.w),
                 child: Text(
-                  notifyProvider.allNotifications.isEmpty
-                      ? 'When you get notifications, they\'ll show up here'
-                      : 'Try switching to another tab to see more notifications',
+                  _searchQuery.isNotEmpty
+                      ? 'Try a different search term'
+                      : notifyProvider.allNotifications.isEmpty
+                          ? 'When you get notifications, they\'ll show up here'
+                          : 'Try changing the filter to see more notifications',
                   style: TextConstants.smallText.copyWith(
                     fontSize: 14.sp,
                     color: AppTheme.textLight,
@@ -296,7 +573,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) {
-            final notification = notifyProvider.notifications[index];
+            final notification = filteredNotifications[index];
             return _NotificationCard(
               notification: notification,
               onTap: () => _handleNotificationTap(notification),
@@ -305,7 +582,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
               },
             );
           },
-          childCount: notifyProvider.notifications.length,
+          childCount: filteredNotifications.length,
         ),
       ),
     );
@@ -325,41 +602,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
         'Navigate to: ${notification.targetType} - ${notification.targetId}');
   }
 }
-
-// ✅ COMMENTED OUT - Filter header delegate (not needed with tabs)
-// class _FilterHeaderDelegate extends SliverPersistentHeaderDelegate {
-//   final double minHeight;
-//   final double maxHeight;
-//   final Widget child;
-//
-//   _FilterHeaderDelegate({
-//     required this.minHeight,
-//     required this.maxHeight,
-//     required this.child,
-//   });
-//
-//   @override
-//   double get minExtent => minHeight;
-//
-//   @override
-//   double get maxExtent => maxHeight;
-//
-//   @override
-//   Widget build(
-//     BuildContext context,
-//     double shrinkOffset,
-//     bool overlapsContent,
-//   ) {
-//     return SizedBox.expand(child: child);
-//   }
-//
-//   @override
-//   bool shouldRebuild(_FilterHeaderDelegate oldDelegate) {
-//     return maxHeight != oldDelegate.maxHeight ||
-//         minHeight != oldDelegate.minHeight ||
-//         child != oldDelegate.child;
-//   }
-// }
 
 class _NotificationCard extends StatelessWidget {
   final NotificationModel notification;

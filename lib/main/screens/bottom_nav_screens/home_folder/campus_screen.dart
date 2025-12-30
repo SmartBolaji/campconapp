@@ -6,7 +6,7 @@ import 'package:campcon/main/screens/bottom_nav_screens/post_folder/post_comment
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/post_options.dart';
 import 'package:campcon/main/widgets/dialogs/campus_dialog.dart';
 import 'package:campcon/main/widgets/floating_widget.dart';
-import 'package:campcon/main/widgets/posts/post_widget.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/post_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';

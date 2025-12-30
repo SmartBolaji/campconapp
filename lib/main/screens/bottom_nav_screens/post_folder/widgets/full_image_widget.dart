@@ -1,5 +1,5 @@
-
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/services/cache.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
@@ -130,7 +130,7 @@ class _FullScreenImageViewState extends State<FullScreenImageView> {
                     },
                     child: Icon(
                       isLiked ? Icons.favorite : Icons.favorite_border,
-                      color: isLiked ? const Color(0xFFa62c71) : Colors.white,
+                      color: isLiked ? AppTheme.error : Colors.white,
                     ),
                   ),
                 ),

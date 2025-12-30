@@ -19,10 +19,13 @@ class CustomTopBar extends StatelessWidget {
   final VoidCallback? onAddTap;
   final VoidCallback? onEditTap;
   final VoidCallback? onCartTap;
+  final VoidCallback? onCustomTap;
   final bool showAdd;
   final bool showEdit;
   final bool showSearch;
   final bool showCart;
+  final bool showCustom;
+  final Widget? customIcon;
   final int cartItemCount;
 
   const CustomTopBar({
@@ -33,10 +36,13 @@ class CustomTopBar extends StatelessWidget {
     this.onAddTap,
     this.onEditTap,
     this.onCartTap,
+    this.onCustomTap,
     this.showAdd = false,
     this.showEdit = false,
     this.showSearch = true,
     this.showCart = false,
+    this.showCustom = false,
+    this.customIcon,
     this.cartItemCount = 0,
   }) : super(key: key);
 
@@ -233,6 +239,21 @@ class CustomTopBar extends StatelessWidget {
                             color: AppTheme.textPrimary,
                             size: 24.sp,
                           ),
+                          padding: EdgeInsets.zero,
+                        ),
+                      )
+                    else if (showCustom)
+                      SizedBox(
+                        width: 35.w,
+                        height: 35.h,
+                        child: IconButton(
+                          onPressed: onCustomTap ?? () {},
+                          icon: customIcon ??
+                              Icon(
+                                IconlyLight.setting,
+                                color: AppTheme.textPrimary,
+                                size: 22.sp,
+                              ),
                           padding: EdgeInsets.zero,
                         ),
                       )
