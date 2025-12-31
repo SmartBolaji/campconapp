@@ -31,6 +31,7 @@ import 'main/provider/profile_provider.dart';
 import 'main/provider/sales_provider.dart';
 import 'main/provider/buyer_orders_provider.dart';
 import 'main/provider/pickup_provider.dart';
+import 'package:campcon/main/provider/new_post_provider.dart';
 
 Future<void> main() async {
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
@@ -76,6 +77,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => SalesProvider()),
         ChangeNotifierProvider(create: (_) => BuyerOrdersProvider()),
         ChangeNotifierProvider(create: (_) => PickupProvider()),
+        ChangeNotifierProvider(create: (_) => NewPostProvider()),
       ],
       child: const MyApp(),
     ),

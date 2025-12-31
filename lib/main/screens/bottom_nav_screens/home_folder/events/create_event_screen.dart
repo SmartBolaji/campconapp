@@ -24,7 +24,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   final _ticketLinkController = TextEditingController();
-  final _ticketStockController = TextEditingController(); // ✅ New
+  final _ticketStockController = TextEditingController(); //  New
 
   @override
   void initState() {
@@ -142,7 +142,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
     FocusScope.of(context).unfocus();
 
-    // ✅ CAPTURE ALL VALUES BEFORE CLEARING
+    //  CAPTURE ALL VALUES BEFORE CLEARING
     final title = _titleController.text.trim();
     final location = _locationController.text.trim();
     final description = _descriptionController.text.trim();
@@ -156,8 +156,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       eventProvider.selectedTime!.hour,
       eventProvider.selectedTime!.minute,
     );
-    final isFree = eventProvider.isFree; // ✅ CAPTURE BEFORE CLEAR
-    final sellOnCampcon = eventProvider.sellOnCampcon; // ✅ CAPTURE BEFORE CLEAR
+    final isFree = eventProvider.isFree; //  CAPTURE BEFORE CLEAR
+    final sellOnCampcon = eventProvider.sellOnCampcon; //  CAPTURE BEFORE CLEAR
     final price = isFree ? null : double.tryParse(_priceController.text.trim());
     final ticketLink = _ticketLinkController.text.trim().isEmpty
         ? null
@@ -179,10 +179,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
     Navigator.of(context).pop();
 
-    // ✅ USE CAPTURED VALUES
+    //  USE CAPTURED VALUES
     final success = await eventProvider.createEventSilently(
       organizerId: currentUser.uid,
-      organizerName: currentUser.username,
+      organizerName: currentUser.name ?? currentUser.username,
       title: title,
       description: description,
       location: location,
@@ -190,15 +190,15 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       eventTime: eventTime,
       category: category,
       school: school,
-      isFree: isFree, // ✅ Use captured value
+      isFree: isFree,
       ticketPrice: price,
       ticketLink: ticketLink,
       image: image,
-      sellOnCampcon: sellOnCampcon, // ✅ Use captured value
+      sellOnCampcon: sellOnCampcon,
       ticketStock: ticketStock,
     );
 
-    debugPrint(success ? '✅ Event created' : '❌ Failed to create event');
+    debugPrint(success ? ' Event created' : '❌ Failed to create event');
   }
 
   void _showError(String message) {
@@ -255,13 +255,13 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                         SizedBox(height: 20.h),
                         _buildPricingSection(eventProvider),
 
-                        // ✅ Add Ticket Stock Section
+                        //  Add Ticket Stock Section
                         if (!eventProvider.isFree) ...[
                           SizedBox(height: 20.h),
                           _buildTicketStockSection(eventProvider),
                         ],
 
-                        // ✅ Only show external ticket link if NOT selling on CampCon
+                        //  Only show external ticket link if NOT selling on CampCon
                         if (!eventProvider.sellOnCampcon ||
                             eventProvider.isFree) ...[
                           SizedBox(height: 16.h),
@@ -649,7 +649,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     );
   }
 
-  // ✅ New Widget: Ticket Stock Section
+  //  New Widget: Ticket Stock Section
   Widget _buildTicketStockSection(EventProvider eventProvider) {
     return Container(
       padding: EdgeInsets.all(16.w),
@@ -808,7 +808,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     );
   }
 
-  // ✅ Update Ticket Link Section
+  //  Update Ticket Link Section
   Widget _buildTicketLinkSection(EventProvider eventProvider) {
     return Container(
       padding: EdgeInsets.all(16.w),
@@ -1051,7 +1051,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     _descriptionController.dispose();
     _priceController.dispose();
     _ticketLinkController.dispose();
-    _ticketStockController.dispose(); // ✅ New
+    _ticketStockController.dispose(); //  New
     super.dispose();
   }
 }

@@ -209,7 +209,7 @@ class SalesProvider extends ChangeNotifier {
 
       _isUpdating = false;
       notifyListeners();
-      debugPrint('✅ Order status updated to ${newStatus.name}');
+      debugPrint(' Order status updated to ${newStatus.name}');
       return true;
     } catch (e) {
       _isUpdating = false;
@@ -256,7 +256,7 @@ class SalesProvider extends ChangeNotifier {
 
       _isUpdating = false;
       notifyListeners();
-      debugPrint('✅ Order cancelled');
+      debugPrint(' Order cancelled');
       return true;
     } catch (e) {
       _isUpdating = false;

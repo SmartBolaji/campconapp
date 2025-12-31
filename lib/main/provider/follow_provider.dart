@@ -138,7 +138,7 @@ class FollowProvider with ChangeNotifier {
             'followersCount': FieldValue.increment(1),
           });
 
-          debugPrint('✅ Followed user: $targetUserId');
+          debugPrint(' Followed user: $targetUserId');
         } else if (followingSnapshot.exists && wasFollowing) {
           // Unfollow action
           transaction.delete(currentUserFollowingDoc);
@@ -153,7 +153,7 @@ class FollowProvider with ChangeNotifier {
             'followersCount': FieldValue.increment(-1),
           });
 
-          debugPrint('✅ Unfollowed user: $targetUserId');
+          debugPrint(' Unfollowed user: $targetUserId');
         }
       });
 

@@ -39,7 +39,7 @@ class _CampusDialogState extends State<CampusDialog>
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
   final List<String> _campusList =
-      UsableData().campusList; // ✅ Changed from schoolList to campusList
+      UsableData().campusList; //  Changed from schoolList to campusList
   String? _selectedCampus;
 
   @override
@@ -96,7 +96,10 @@ class _CampusDialogState extends State<CampusDialog>
                       // Header with close button
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
+                          const SizedBox(
+                              width: 24), // Placeholder for centering
                           Text(
                             'Select Your Hall',
                             style: TextConstants.boldText.copyWith(
@@ -125,7 +128,7 @@ class _CampusDialogState extends State<CampusDialog>
 
                       // Description
                       _buildAnimatedText(
-                        'Choose your hall to connect with your hall mates', // ✅ Changed description
+                        'Choose your hall to connect with your hall mates', //  Changed description
                         TextConstants.smallText.copyWith(
                           fontSize: 13.sp,
                           color: AppTheme.textSecondary,
@@ -239,7 +242,7 @@ class _CampusDialogState extends State<CampusDialog>
                     children: [
                       Icon(
                         Icons
-                            .home_outlined, // ✅ Changed icon from school to home
+                            .home_outlined, //  Changed icon from school to home
                         color: isSelected
                             ? AppTheme.primary
                             : AppTheme.textSecondary,

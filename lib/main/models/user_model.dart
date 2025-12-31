@@ -20,8 +20,14 @@ class UserModel {
   final int followersCount;
   final int followingCount;
   final String? campus;
-  final String role; // ✅ Add role field
-  final String? fcmToken; // ✅ Add fcmToken field
+  final String role;
+  final String? fcmToken;
+
+  // Engagement-based personalization fields
+  final List<String> engagedTags; // Tags from posts user liked/commented
+  final List<String> engagedAuthors; // User IDs of authors user engages with
+  final List<String> searchHistory; // Recent search terms
+  final List<String> viewedCampuses; // Campuses user has shown interest in
 
   UserModel({
     required this.uid,
@@ -43,8 +49,13 @@ class UserModel {
     this.followersCount = 0,
     this.followingCount = 0,
     this.campus,
-    this.role = 'user', // ✅ Default to 'user'
-    this.fcmToken, // ✅ Add fcmToken parameter
+    this.role = 'user',
+    this.fcmToken,
+    // Tags for personalization
+    this.engagedTags = const [],
+    this.engagedAuthors = const [],
+    this.searchHistory = const [],
+    this.viewedCampuses = const [],
   });
 
   // Add getter for fullName
@@ -57,8 +68,7 @@ class UserModel {
       name: map['name'],
       aboutMe: map['aboutMe'],
       username: map['username'] ?? '',
-      profileImageUrl: map['profileImageUrl'] ??
-          map['profileImg'], // ✅ Support both field names
+      profileImageUrl: map['profileImageUrl'] ?? map['profileImg'],
       phoneNumber: map['phoneNumber'] ?? '',
       createdAt: map['createdAt'] != null
           ? DateTime.parse(map['createdAt'])
@@ -73,17 +83,20 @@ class UserModel {
       interests:
           map['interests'] != null ? List<String>.from(map['interests']) : null,
       bio: map['bio'],
-      profileImage: map['profileImage'] ??
-          map['profileImg'], // ✅ Support both field names
+      profileImage: map['profileImage'] ?? map['profileImg'],
       followersCount: map['followersCount'] ?? 0,
       followingCount: map['followingCount'] ?? 0,
       campus: map['campus'],
-      role: map['role'] ?? 'user', // ✅ Parse role
-      fcmToken: map['fcmToken'], // ✅ Parse fcmToken
+      role: map['role'] ?? 'user',
+      fcmToken: map['fcmToken'],
+      // Tags for personalization
+      engagedTags: List<String>.from(map['engagedTags'] ?? []),
+      engagedAuthors: List<String>.from(map['engagedAuthors'] ?? []),
+      searchHistory: List<String>.from(map['searchHistory'] ?? []),
+      viewedCampuses: List<String>.from(map['viewedCampuses'] ?? []),
     );
   }
 
-  // Add fromJson method (alias for fromMap)
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel.fromMap(json);
   }
@@ -109,12 +122,16 @@ class UserModel {
       'followersCount': followersCount,
       'followingCount': followingCount,
       'campus': campus,
-      'role': role, // ✅ Include role
-      'fcmToken': fcmToken, // ✅ Include fcmToken
+      'role': role,
+      'fcmToken': fcmToken,
+      // Tags for personalization
+      'engagedTags': engagedTags,
+      'engagedAuthors': engagedAuthors,
+      'searchHistory': searchHistory,
+      'viewedCampuses': viewedCampuses,
     };
   }
 
-  // Add toJson method (alias for toMap)
   Map<String, dynamic> toJson() {
     return toMap();
   }
@@ -139,8 +156,13 @@ class UserModel {
     int? followersCount,
     int? followingCount,
     String? campus,
-    String? role, // ✅ Add role
-    String? fcmToken, // ✅ Add fcmToken
+    String? role,
+    String? fcmToken,
+    // Tags for personalization
+    List<String>? engagedTags,
+    List<String>? engagedAuthors,
+    List<String>? searchHistory,
+    List<String>? viewedCampuses,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -162,8 +184,13 @@ class UserModel {
       followersCount: followersCount ?? this.followersCount,
       followingCount: followingCount ?? this.followingCount,
       campus: campus ?? this.campus,
-      role: role ?? this.role, // ✅ Add role
-      fcmToken: fcmToken ?? this.fcmToken, // ✅ Add fcmToken
+      role: role ?? this.role,
+      fcmToken: fcmToken ?? this.fcmToken,
+      // Tags for personalization
+      engagedTags: engagedTags ?? this.engagedTags,
+      engagedAuthors: engagedAuthors ?? this.engagedAuthors,
+      searchHistory: searchHistory ?? this.searchHistory,
+      viewedCampuses: viewedCampuses ?? this.viewedCampuses,
     );
   }
 }

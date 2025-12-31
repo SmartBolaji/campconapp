@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:io';
 import 'package:campcon/main/services/backblaze.dart';
 import 'package:campcon/main/models/post_model.dart';
+import 'package:campcon/main/services/post_tagging_service.dart';
 
 enum UploadStatus {
   idle,
@@ -160,7 +161,7 @@ class PostProvider extends ChangeNotifier {
     required String username,
     required String userProfileImage,
     required String content,
-    required String campus, // ✅ Add this parameter
+    required String campus, //  Add this parameter
     List<File>? images,
   }) async {
     if (content.trim().isEmpty && (images == null || images.isEmpty)) {
@@ -202,7 +203,7 @@ class PostProvider extends ChangeNotifier {
               message: 'Uploaded ${i + 1} of ${images.length} images',
             );
 
-            debugPrint('✅ Image ${i + 1} uploaded successfully');
+            debugPrint(' Image ${i + 1} uploaded successfully');
 
             // Clean up compressed file
             if (compressedImage.path != images[i].path) {
@@ -237,13 +238,14 @@ class PostProvider extends ChangeNotifier {
         shares: 0,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
-        campus: campus, // ✅ Add this
+        campus: campus, //  Add this
+        tags: PostTaggingService.extractTags(content), // Auto-extract tags
       );
 
       await postRef.set(post.toMap());
 
       setUploadSuccess();
-      debugPrint('✅ Post created successfully with campus: $campus');
+      debugPrint(' Post created successfully with campus: $campus');
       return true;
     } catch (e) {
       debugPrint('❌ Error creating post: $e');
@@ -258,7 +260,7 @@ class PostProvider extends ChangeNotifier {
     required String username,
     required String userProfileImage,
     required String content,
-    required String campus, // ✅ Add this parameter
+    required String campus, //  Add this parameter
     List<File>? images,
   }) async {
     if (content.trim().isEmpty && (images == null || images.isEmpty)) {
@@ -292,7 +294,7 @@ class PostProvider extends ChangeNotifier {
             // Update progress
             setUploadProgress((i + 1) / images.length);
 
-            debugPrint('✅ Image ${i + 1} uploaded successfully');
+            debugPrint(' Image ${i + 1} uploaded successfully');
 
             // Clean up compressed file if different from original
             if (compressedImage.path != images[i].path) {
@@ -329,13 +331,14 @@ class PostProvider extends ChangeNotifier {
         shares: 0,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
-        campus: campus, // ✅ Add this
+        campus: campus, //  Add this
+        tags: PostTaggingService.extractTags(content), // Auto-extract tags
       );
 
       await postRef.set(post.toMap());
 
       setLoading(false);
-      debugPrint('✅ Post created successfully with campus: $campus');
+      debugPrint(' Post created successfully with campus: $campus');
       return true;
     } catch (e) {
       setLoading(false);

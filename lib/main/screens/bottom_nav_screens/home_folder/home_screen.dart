@@ -51,11 +51,11 @@ class _HomeScreenState extends State<HomeScreen>
                         padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 0),
                         child: Column(
                           children: [
-                            // ✅ Use reusable top bar
+                            //  Use reusable top bar
                             const CustomTopBar(),
                             SizedBox(height: 20.h),
 
-                            // ✅ Create Post Button using ActionSearchBar
+                            //  Create Post Button using ActionSearchBar
                             ActionSearchBar.post(
                               onTap: () {
                                 Navigator.push(

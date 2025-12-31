@@ -87,7 +87,7 @@ class _MarketScreenState extends State<MarketScreen> {
                 controller: _scrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
-                  // ✅ Floating App Bar with Search and Tabs
+                  //  Floating App Bar with Search and Tabs
                   SliverAppBar(
                     backgroundColor: AppTheme.surface,
                     elevation: 0,
@@ -158,7 +158,7 @@ class _MarketScreenState extends State<MarketScreen> {
                     ),
                   ),
 
-                  // ✅ Filters Section (Pinned below tabs) - INCREASED HEIGHT
+                  // Filters Section
                   SliverPersistentHeader(
                     // pinned: true,
                     delegate: _FilterHeaderDelegate(
@@ -170,18 +170,15 @@ class _MarketScreenState extends State<MarketScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            // SizedBox(height: 12.h), // ✅ Restored spacing
                             const SortFilterBar(),
-                            SizedBox(height: 8.h), // ✅ Restored spacing
-                            // const CategoryChips(),
-                            // SizedBox(height: 8.h), // ✅ Restored spacing
+                            SizedBox(height: 8.h),
                           ],
                         ),
                       ),
                     ),
                   ),
 
-                  // ✅ Content Section
+                  // Content Section
                   ..._buildSliverContent(provider),
                 ],
               ),
@@ -305,18 +302,18 @@ class _MarketScreenState extends State<MarketScreen> {
 
     // Other Products Section
     if (otherProducts.isNotEmpty) {
-      slivers.add(
-        SliverToBoxAdapter(
-          child: _buildSectionHeader(
-            icon: Ph.buildings,
-            title: myProducts.isNotEmpty
-                ? 'Explore More'
-                : (provider.selectedTab == 0 ? 'All Items' : 'All Services'),
-            count: otherProducts.length,
-            color: AppTheme.textSecondary,
-          ),
-        ),
-      );
+      // slivers.add(
+      //   SliverToBoxAdapter(
+      //     child: _buildSectionHeader(
+      //       icon: Ph.buildings,
+      //       title: myProducts.isNotEmpty
+      //           ? 'Explore More'
+      //           : (provider.selectedTab == 0 ? 'All Items' : 'All Services'),
+      //       count: otherProducts.length,
+      //       color: AppTheme.textSecondary,
+      //     ),
+      //   ),
+      // );
 
       slivers.add(
         SliverPadding(
@@ -360,7 +357,12 @@ class _MarketScreenState extends State<MarketScreen> {
     required Color color,
   }) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+      padding: EdgeInsets.only(
+        left: 20.w,
+        right: 20.w,
+        top: 0.h,
+        bottom: 12.h,
+      ),
       child: Row(
         children: [
           Container(
@@ -405,7 +407,7 @@ class _MarketScreenState extends State<MarketScreen> {
     );
   }
 
-  // ✅ Calculate dynamic image height for variety
+  //  Calculate dynamic image height for variety
   double _calculateImageHeight(int index) {
     if (index % 7 == 0) return 180.h; // Tallest
     if (index % 5 == 0) return 160.h; // Tall
@@ -476,7 +478,7 @@ class _MarketScreenState extends State<MarketScreen> {
   }
 }
 
-// ✅ Custom delegate for pinned filter header
+//  Custom delegate for pinned filter header
 class _FilterHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double minHeight;
   final double maxHeight;

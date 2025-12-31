@@ -147,7 +147,7 @@ class _PostItemScreenState extends State<PostItemScreen> {
       image: image,
     );
 
-    debugPrint(success ? '✅ Item posted' : '❌ Failed to post item');
+    debugPrint(success ? ' Item posted' : '❌ Failed to post item');
   }
 
   void _showError(String message) {

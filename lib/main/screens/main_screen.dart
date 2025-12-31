@@ -1,5 +1,5 @@
 import 'package:campcon/main/screens/bottom_nav_screens/messaging_folder/message_screen.dart';
-import 'package:campcon/main/screens/bottom_nav_screens/home_folder/events/widgets/event_upload_bar.dart'; // ✅ Add this
+import 'package:campcon/main/screens/bottom_nav_screens/home_folder/events/widgets/event_upload_bar.dart'; //  Add this
 import 'package:campcon/main/screens/bottom_nav_screens/market_folder/widgets/market_upload_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:campcon/main/constants/app_colors.dart';
@@ -65,7 +65,7 @@ class _MainScreenState extends State<MainScreen> {
 
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-      if (authProvider.currentUser?.isStudent != null) {
+      if (authProvider.currentUser?.isStudent == null) {
         _hasShownDialog = true;
 
         UserTypeDialog.show(
@@ -139,7 +139,7 @@ class _MainScreenState extends State<MainScreen> {
             child: UploadMarketProgressBar(),
           ),
 
-          // ✅ Event Upload Progress Bar
+          //  Event Upload Progress Bar
           const Positioned(
             left: 0,
             right: 0,

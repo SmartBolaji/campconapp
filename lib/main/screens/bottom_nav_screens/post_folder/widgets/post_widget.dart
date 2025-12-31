@@ -6,6 +6,8 @@ import 'package:campcon/main/provider/feed_provider.dart';
 import 'package:campcon/main/screens/profile/profile_screen.dart';
 import 'package:campcon/main/widgets/format_time.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/image_widget.dart';
+import 'package:campcon/main/services/cache.dart'; //  Add this import
+import 'package:cached_network_image/cached_network_image.dart'; //  Add this import
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -42,15 +44,14 @@ class PostWidget extends StatelessWidget {
   });
 
   void _navigateToProfile(BuildContext context) {
-    // ✅ Create initial user data from post author
     final initialUserData = author ??
         UserModel(
           uid: post.userId,
-          email: '', // Not available from post
+          email: '',
           username: post.username,
           name: post.username,
-          profileImageUrl: '', // Will be loaded
-          phoneNumber: '', // Not available from post
+          profileImageUrl: '',
+          phoneNumber: '',
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );
@@ -61,7 +62,7 @@ class PostWidget extends StatelessWidget {
         type: PageTransitionType.rightToLeft,
         child: ProfileScreen(
           userId: post.userId,
-          initialUserData: initialUserData, // ✅ Pass initial data
+          initialUserData: initialUserData,
         ),
         duration: const Duration(milliseconds: 300),
       ),
@@ -94,18 +95,21 @@ class PostWidget extends StatelessWidget {
           children: [
             Padding(
               padding: EdgeInsets.fromLTRB(
-                  16.w, index == 0 ? 12.h : 12.h, 16.w, 12.h),
+                  16.w, index == 0 ? 18.h : 12.h, 16.w, 12.h),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ✅ Clickable Avatar
+                  //  Clickable Avatar with CachedNetworkImage
                   GestureDetector(
                     onTap: () => _navigateToProfile(context),
                     child: CircleAvatar(
                       radius: 20.r,
                       backgroundColor: AppTheme.primaryBackground,
                       backgroundImage: displayImage.isNotEmpty
-                          ? NetworkImage(displayImage)
+                          ? CachedNetworkImageProvider(
+                              displayImage,
+                              cacheManager: CustomCacheManager(),
+                            )
                           : null,
                       child: displayImage.isEmpty
                           ? Icon(
@@ -123,7 +127,7 @@ class PostWidget extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            // ✅ Clickable Name
+                            //  Clickable Name
                             Flexible(
                               child: GestureDetector(
                                 onTap: () => _navigateToProfile(context),
@@ -188,7 +192,6 @@ class PostWidget extends StatelessWidget {
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16.w),
                   child: ClipRRect(
-                    // borderRadius: BorderRadius.circular(12.r),
                     child: ImagePageViewWidget(
                       imageUrls: post.imageUrls,
                       showFullScreenButton: false,
@@ -221,15 +224,12 @@ class PostWidget extends StatelessWidget {
                     onTap: onComment,
                   ),
                   SizedBox(width: 16.w),
-    
                   _buildActionButton(
                     icon: FeatherIcons.repeat,
-                    count:
-                        postState.repostsCount, 
+                    count: postState.repostsCount,
                     onTap: onRepost,
                     isActive: postState.isReposted,
-                    activeColor:
-                        AppTheme.primary,
+                    activeColor: AppTheme.primary,
                   ),
                   SizedBox(width: 16.w),
                   _buildActionButton(

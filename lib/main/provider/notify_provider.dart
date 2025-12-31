@@ -16,20 +16,20 @@ class NotifyProvider extends ChangeNotifier {
   // Tab state (replacing sort and filter)
   int _selectedTab = 0;
 
-  // ✅ COMMENTED OUT - Sort and filter state
+  //  COMMENTED OUT - Sort and filter state
   // String _sortBy = 'Recent';
   // String _selectedFilter = 'All';
 
   StreamSubscription<QuerySnapshot>? _notificationSubscription;
 
-  // ✅ COMMENTED OUT - Sort options
+  //  COMMENTED OUT - Sort options
   // final List<String> sortOptions = [
   //   'Recent',
   //   'Oldest First',
   //   'Unread First',
   // ];
 
-  // ✅ COMMENTED OUT - Filter options (based on notification types)
+  //  COMMENTED OUT - Filter options (based on notification types)
   // final List<String> filterOptions = [
   //   'All',
   //   'Likes',
@@ -63,7 +63,7 @@ class NotifyProvider extends ChangeNotifier {
   int get selectedTab => _selectedTab;
   String get currentTabLabel => tabLabels[_selectedTab];
 
-  // ✅ COMMENTED OUT - Old getters
+  //  COMMENTED OUT - Old getters
   // String get sortBy => _sortBy;
   // String get selectedFilter => _selectedFilter;
 
@@ -120,7 +120,7 @@ class NotifyProvider extends ChangeNotifier {
     return filtered;
   }
 
-  // ✅ COMMENTED OUT - Old filtered and sorted getter
+  //  COMMENTED OUT - Old filtered and sorted getter
   // List<NotificationModel> get _filteredAndSortedNotifications {
   //   List<NotificationModel> filtered = List.from(_notifications);
   //
@@ -178,7 +178,7 @@ class NotifyProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ✅ COMMENTED OUT - Old change methods
+  //  COMMENTED OUT - Old change methods
   // void changeSortBy(String newSortBy) {
   //   _sortBy = newSortBy;
   //   notifyListeners();
@@ -233,7 +233,7 @@ class NotifyProvider extends ChangeNotifier {
         notifyListeners();
       });
 
-      debugPrint('✅ Loaded ${_notifications.length} notifications');
+      debugPrint(' Loaded ${_notifications.length} notifications');
     } catch (e) {
       _isLoading = false;
       _error = 'Failed to load notifications';
@@ -288,7 +288,7 @@ class NotifyProvider extends ChangeNotifier {
 
       await _firestore.collection('notifications').add(notification.toMap());
 
-      debugPrint('✅ Created notification: $type for $recipientId');
+      debugPrint(' Created notification: $type for $recipientId');
     } catch (e) {
       debugPrint('❌ Error creating notification: $e');
     }
@@ -310,7 +310,7 @@ class NotifyProvider extends ChangeNotifier {
         notifyListeners();
       }
 
-      debugPrint('✅ Marked notification as read: $notificationId');
+      debugPrint(' Marked notification as read: $notificationId');
     } catch (e) {
       debugPrint('❌ Error marking notification as read: $e');
     }
@@ -337,7 +337,7 @@ class NotifyProvider extends ChangeNotifier {
       _updateUnreadCount();
       notifyListeners();
 
-      debugPrint('✅ Marked all notifications as read');
+      debugPrint(' Marked all notifications as read');
     } catch (e) {
       debugPrint('❌ Error marking all notifications as read: $e');
     }
@@ -353,7 +353,7 @@ class NotifyProvider extends ChangeNotifier {
       _updateUnreadCount();
       notifyListeners();
 
-      debugPrint('✅ Deleted notification: $notificationId');
+      debugPrint(' Deleted notification: $notificationId');
     } catch (e) {
       debugPrint('❌ Error deleting notification: $e');
     }
@@ -379,7 +379,7 @@ class NotifyProvider extends ChangeNotifier {
       _updateUnreadCount();
       notifyListeners();
 
-      debugPrint('✅ Cleared all notifications');
+      debugPrint(' Cleared all notifications');
     } catch (e) {
       debugPrint('❌ Error clearing notifications: $e');
     }
@@ -396,7 +396,7 @@ class NotifyProvider extends ChangeNotifier {
     _hasLoaded = false;
     _unreadCount = 0;
     _selectedTab = 0;
-    // ✅ COMMENTED OUT - Old state reset
+    //  COMMENTED OUT - Old state reset
     // _sortBy = 'Recent';
     // _selectedFilter = 'All';
     notifyListeners();

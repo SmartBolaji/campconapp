@@ -1,6 +1,8 @@
 import 'package:campcon/main/models/post_model.dart';
 import 'package:campcon/main/models/user_model.dart';
 import 'package:campcon/main/provider/follow_provider.dart';
+import 'package:campcon/main/provider/notify_provider.dart'; //  Add this import
+import 'package:campcon/main/services/notification_helper.dart'; //  Add this import
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -532,7 +534,13 @@ class ProfileProvider extends ChangeNotifier {
   }
 
   /// Toggle like
-  Future<void> toggleLike(String postId, String postOwnerId) async {
+  Future<void> toggleLike(
+    String postId,
+    String postOwnerId,
+    NotifyProvider notifyProvider,
+    UserModel? currentUser, //  Add parameter
+    String? postImageUrl, //  Add parameter
+  ) async {
     if (_currentUserId == null) return;
 
     final state = getPostState(postId);
@@ -554,10 +562,24 @@ class ProfileProvider extends ChangeNotifier {
       if (wasLiked) {
         await likeDoc.delete();
       } else {
+        final userRef = _firestore.collection('users').doc(_currentUserId);
         await likeDoc.set({
-          'likedBy': _firestore.collection('users').doc(_currentUserId),
+          'likedby': userRef,
           'timestamp': FieldValue.serverTimestamp(),
         });
+
+        //  Create notification if not liking own post
+        if (postOwnerId != _currentUserId && currentUser != null) {
+          await NotificationHelper.createLikeNotification(
+            notifyProvider: notifyProvider,
+            recipientId: postOwnerId,
+            actorId: _currentUserId!,
+            actorName: currentUser.username,
+            actorProfileImage: currentUser.profileImageUrl,
+            postId: postId,
+            postImageUrl: postImageUrl,
+          );
+        }
       }
     } catch (e) {
       // Revert on error
@@ -662,7 +684,7 @@ class ProfileProvider extends ChangeNotifier {
         }
       });
 
-      debugPrint('✅ Repost synced successfully: $postId');
+      debugPrint(' Repost synced successfully: $postId');
     } catch (e) {
       // Revert on error
       state.isReposted = wasReposted;
@@ -793,17 +815,17 @@ class PostWithAuthorProfile {
 class ProfilePostState {
   int likesCount;
   int repliesCount;
-  int repostsCount; // ✅ NEW
+  int repostsCount; //  NEW
   bool isLiked;
   bool isBookmarked;
-  bool isReposted; // ✅ NEW
+  bool isReposted; //  NEW
 
   ProfilePostState({
     this.likesCount = 0,
     this.repliesCount = 0,
-    this.repostsCount = 0, // ✅ NEW
+    this.repostsCount = 0, //  NEW
     this.isLiked = false,
     this.isBookmarked = false,
-    this.isReposted = false, // ✅ NEW
+    this.isReposted = false, //  NEW
   });
 }

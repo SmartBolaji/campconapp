@@ -337,7 +337,7 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> signIn() async {
     if (emailController.text.trim().isEmpty ||
         passwordController.text.isEmpty) {
-      setError('Please enter email and password');
+      setError('Please enter email/username and password');
       return false;
     }
 
@@ -345,8 +345,26 @@ class AuthProvider extends ChangeNotifier {
     clearError();
 
     try {
+      String input = emailController.text.trim();
+      String emailToUse = input;
+
+      // Check if input is username (no @ symbol) and get email
+      if (!input.contains('@')) {
+        debugPrint('🔍 Input appears to be username, looking up email...');
+        String? email = await _authService.getEmailFromUsername(input);
+
+        if (email == null) {
+          setLoading(false);
+          setError('Username not found. Please check and try again.');
+          return false;
+        }
+
+        emailToUse = email;
+        debugPrint('✅ Found email for username: $email');
+      }
+
       UserCredential? result = await _authService.signInWithEmailAndPassword(
-        email: emailController.text.trim(),
+        email: emailToUse,
         password: passwordController.text,
       );
 
@@ -361,7 +379,6 @@ class AuthProvider extends ChangeNotifier {
           );
         }
 
-        _clearControllers();
         setLoading(false);
         return true;
       } else {
@@ -376,7 +393,7 @@ class AuthProvider extends ChangeNotifier {
       if (e is FirebaseAuthException) {
         setError(_getErrorMessage(e.code));
       } else {
-        setError('Failed to sign in. Please check your credentials.');
+        setError('An error occurred. Please try again.');
       }
       return false;
     }
@@ -501,7 +518,6 @@ class AuthProvider extends ChangeNotifier {
         try {
           profileImageUrl = await _backblazeService.uploadFile(
             _profileImage!,
-     
           );
         } catch (e) {
           debugPrint('Error uploading profile image: $e');
@@ -664,7 +680,6 @@ class AuthProvider extends ChangeNotifier {
       if (newProfileImage != null) {
         newProfileImageUrl = await _backblazeService.uploadFile(
           newProfileImage,
-  
         );
       }
 
@@ -710,7 +725,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-    // Update user type (student or not) with student details
+  // Update user type (student or not) with student details
   Future<bool> updateUserType(
     bool isStudent, {
     Map<String, String>? studentDetails,
@@ -760,7 +775,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-    // ✅ Update user campus
+  //  Update user campus
   Future<void> updateCampus(String campus) async {
     if (_currentUser == null) return;
 
@@ -772,7 +787,7 @@ class AuthProvider extends ChangeNotifier {
       _currentUser = _currentUser!.copyWith(campus: campus);
       notifyListeners();
 
-      debugPrint('✅ Campus updated: $campus');
+      debugPrint(' Campus updated: $campus');
     } catch (e) {
       debugPrint('❌ Error updating campus: $e');
       rethrow;
@@ -787,22 +802,22 @@ class AuthProvider extends ChangeNotifier {
   String _getErrorMessage(dynamic error) {
     if (error is String) {
       switch (error) {
-        case 'email-already-in-use':
-          return 'An account already exists with this email.';
-        case 'invalid-email':
-          return 'Please enter a valid email address.';
-        case 'weak-password':
-          return 'Password is too weak. Please use a stronger password.';
         case 'user-not-found':
-          return 'No account found with this email.';
+          return 'No account found with this email/username.';
         case 'wrong-password':
           return 'Incorrect password. Please try again.';
+        case 'invalid-email':
+          return 'Invalid email format.';
+        case 'user-disabled':
+          return 'This account has been disabled.';
         case 'too-many-requests':
-          return 'Too many attempts. Please try again later.';
+          return 'Too many failed attempts. Please try again later.';
         case 'network-request-failed':
           return 'Network error. Please check your connection.';
+        case 'invalid-credential':
+          return 'Invalid email/username or password.';
         default:
-          return 'An error occurred. Please try again.';
+          return 'Authentication failed. Please try again.';
       }
     }
     return 'An unexpected error occurred.';

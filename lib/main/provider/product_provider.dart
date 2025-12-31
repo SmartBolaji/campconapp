@@ -134,7 +134,7 @@ class ProductProvider extends ChangeNotifier {
 
       _isLoadingPickupCenters = false;
       notifyListeners();
-      debugPrint('✅ Loaded ${_approvedPickupCenters.length} pickup centers');
+      debugPrint(' Loaded ${_approvedPickupCenters.length} pickup centers');
     } catch (e) {
       _isLoadingPickupCenters = false;
       debugPrint('❌ Error loading pickup centers: $e');
@@ -256,7 +256,7 @@ class ProductProvider extends ChangeNotifier {
       _resetOrderDetails();
       notifyListeners();
 
-      debugPrint('✅ Order placed successfully');
+      debugPrint(' Order placed successfully');
       return true;
     } catch (e) {
       _isPlacingOrder = false;

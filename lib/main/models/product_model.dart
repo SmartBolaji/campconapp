@@ -38,7 +38,7 @@ class Product {
     this.views,
   });
 
-  // ✅ Helper for price display
+  //  Helper for price display
   String get formattedPrice {
     if (price == 0) return 'Free';
     final formatter = NumberFormat("#,##0", "en_US");

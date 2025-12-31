@@ -1,16 +1,13 @@
 import 'package:campcon/main/constants/app_colors.dart';
-import 'package:campcon/main/models/post_model.dart';
-import 'package:campcon/main/models/user_model.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/feed_provider.dart';
+import 'package:campcon/main/provider/notify_provider.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/post_options.dart';
 import 'package:campcon/main/widgets/floating_widget.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/post_widget.dart';
-import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/post_view_widget.dart';
 import 'package:campcon/main/widgets/navigate_profile_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 
 class MyForYouScreen extends StatefulWidget {
@@ -112,7 +109,7 @@ class _MyForYouScreenState extends State<MyForYouScreen> {
         }
 
         return RefreshIndicator(
-          onRefresh: () => feedProvider.refreshForYouFeed(currentUserId),
+          onRefresh: () => feedProvider.loadForYouFeed(currentUserId),
           color: AppTheme.primary,
           child: ListView.builder(
             itemCount: feedProvider.forYouPosts.length,
@@ -146,10 +143,25 @@ class _MyForYouScreenState extends State<MyForYouScreen> {
                 },
                 onLike: () async {
                   try {
+                    // Get current user from auth provider
+                    final currentUser = authProvider.currentUser;
+
+                    // Get post image URL (first image if available)
+                    String? postImageUrl;
+                    if (post.imageUrls.isNotEmpty) {
+                      postImageUrl = post.imageUrls.first;
+                    }
+
                     await feedProvider.toggleLike(
                       post.postId,
                       currentUserId,
                       post.userId,
+                      Provider.of<NotifyProvider>(
+                        context,
+                        listen: false,
+                      ),
+                      currentUser,
+                      postImageUrl,
                     );
                   } catch (e) {
                     if (mounted) {

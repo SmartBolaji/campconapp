@@ -180,7 +180,7 @@ class MarketPostProvider extends ChangeNotifier {
         imageUrl = await _backblazeService.uploadFile(compressedImage);
 
         updateSilentUploadProgress(0.7, message: 'Image uploaded...');
-        debugPrint('✅ Image uploaded successfully');
+        debugPrint(' Image uploaded successfully');
 
         if (compressedImage.path != image.path) {
           try {
@@ -221,7 +221,7 @@ class MarketPostProvider extends ChangeNotifier {
       await productRef.set(product.toJson());
 
       setUploadSuccess('Item');
-      debugPrint('✅ Item posted successfully');
+      debugPrint(' Item posted successfully');
       return true;
     } catch (e) {
       debugPrint('❌ Error posting item: $e');
@@ -259,7 +259,7 @@ class MarketPostProvider extends ChangeNotifier {
         imageUrl = await _backblazeService.uploadFile(compressedImage);
 
         updateSilentUploadProgress(0.7, message: 'Image uploaded...');
-        debugPrint('✅ Image uploaded successfully');
+        debugPrint(' Image uploaded successfully');
 
         if (compressedImage.path != image.path) {
           try {
@@ -291,7 +291,7 @@ class MarketPostProvider extends ChangeNotifier {
       await serviceRef.set(service.toJson());
 
       setUploadSuccess('Service');
-      debugPrint('✅ Service posted successfully');
+      debugPrint(' Service posted successfully');
       return true;
     } catch (e) {
       debugPrint('❌ Error posting service: $e');

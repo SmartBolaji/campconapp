@@ -1,7 +1,9 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/product_model.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/market_folder/product/product_decription.dart';
+import 'package:campcon/main/services/cache.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
@@ -26,14 +28,14 @@ class ProductGridView extends StatelessWidget {
       itemBuilder: (context, index) {
         return ProductCard(
           product: products[index],
-          // ✅ Vary image height based on position for visual interest
+          //  Vary image height based on position for visual interest
           imageHeight: _calculateImageHeight(index),
         );
       },
     );
   }
 
-  // ✅ Calculate dynamic image height for variety
+  //  Calculate dynamic image height for variety
   double _calculateImageHeight(int index) {
     // Create visual interest with varying heights
     if (index % 7 == 0) return 180.h; // Tallest
@@ -57,7 +59,7 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ Determine border color based on stock and discount
+    //  Determine border color based on stock and discount
     Color? borderColor;
     double borderWidth = 0;
 
@@ -97,11 +99,11 @@ class ProductCard extends StatelessWidget {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min, // ✅ Only take needed space
+          mainAxisSize: MainAxisSize.min, //  Only take needed space
           children: [
             // Product Image with fixed height
             SizedBox(
-              height: imageHeight, // ✅ Fixed height based on index
+              height: imageHeight, //  Fixed height based on index
               child: Stack(
                 children: [
                   Container(
@@ -121,19 +123,29 @@ class ProductCard extends StatelessWidget {
                               fit: BoxFit.cover,
                             )
                           : product.imageUrl != null
-                              ? Image.network(
-                                  product.imageUrl!,
+                              ? CachedNetworkImage(
+                                  imageUrl: product.imageUrl!,
                                   width: double.infinity,
                                   height: double.infinity,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
+                                  cacheManager: CustomCacheManager(),
+                                  placeholder: (context, url) => Container(
+                                    color: AppTheme.primaryBackground,
+                                    child: Center(
+                                      child: CircularProgressIndicator(
+                                        color: AppTheme.primary,
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                  ),
+                                  errorWidget: (context, url, error) =>
                                       _buildPlaceholder(),
                                 )
                               : _buildPlaceholder(),
                     ),
                   ),
 
-                  // ✅ Gradient overlay for better badge visibility
+                  //  Gradient overlay for better badge visibility
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
@@ -287,7 +299,7 @@ class ProductCard extends StatelessWidget {
               ),
             ),
 
-            // Product Details - ✅ Compact and flexible
+            // Product Details -  Compact and flexible
             Padding(
               padding: EdgeInsets.all(10.w),
               child: Column(
@@ -388,7 +400,7 @@ class ProductCard extends StatelessWidget {
     );
   }
 
-  // ✅ Get stock badge color based on stock level
+  //  Get stock badge color based on stock level
   Color _getStockBadgeColor() {
     if (product.stock == null || product.stock! == 0) {
       return AppTheme.error.withOpacity(0.9);
@@ -399,7 +411,7 @@ class ProductCard extends StatelessWidget {
     }
   }
 
-  // ✅ Get stock text based on stock level
+  //  Get stock text based on stock level
   String _getStockText() {
     if (product.stock == null || product.stock! == 0) {
       return 'Out of stock';

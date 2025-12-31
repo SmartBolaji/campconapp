@@ -53,14 +53,14 @@ class _SignInState extends State<SignIn> {
                 child: Column(
                   children: [
                     CustomTxtfield(
-                      label: 'Email',
-                      hintText: 'Enter your email',
+                      label: 'Email or username',
+                      hintText: 'Enter your email or username',
                       controller: authProvider.emailController,
                       keyboardType: TextInputType.emailAddress,
                       prefixIcon: null,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Please enter your email';
+                          return 'Please enter your email or username';
                         }
                         return null;
                       },
@@ -206,11 +206,8 @@ class _SignInState extends State<SignIn> {
       bool success = await authProvider.signIn();
       if (success) {
         if (mounted) {
-          // Close the bottom sheet or dialog
-          Navigator.of(context).pop();
-
-          // The AuthenticationWrapper will automatically navigate to MainScreen
-          // because authProvider.isAuthenticated is now true
+          // Navigate to main screen by popping all routes back to root
+          Navigator.of(context).popUntil((route) => route.isFirst);
         }
       } else {
         if (authProvider.errorMessage != null &&

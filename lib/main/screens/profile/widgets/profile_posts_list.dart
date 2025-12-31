@@ -2,8 +2,10 @@ import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/post_model.dart';
 import 'package:campcon/main/models/user_model.dart';
+import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/feed_provider.dart'
     show PostState, FeedProvider;
+import 'package:campcon/main/provider/notify_provider.dart';
 import 'package:campcon/main/provider/profile_provider.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/post_options.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/post_view_widget.dart';
@@ -12,6 +14,7 @@ import 'package:campcon/main/widgets/floating_widget.dart';
 import 'package:campcon/main/widgets/navigate_profile_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 
 enum ProfileTabType { posts, reposts, media, saved }
 
@@ -26,6 +29,9 @@ class ProfilePostsList {
     required ScrollController scrollController,
     required Future<void> Function() onRefresh,
   }) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final currentUserId = authProvider.currentUser?.uid ?? '';
+    
     final posts = _getPostsListStatic(provider, tabType);
     final isLoading = _isLoadingStatic(provider, tabType);
     final hasMore = _hasMoreStatic(provider, tabType);
@@ -151,7 +157,19 @@ class ProfilePostsList {
                     );
                   },
                   onLike: () async {
-                    await provider.toggleLike(post.postId, post.userId);
+                    // Get current user from auth provider
+                    final currentUser = authProvider.currentUser;
+
+                    await provider.toggleLike(
+                      post.postId,
+                      post.userId,
+                      Provider.of<NotifyProvider>(
+                        context,
+                        listen: false,
+                      ),
+                      currentUser,
+                      post.imageUrls.isNotEmpty ? post.imageUrls.first : null,
+                    );
                   },
                   onComment: () {
                     navigateToPostView(

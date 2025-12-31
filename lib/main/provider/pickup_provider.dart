@@ -255,7 +255,7 @@ class PickupProvider extends ChangeNotifier {
       _resetForm();
       notifyListeners();
 
-      debugPrint('✅ Pickup center application submitted');
+      debugPrint(' Pickup center application submitted');
       return true;
     } catch (e) {
       _isSubmitting = false;
@@ -283,7 +283,7 @@ class PickupProvider extends ChangeNotifier {
       _isSubmitting = false;
       notifyListeners();
 
-      debugPrint('✅ Pickup center updated');
+      debugPrint(' Pickup center updated');
       return true;
     } catch (e) {
       _isSubmitting = false;
@@ -307,7 +307,7 @@ class PickupProvider extends ChangeNotifier {
       _isSubmitting = false;
       notifyListeners();
 
-      debugPrint('✅ Application withdrawn');
+      debugPrint(' Application withdrawn');
       return true;
     } catch (e) {
       _isSubmitting = false;

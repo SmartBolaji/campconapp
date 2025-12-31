@@ -195,6 +195,26 @@ class AuthService {
     }
   }
 
+  // Get email from username
+  Future<String?> getEmailFromUsername(String username) async {
+    try {
+      QuerySnapshot result = await _firestore
+          .collection('users')
+          .where('username', isEqualTo: username.toLowerCase())
+          .limit(1)
+          .get();
+
+      if (result.docs.isNotEmpty) {
+        final userData = result.docs.first.data() as Map<String, dynamic>;
+        return userData['email'] as String?;
+      }
+      return null;
+    } catch (e) {
+      print('Error getting email from username: $e');
+      return null;
+    }
+  }
+
   // Upload profile image
   Future<String> uploadProfileImage(File image, String uid) async {
     try {

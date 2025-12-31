@@ -6,7 +6,7 @@ import 'package:path_provider/path_provider.dart';
 class CustomCacheManager extends CacheManager {
   static const Duration stalePeriod = Duration(days: 3);
   static const int maxImages = 300;
-  static const String key = "dressfli_image_cache";
+  static const String key = "campcon_image_cache";
 
   static CustomCacheManager? _instance;
 
@@ -37,7 +37,7 @@ class CustomCacheManager extends CacheManager {
   static Future<void> _recoverFromCorruptCache() async {
     try {
       final cacheDir = Directory(
-          '${(await getTemporaryDirectory()).path}/dressfli_image_cache');
+          '${(await getTemporaryDirectory()).path}/campcon_image_cache');
       if (await cacheDir.exists()) {
         final cacheFile = File('${cacheDir.path}/cache.json');
         if (await cacheFile.exists()) {
@@ -87,7 +87,7 @@ class CustomCacheManager extends CacheManager {
 class VideoCacheManager extends CacheManager {
   static const Duration stalePeriod = Duration(days: 7); // Longer for videos
   static const int maxVideos = 50; // Fewer videos due to size
-  static const String key = "dressfli_video_cache";
+  static const String key = "campcon_video_cache";
 
   static VideoCacheManager? _instance;
 

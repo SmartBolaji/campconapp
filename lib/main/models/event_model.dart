@@ -20,7 +20,7 @@ class EventModel {
   final int attendingCount;
   final String school;
 
-  // ✅ New ticket stock fields
+  //  New ticket stock fields
   final bool sellOnCampcon;
   final int? ticketStock;
   final int soldTickets;
@@ -44,18 +44,18 @@ class EventModel {
     this.interestedCount = 0,
     this.attendingCount = 0,
     required this.school,
-    this.sellOnCampcon = false, // ✅ New
-    this.ticketStock, // ✅ New
-    this.soldTickets = 0, // ✅ New
+    this.sellOnCampcon = false, //  New
+    this.ticketStock, //  New
+    this.soldTickets = 0, //  New
   });
 
-  // ✅ Calculate available tickets
+  //  Calculate available tickets
   int get availableTickets {
     if (!sellOnCampcon || ticketStock == null) return 0;
     return ticketStock! - soldTickets;
   }
 
-  // ✅ Check if tickets are sold out
+  //  Check if tickets are sold out
   bool get isSoldOut {
     if (!sellOnCampcon) return false;
     return availableTickets <= 0;

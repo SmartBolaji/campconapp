@@ -7,6 +7,7 @@ import 'package:campcon/main/screens/bottom_nav_screens/post_folder/post_options
 import 'package:campcon/main/screens/profile/profile_screen.dart';
 import 'package:campcon/main/widgets/format_time.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/image_widget.dart';
+import 'package:campcon/main/services/cache.dart'; //  Add this import
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -192,7 +193,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
           ),
         ],
       ),
-      // ✅ Wrap body with Consumer to get live state updates
+      //  Wrap body with Consumer to get live state updates
       body: Consumer<FeedProvider>(
         builder: (context, feedProvider, child) {
           final postState = feedProvider.getPostState(widget.post.postId);
@@ -213,7 +214,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
                         screenWidth: screenWidth,
                         displayName: displayName,
                         displayImage: displayImage,
-                        postState: postState, // ✅ Pass live state
+                        postState: postState, //  Pass live state
                       ),
                     ),
                     SliverToBoxAdapter(
@@ -250,7 +251,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
                                 borderRadius: BorderRadius.circular(10.r),
                               ),
                               child: Text(
-                                '${postState.repliesCount}', // ✅ Live count
+                                '${postState.repliesCount}', //  Live count
                                 style: TextConstants.smallText.copyWith(
                                   fontSize: 12.sp,
                                   fontWeight: FontWeight.w600,
@@ -352,7 +353,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
     required double screenWidth,
     required String displayName,
     required String displayImage,
-    required PostState postState, // ✅ Accept live state
+    required PostState postState, //  Accept live state
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -373,15 +374,19 @@ class _PostViewScreenState extends State<PostViewScreen> {
                 GestureDetector(
                   onTap: () => _navigateToProfile(context),
                   child: CircleAvatar(
-                    radius: 22.r,
+                    radius: 20.r,
                     backgroundColor: AppTheme.primaryBackground,
                     backgroundImage: displayImage.isNotEmpty
-                        ? NetworkImage(displayImage)
+                        ? CachedNetworkImageProvider(
+                            displayImage,
+                            cacheManager:
+                                CustomCacheManager(), //  Add cache manager
+                          )
                         : null,
                     child: displayImage.isEmpty
                         ? Icon(
                             Icons.person,
-                            size: 22.sp,
+                            size: 20.sp,
                             color: AppTheme.primary,
                           )
                         : null,
@@ -441,7 +446,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
                 child: ImagePageViewWidget(
                   imageUrls: widget.post.imageUrls,
                   showFullScreenButton: false,
-                  isLiked: postState.isLiked, // ✅ Live state
+                  isLiked: postState.isLiked, //  Live state
                   onLike: widget.onLike ?? () {},
                   width: screenWidth - 32.w,
                 ),
@@ -450,7 +455,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
               ImagePageViewWidget(
                 imageUrls: widget.post.imageUrls,
                 showFullScreenButton: false,
-                isLiked: postState.isLiked, // ✅ Live state
+                isLiked: postState.isLiked, //  Live state
                 onLike: widget.onLike ?? () {},
                 width: screenWidth,
               ),
@@ -517,16 +522,16 @@ class _PostViewScreenState extends State<PostViewScreen> {
                   icon: FeatherIcons.repeat,
                   label: 'Repost',
                   onTap: widget.onRepost,
-                  isActive: postState.isReposted, // ✅ Live state
+                  isActive: postState.isReposted, //  Live state
                   activeColor: AppTheme.primary,
                 ),
                 _buildActionButton(
-                  icon: postState.isLiked // ✅ Live state
+                  icon: postState.isLiked //  Live state
                       ? Icons.favorite
                       : Icons.favorite_border,
                   label: 'Like',
                   onTap: widget.onLike,
-                  isActive: postState.isLiked, // ✅ Live state
+                  isActive: postState.isLiked, //  Live state
                   activeColor: AppTheme.error,
                 ),
                 _buildActionButton(
@@ -535,12 +540,12 @@ class _PostViewScreenState extends State<PostViewScreen> {
                   onTap: widget.onShare,
                 ),
                 _buildActionButton(
-                  icon: postState.isBookmarked // ✅ Live state
+                  icon: postState.isBookmarked //  Live state
                       ? Icons.bookmark
                       : Icons.bookmark_border,
                   label: 'Save',
                   onTap: widget.onBookmark,
-                  isActive: postState.isBookmarked, // ✅ Live state
+                  isActive: postState.isBookmarked, //  Live state
                   activeColor: AppTheme.primary,
                 ),
               ],
@@ -603,7 +608,10 @@ class _PostViewScreenState extends State<PostViewScreen> {
             radius: 18.r,
             backgroundColor: AppTheme.primaryBackground,
             backgroundImage: userAvatar.isNotEmpty
-                ? CachedNetworkImageProvider(userAvatar)
+                ? CachedNetworkImageProvider(
+                    userAvatar,
+                    cacheManager: CustomCacheManager(), //  Add cache manager
+                  )
                 : null,
             child: userAvatar.isEmpty
                 ? Icon(Icons.person, size: 18.sp, color: AppTheme.primary)

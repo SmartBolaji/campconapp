@@ -1,7 +1,9 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/event_model.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/home_folder/events/event_description.dart';
+import 'package:campcon/main/services/cache.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
@@ -11,33 +13,35 @@ import 'package:page_transition/page_transition.dart';
 class EventCard extends StatelessWidget {
   final EventModel event;
   final double imageHeight;
-  final bool isInterested;
   final bool isAttending;
-  final VoidCallback onInterested;
+  final bool isOwner;
   final VoidCallback onAttending;
 
   const EventCard({
     Key? key,
     required this.event,
     required this.imageHeight,
-    required this.isInterested,
     required this.isAttending,
-    required this.onInterested,
+    this.isOwner = false,
     required this.onAttending,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // ✅ Determine border color based on event status
+    // Determine border color based on event status
     Color? borderColor;
     double borderWidth = 0;
 
-    if (event.isFree) {
+    // Owner badge takes priority
+    if (isOwner) {
+      borderColor = AppTheme.primary;
+      borderWidth = 2;
+    } else if (event.isFree) {
       borderColor = AppTheme.success;
       borderWidth = 2;
     } else if (event.eventDate
         .isBefore(DateTime.now().add(const Duration(days: 7)))) {
-      borderColor = AppTheme.primary;
+      borderColor = AppTheme.primary.withOpacity(0.5);
       borderWidth = 2;
     }
 
@@ -89,12 +93,22 @@ class EventCard extends StatelessWidget {
                               fit: BoxFit.cover,
                             )
                           : event.imageUrl != null
-                              ? Image.network(
-                                  event.imageUrl!,
+                              ? CachedNetworkImage(
+                                  imageUrl: event.imageUrl!,
                                   width: double.infinity,
                                   height: double.infinity,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
+                                  cacheManager: CustomCacheManager(),
+                                  placeholder: (context, url) => Container(
+                                    color: AppTheme.primaryBackground,
+                                    child: Center(
+                                      child: CircularProgressIndicator(
+                                        color: AppTheme.primary,
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                  ),
+                                  errorWidget: (context, url, error) =>
                                       _buildPlaceholder(),
                                 )
                               : _buildPlaceholder(),
@@ -119,9 +133,54 @@ class EventCard extends StatelessWidget {
                     ),
                   ),
 
-                  // Date Badge
+                  //  Owner Badge (top left, before date badge)
+                  if (isOwner)
+                    Positioned(
+                      top: 8.h,
+                      left: 8.w,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 10.w,
+                          vertical: 6.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary,
+                          borderRadius: BorderRadius.circular(8.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Iconify(
+                              Ph.crown_fill,
+                              size: 12.sp,
+                              color: AppTheme.white,
+                            ),
+                            SizedBox(width: 4.w),
+                            Text(
+                              'Your Event',
+                              style: TextConstants.smallText.copyWith(
+                                fontSize: 10.sp,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                  // Date Badge (adjusted position if owner)
                   Positioned(
-                    top: 8.h,
+                    top: isOwner
+                        ? 42.h
+                        : 8.h, //  Move down if owner badge exists
                     left: 8.w,
                     child: Container(
                       padding: EdgeInsets.symmetric(
@@ -162,86 +221,83 @@ class EventCard extends StatelessWidget {
                   ),
 
                   // Price Badge
-                  Positioned(
-                    top: 8.h,
-                    right: 8.w,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 10.w,
-                        vertical: 6.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: event.isFree
-                            ? AppTheme.success
-                            : event.isSoldOut
-                                ? AppTheme.error
-                                : AppTheme.primary.withValues(alpha: 0.95),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: event.sellOnCampcon && !event.isFree
-                          ? Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                // Text(
-                                //   event.formattedPrice,
-                                //   style: TextConstants.mediumText.copyWith(
-                                //     fontSize: 12.sp,
-                                //     fontWeight: FontWeight.bold,
-                                //     color: AppTheme.white,
-                                //   ),
-                                // ),
-                                if (!event.isSoldOut) ...[
-                                  SizedBox(height: 2.h),
-                                  Text(
-                                    '${event.availableTickets} left',
-                                    style: TextConstants.smallText.copyWith(
-                                      fontSize: 10.sp,
-                                      color: AppTheme.white.withOpacity(0.9),
-                                    ),
-                                  ),
-                                ] else
-                                  Text(
-                                    'SOLD OUT',
-                                    style: TextConstants.smallText.copyWith(
-                                      fontSize: 10.sp,
+                  (isOwner)
+                      ? const SizedBox.shrink()
+                      : Positioned(
+                          top: 8.h,
+                          right: 8.w,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 10.w,
+                              vertical: 6.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: event.isFree
+                                  ? AppTheme.success
+                                  : event.isSoldOut
+                                      ? AppTheme.error
+                                      : AppTheme.primary.withOpacity(0.95),
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
+                            child: event.sellOnCampcon && !event.isFree
+                                ? Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (!event.isSoldOut) ...[
+                                        // SizedBox(height: 2.h),
+                                        Text(
+                                          '${event.availableTickets} left',
+                                          style:
+                                              TextConstants.smallText.copyWith(
+                                            fontSize: 10.sp,
+                                            color:
+                                                AppTheme.white.withOpacity(0.9),
+                                          ),
+                                        ),
+                                      ] else
+                                        Text(
+                                          'SOLD OUT',
+                                          style:
+                                              TextConstants.smallText.copyWith(
+                                            fontSize: 10.sp,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppTheme.white,
+                                          ),
+                                        ),
+                                    ],
+                                  )
+                                : Text(
+                                    event.formattedPrice,
+                                    style: TextConstants.mediumText.copyWith(
+                                      fontSize: 12.sp,
                                       fontWeight: FontWeight.bold,
                                       color: AppTheme.white,
                                     ),
                                   ),
-                              ],
-                            )
-                          : Text(
-                              event.formattedPrice,
-                              style: TextConstants.mediumText.copyWith(
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.white,
-                              ),
-                            ),
-                    ),
-                  ),
+                          ),
+                        ),
 
                   // Action Buttons
-                  Positioned(
-                    bottom: 8.h,
-                    right: 8.w,
-                    child: Row(
-                      children: [
-                        _ActionButton(
-                          icon: Ph.star_fill,
-                          isActive: isInterested,
-                          onTap: onInterested,
-                        ),
-                        SizedBox(width: 6.w),
-                        _ActionButton(
-                          icon: Ph.calendar_check_fill,
-                          isActive: isAttending,
-                          onTap: onAttending,
-                        ),
-                      ],
-                    ),
-                  ),
+                  // Positioned(
+                  //   bottom: 8.h,
+                  //   right: 8.w,
+                  //   child: Row(
+                  //     children: [
+                  //       _ActionButton(
+                  //         icon: Ph.star_fill,
+                  //         isActive: isInterested,
+                  //         onTap: onInterested,
+                  //       ),
+                  //       SizedBox(width: 6.w),
+                  //       _ActionButton(
+                  //         icon: Ph.calendar_check_fill,
+                  //         isActive: isAttending,
+                  //         onTap: onAttending,
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ),
                 ],
               ),
             ),
@@ -329,26 +385,6 @@ class EventCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  // SizedBox(height: 6.h),
-
-                  // // Stats
-                  // Row(
-                  //   children: [
-                  //     Iconify(
-                  //       Ph.users,
-                  //       size: 12.sp,
-                  //       color: AppTheme.textLight,
-                  //     ),
-                  //     SizedBox(width: 4.w),
-                  //     Text(
-                  //       '${event.interestedCount} interested',
-                  //       style: TextConstants.smallText.copyWith(
-                  //         fontSize: 10.sp,
-                  //         color: AppTheme.textSecondary,
-                  //       ),
-                  //     ),
-                  //   ],
-                  // ),
                 ],
               ),
             ),
@@ -384,43 +420,5 @@ class EventCard extends StatelessWidget {
       'DEC'
     ];
     return months[month - 1];
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  final String icon;
-  final bool isActive;
-  final VoidCallback onTap;
-
-  const _ActionButton({
-    required this.icon,
-    required this.isActive,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.all(6.w),
-        decoration: BoxDecoration(
-          color: isActive ? AppTheme.primary : AppTheme.white.withOpacity(0.9),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Iconify(
-          icon,
-          size: 16.sp,
-          color: isActive ? AppTheme.white : AppTheme.textSecondary,
-        ),
-      ),
-    );
   }
 }

@@ -2,10 +2,12 @@ import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/feed_provider.dart';
+import 'package:campcon/main/provider/notify_provider.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/post_comments_screen.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/post_options.dart';
 import 'package:campcon/main/widgets/floating_widget.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/post_widget.dart';
+import 'package:campcon/main/widgets/navigate_profile_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
@@ -136,14 +138,39 @@ class _FriendsScreenState extends State<FriendsScreen> {
                 postState: postState,
                 currentUserId: currentUserId,
                 onTap: () {
-                  debugPrint('Post tapped: ${post.postId}');
+                  // Navigate to post view when post is tapped
+                  navigateToPostView(
+                    context: context,
+                    post: post,
+                    author: author,
+                    postState: postState,
+                    currentUserId: currentUserId,
+                    feedProvider: feedProvider,
+                    isMyPost: isMyPost,
+                    focusComment: false,
+                  );
                 },
                 onLike: () async {
                   try {
+                    // Get current user from auth provider
+                    final currentUser = authProvider.currentUser;
+
+                    // Get post image URL (first image if available)
+                    String? postImageUrl;
+                    if (post.imageUrls.isNotEmpty) {
+                      postImageUrl = post.imageUrls.first;
+                    }
+
                     await feedProvider.toggleLike(
                       post.postId,
                       currentUserId,
                       post.userId,
+                      Provider.of<NotifyProvider>(
+                        context,
+                        listen: false,
+                      ),
+                      currentUser,
+                      postImageUrl,
                     );
                   } catch (e) {
                     if (mounted) {

@@ -178,7 +178,7 @@ class _PostServiceScreenState extends State<PostServiceScreen> {
       image: image,
     );
 
-    debugPrint(success ? '✅ Service posted' : '❌ Failed to post service');
+    debugPrint(success ? ' Service posted' : '❌ Failed to post service');
   }
 
   void _showError(String message) {

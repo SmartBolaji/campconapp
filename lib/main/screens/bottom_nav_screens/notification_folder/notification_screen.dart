@@ -265,7 +265,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 controller: _scrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
-                  // ✅ Floating App Bar with Search
+                  //  Floating App Bar with Search
                   SliverAppBar(
                     backgroundColor: AppTheme.surface,
                     elevation: 0,
@@ -330,7 +330,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                             ),
                             SizedBox(height: 20.h),
 
-                            // ✅ Search Bar using ActionSearchBar
+                            //  Search Bar using ActionSearchBar
                             ActionSearchBar.search(
                               controller: _searchController,
                               hintText: 'Search notifications',
@@ -346,7 +346,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                     ),
                   ),
 
-                  // ✅ Active Filter Chip (if filter is applied)
+                  //  Active Filter Chip (if filter is applied)
                   if (notifyProvider.selectedTab != 0)
                     SliverToBoxAdapter(
                       child: Container(
@@ -402,7 +402,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       ),
                     ),
 
-                  // ✅ Mark all as read button (if unread exists)
+                  //  Mark all as read button (if unread exists)
                   if (notifyProvider.unreadCount > 0)
                     SliverToBoxAdapter(
                       child: Container(
@@ -446,7 +446,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       ),
                     ),
 
-                  // ✅ Content Section
+                  //  Content Section
                   _buildSliverContent(notifyProvider),
                 ],
               ),

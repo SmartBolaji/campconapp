@@ -59,7 +59,7 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
                 controller: _scrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
-                  // ✅ Floating App Bar with Search and Tabs
+                  //  Floating App Bar with Search and Tabs
                   SliverAppBar(
                     backgroundColor: AppTheme.surface,
                     elevation: 0,
@@ -82,7 +82,7 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
                             ),
                             SizedBox(height: 20.h),
 
-                            // ✅ Search Bar using ActionSearchBar - navigates to search screen
+                            //  Search Bar using ActionSearchBar - navigates to search screen
                             ActionSearchBar.navigate(
                               hintText: 'Search resources',
                               onTap: () {

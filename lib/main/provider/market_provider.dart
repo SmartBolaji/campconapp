@@ -242,7 +242,7 @@ class MarketplaceProvider extends ChangeNotifier {
         }
       });
 
-      debugPrint('✅ Loaded ${_allProducts.length} items');
+      debugPrint(' Loaded ${_allProducts.length} items');
     } catch (e) {
       _isLoadingItems = false;
       _error = 'Failed to load items';
@@ -311,7 +311,7 @@ class MarketplaceProvider extends ChangeNotifier {
         }
       });
 
-      debugPrint('✅ Loaded ${_allServices.length} services');
+      debugPrint(' Loaded ${_allServices.length} services');
     } catch (e) {
       _isLoadingServices = false;
       _error = 'Failed to load services';

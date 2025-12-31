@@ -237,7 +237,7 @@ class BuyerOrdersProvider extends ChangeNotifier {
 
       _isSubmittingReview = false;
       notifyListeners();
-      debugPrint('✅ Review submitted successfully');
+      debugPrint(' Review submitted successfully');
       return true;
     } catch (e) {
       _isSubmittingReview = false;
@@ -320,7 +320,7 @@ class BuyerOrdersProvider extends ChangeNotifier {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      debugPrint('✅ Order cancelled by buyer');
+      debugPrint(' Order cancelled by buyer');
       return true;
     } catch (e) {
       _error = 'Failed to cancel order';
@@ -339,7 +339,7 @@ class BuyerOrdersProvider extends ChangeNotifier {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      debugPrint('✅ Order confirmed as received');
+      debugPrint(' Order confirmed as received');
       return true;
     } catch (e) {
       _error = 'Failed to confirm order';

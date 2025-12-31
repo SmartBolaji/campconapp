@@ -3,19 +3,21 @@ import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/models/post_model.dart';
 import 'package:campcon/main/models/user_model.dart';
 import 'package:campcon/main/provider/feed_provider.dart';
+import 'package:campcon/main/provider/notify_provider.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/post_options.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/post_view_widget.dart';
 import 'package:campcon/main/widgets/floating_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:provider/provider.dart';
 
 void navigateToPostView({
   required BuildContext context,
   bool mounted = true,
   required PostModel post,
   required UserModel? author,
-  required PostState postState, // Keep for backward compatibility but not used
+  required PostState postState,
   required String currentUserId,
   required FeedProvider feedProvider,
   required bool isMyPost,
@@ -36,6 +38,12 @@ void navigateToPostView({
               post.postId,
               currentUserId,
               post.userId,
+              Provider.of<NotifyProvider>(
+                context,
+                listen: false,
+              ),
+              author,
+              post.imageUrls.isNotEmpty ? post.imageUrls.first : null,
             );
           } catch (e) {
             if (mounted) {

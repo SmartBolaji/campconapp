@@ -12,7 +12,8 @@ class PostModel {
   final int shares;
   final DateTime createdAt;
   final DateTime updatedAt;
-  final String? campus; // ✅ Add this field
+  final String? campus;
+  final List<String> tags; 
 
   PostModel({
     required this.postId,
@@ -26,7 +27,8 @@ class PostModel {
     required this.shares,
     required this.createdAt,
     required this.updatedAt,
-    this.campus, // ✅ Add this parameter
+    this.campus,
+    this.tags = const [], 
   });
 
   factory PostModel.fromMap(Map<String, dynamic> map) {
@@ -48,7 +50,8 @@ class PostModel {
           ? (map['updatedAt'] as Timestamp).toDate()
           : DateTime.parse(
               map['updatedAt'] ?? DateTime.now().toIso8601String()),
-      campus: map['campus'], // ✅ Add this
+      campus: map['campus'],
+      tags: List<String>.from(map['tags'] ?? []),
     );
   }
 
@@ -65,7 +68,8 @@ class PostModel {
       'shares': shares,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
-      'campus': campus, // ✅ Add this
+      'campus': campus,
+      'tags': tags, 
     };
   }
 
@@ -81,7 +85,8 @@ class PostModel {
     int? shares,
     DateTime? createdAt,
     DateTime? updatedAt,
-    String? campus, // ✅ Add this
+    String? campus,
+    List<String>? tags, // ✅ NEW
   }) {
     return PostModel(
       postId: postId ?? this.postId,
@@ -95,7 +100,8 @@ class PostModel {
       shares: shares ?? this.shares,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      campus: campus ?? this.campus, // ✅ Add this
+      campus: campus ?? this.campus,
+      tags: tags ?? this.tags, 
     );
   }
 }
