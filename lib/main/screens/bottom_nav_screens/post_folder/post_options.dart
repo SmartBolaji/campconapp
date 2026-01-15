@@ -1,4 +1,5 @@
 import 'package:campcon/main/constants/app_colors.dart';
+import 'package:campcon/main/constants/text_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -38,9 +39,8 @@ class PostOptionsWidget {
                 padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
                 child: Text(
                   'Post Options',
-                  style: TextStyle(
+                  style: TextConstants.boldText.copyWith(
                     fontSize: 20.sp,
-                    fontWeight: FontWeight.bold,
                     color: AppTheme.textPrimary,
                   ),
                 ),
@@ -71,8 +71,8 @@ class PostOptionsWidget {
                     ClipboardData(text: 'https://campcon.app/post/$postId'),
                   );
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Link copied to clipboard'),
+                    const SnackBar(
+                      content: Text('Link copied to clipboard'),
                       backgroundColor: AppTheme.success,
                     ),
                   );
@@ -155,7 +155,7 @@ class PostOptionsWidget {
             Container(
               padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Icon(
@@ -171,7 +171,7 @@ class PostOptionsWidget {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
+                    style: TextConstants.mediumText.copyWith(
                       fontSize: 15.sp,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textPrimary,
@@ -180,7 +180,7 @@ class PostOptionsWidget {
                   SizedBox(height: 2.h),
                   Text(
                     description,
-                    style: TextStyle(
+                    style: TextConstants.smallText.copyWith(
                       fontSize: 12.sp,
                       color: AppTheme.textSecondary,
                     ),
@@ -214,7 +214,8 @@ class PostOptionsWidget {
         ),
         content: Text(
           'Thank you for helping keep our community safe. We will review this post.',
-          style: TextStyle(color: AppTheme.textSecondary),
+          style:
+              TextConstants.smallText.copyWith(color: AppTheme.textSecondary),
         ),
         actions: [
           TextButton(
@@ -226,13 +227,18 @@ class PostOptionsWidget {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: const Text('Post reported. Thank you!'),
+                  content: Text(
+                    'Post reported. Thank you!',
+                    style: TextConstants.smallText
+                        .copyWith(color: AppTheme.textPrimary),
+                  ),
                   backgroundColor: AppTheme.success,
                 ),
               );
             },
             style: TextButton.styleFrom(foregroundColor: AppTheme.error),
-            child: const Text('Report'),
+            child: Text('Report',
+                style: TextConstants.smallText.copyWith(color: AppTheme.error)),
           ),
         ],
       ),
@@ -271,14 +277,13 @@ class CommentOptionsWidget {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 child: Text(
                   'Comment Options',
-                  style: TextStyle(
-                    fontFamily: 'Playfair',
+                  style: TextConstants.mediumText.copyWith(
                     fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimary,
                   ),
                 ),
               ),

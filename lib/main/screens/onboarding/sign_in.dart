@@ -206,8 +206,9 @@ class _SignInState extends State<SignIn> {
       bool success = await authProvider.signIn();
       if (success) {
         if (mounted) {
-          // Navigate to main screen by popping all routes back to root
-          Navigator.of(context).popUntil((route) => route.isFirst);
+          // Use root navigator to pop all routes back to the main app root
+          // This ensures we exit any bottom sheets/dialogs first
+          Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
         }
       } else {
         if (authProvider.errorMessage != null &&

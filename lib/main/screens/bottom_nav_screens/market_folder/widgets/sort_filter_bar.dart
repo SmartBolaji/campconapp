@@ -55,6 +55,9 @@ class SortFilterBar extends StatelessWidget {
       builder: (context) {
         return Container(
           padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 20.w),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,17 +85,25 @@ class SortFilterBar extends StatelessWidget {
               ),
               SizedBox(height: 16.h),
 
-              ...provider.sortOptions.map((option) {
-                final isSelected = provider.sortBy == option;
-                return _OptionTile(
-                  title: option,
-                  isSelected: isSelected,
-                  onTap: () {
-                    provider.changeSortBy(option);
-                    Navigator.pop(context);
-                  },
-                );
-              }).toList(),
+              // Wrap options in Flexible + ListView for scrollability
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: [
+                    ...provider.sortOptions.map((option) {
+                      final isSelected = provider.sortBy == option;
+                      return _OptionTile(
+                        title: option,
+                        isSelected: isSelected,
+                        onTap: () {
+                          provider.changeSortBy(option);
+                          Navigator.pop(context);
+                        },
+                      );
+                    }).toList(),
+                  ],
+                ),
+              ),
 
               SizedBox(height: 20.h),
             ],
@@ -112,6 +123,10 @@ class SortFilterBar extends StatelessWidget {
       builder: (context) {
         return Container(
           padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 20.w),
+          constraints: BoxConstraints(
+            maxHeight:
+                MediaQuery.of(context).size.height * 0.7, // ✅ Add max height
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -139,17 +154,25 @@ class SortFilterBar extends StatelessWidget {
               ),
               SizedBox(height: 16.h),
 
-              ...provider.currentCategories.map((category) {
-                final isSelected = provider.selectedCategory == category;
-                return _OptionTile(
-                  title: category,
-                  isSelected: isSelected,
-                  onTap: () {
-                    provider.changeCategory(category);
-                    Navigator.pop(context);
-                  },
-                );
-              }).toList(),
+              // ✅ Wrap options in Flexible + ListView for scrollability
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: [
+                    ...provider.currentCategories.map((category) {
+                      final isSelected = provider.selectedCategory == category;
+                      return _OptionTile(
+                        title: category,
+                        isSelected: isSelected,
+                        onTap: () {
+                          provider.changeCategory(category);
+                          Navigator.pop(context);
+                        },
+                      );
+                    }).toList(),
+                  ],
+                ),
+              ),
 
               SizedBox(height: 20.h),
             ],

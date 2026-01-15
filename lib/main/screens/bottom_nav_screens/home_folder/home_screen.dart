@@ -41,40 +41,38 @@ class _HomeScreenState extends State<HomeScreen>
         child: NestedScrollView(
           headerSliverBuilder: (context, innerBoxIsScrolled) {
             return [
+              // Top section (logo, search bar, create post button)
               SliverToBoxAdapter(
                 child: Container(
                   color: AppTheme.surface,
-                  padding: EdgeInsets.fromLTRB(0.w, 5.h, 0.w, 0),
+                  padding: EdgeInsets.fromLTRB(20.w, 5.h, 20.w, 20.h),
                   child: Column(
                     children: [
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 0),
-                        child: Column(
-                          children: [
-                            //  Use reusable top bar
-                            const CustomTopBar(),
-                            SizedBox(height: 20.h),
+                      //  Use reusable top bar
+                      const CustomTopBar(),
+                      SizedBox(height: 20.h),
 
-                            //  Create Post Button using ActionSearchBar
-                            ActionSearchBar.post(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const NewPostScreen(),
-                                  ),
-                                );
-                              },
+                      //  Create Post Button using ActionSearchBar
+                      ActionSearchBar.post(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const NewPostScreen(),
                             ),
-                            SizedBox(height: 20.h),
-                          ],
-                        ),
+                          );
+                        },
                       ),
-
-                      // Tab Bar
-                      _buildTabBar(),
                     ],
                   ),
+                ),
+              ),
+
+              // Floating/Pinned Tab Bar
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _TabBarDelegate(
+                  tabBar: _buildTabBar(),
                 ),
               ),
             ];
@@ -99,6 +97,7 @@ class _HomeScreenState extends State<HomeScreen>
   Widget _buildTabBar() {
     return Container(
       decoration: BoxDecoration(
+        color: AppTheme.surface,
         border: Border(
           bottom: BorderSide(
             color: AppTheme.border,
@@ -131,5 +130,32 @@ class _HomeScreenState extends State<HomeScreen>
         ],
       ),
     );
+  }
+}
+
+// Delegate for pinned tab bar
+class _TabBarDelegate extends SliverPersistentHeaderDelegate {
+  final Widget tabBar;
+
+  _TabBarDelegate({required this.tabBar});
+
+  @override
+  double get minExtent => 48.h;
+
+  @override
+  double get maxExtent => 48.h;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return SizedBox.expand(child: tabBar);
+  }
+
+  @override
+  bool shouldRebuild(_TabBarDelegate oldDelegate) {
+    return tabBar != oldDelegate.tabBar;
   }
 }

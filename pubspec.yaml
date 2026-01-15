@@ -123,7 +123,6 @@ flutter:
   assets:
     - .env
     - assets/images/icon.png
-    - assets/images/app_logo.png
     - assets/images/
 
   # An image asset can refer to one or more resolution-specific "variants", see
@@ -179,11 +178,18 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
-flutter_native_splash: 
- color: "#E0E0E0" 
- image: "assets/images/small_logo.png" 
- android: true
- ios: true
+flutter_native_splash:
+  color: "#BC9D04"
+  color_dark: "#BC9D04"
+  image: "assets/images/splash_bg.png"
+  android: true
+  ios: true
+  android_12:
+    color: "#BC9D04"
+    color_dark: "#BC9D04"
+    image: "assets/images/splash_bg.png"
+    icon_background_color: "#BC9D04"
+    icon_background_color_dark: "#BC9D04"
 
 
 

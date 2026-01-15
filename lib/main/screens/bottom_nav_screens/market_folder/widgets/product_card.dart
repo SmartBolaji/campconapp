@@ -48,13 +48,13 @@ class ProductGridView extends StatelessWidget {
 class ProductCard extends StatelessWidget {
   final Product product;
   final double imageHeight;
-  final bool showOwnerBadge; // NEW
+  final bool showOwnerBadge;
 
   const ProductCard({
     Key? key,
     required this.product,
     required this.imageHeight,
-    this.showOwnerBadge = false, // NEW - default false
+    this.showOwnerBadge = false,
   }) : super(key: key);
 
   @override
@@ -164,7 +164,9 @@ class ProductCard extends StatelessWidget {
                   ),
 
                   // Discount Badge
-                  if (product.discount != null && product.discount! > 0)
+                  if (product.discount != null &&
+                      product.discount! > 0 &&
+                      !showOwnerBadge)
                     Positioned(
                       top: 8.h,
                       left: 8.w,

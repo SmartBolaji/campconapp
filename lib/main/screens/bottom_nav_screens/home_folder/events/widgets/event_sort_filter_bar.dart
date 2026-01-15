@@ -55,6 +55,9 @@ class EventSortFilterBar extends StatelessWidget {
       builder: (context) {
         return Container(
           padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 20.w),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,17 +85,21 @@ class EventSortFilterBar extends StatelessWidget {
               ),
               SizedBox(height: 16.h),
 
-              ...provider.sortOptions.map((option) {
-                final isSelected = provider.sortBy == option;
-                return _OptionTile(
-                  title: option,
-                  isSelected: isSelected,
-                  onTap: () {
-                    provider.changeSortBy(option);
-                    Navigator.pop(context);
-                  },
-                );
-              }).toList(),
+              Flexible(
+                  child: ListView(
+                shrinkWrap: true,
+                children: provider.sortOptions.map((option) {
+                  final isSelected = provider.sortBy == option;
+                  return _OptionTile(
+                    title: option,
+                    isSelected: isSelected,
+                    onTap: () {
+                      provider.changeSortBy(option);
+                      Navigator.pop(context);
+                    },
+                  );
+                }).toList(),
+              )),
 
               SizedBox(height: 20.h),
             ],
@@ -112,6 +119,9 @@ class EventSortFilterBar extends StatelessWidget {
       builder: (context) {
         return Container(
           padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 20.w),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -139,17 +149,21 @@ class EventSortFilterBar extends StatelessWidget {
               ),
               SizedBox(height: 16.h),
 
-              ...provider.eventCategories.map((category) {
-                final isSelected = provider.selectedCategory == category;
-                return _OptionTile(
-                  title: category,
-                  isSelected: isSelected,
-                  onTap: () {
-                    provider.changeCategory(category);
-                    Navigator.pop(context);
-                  },
-                );
-              }).toList(),
+              Flexible(
+                  child: ListView(
+                shrinkWrap: true,
+                children: provider.eventCategories.map((option) {
+                  final isSelected = provider.selectedCategory == option;
+                  return _OptionTile(
+                    title: option,
+                    isSelected: isSelected,
+                    onTap: () {
+                      provider.changeCategory(option);
+                      Navigator.pop(context);
+                    },
+                  );
+                }).toList(),
+              )),
 
               SizedBox(height: 20.h),
             ],

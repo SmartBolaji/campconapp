@@ -122,7 +122,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
           color: AppTheme.primary,
           child: ListView.builder(
             itemCount: feedProvider.friendsPosts.length,
-            padding: EdgeInsets.zero,
+             padding: EdgeInsets.only(bottom: 80.sp),
             physics: const AlwaysScrollableScrollPhysics(),
             itemBuilder: (context, index) {
               final postWithAuthor = feedProvider.friendsPosts[index];

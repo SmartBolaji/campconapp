@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary Colors -->
+    <color name="primary">#EFA101</color>
+    <color name="primary_dark">#D89001</color>
+    <color name="primary_background">#FFE8BA</color>
+    
+    <!-- Splash Brand Color -->
+    <color name="splash_brand">#BC9D04</color>
+    
+    <!-- Light Theme -->
+    <color name="surface_light">#FFFFFF</color>
+    <color name="background_light">#F5F5F5</color>
+    <color name="splash_background">#BC9D04</color>
+    
+    <!-- Dark Theme -->
+    <color name="surface_dark">#1E1E1E</color>
+    <color name="background_dark">#121212</color>
+    <color name="splash_background_dark">#BC9D04</color>
+</resources>

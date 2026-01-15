@@ -1,14 +1,11 @@
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
-import 'package:campcon/main/models/post_model.dart';
-import 'package:campcon/main/models/user_model.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/feed_provider.dart'
     show PostState, FeedProvider;
 import 'package:campcon/main/provider/notify_provider.dart';
 import 'package:campcon/main/provider/profile_provider.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/post_options.dart';
-import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/post_view_widget.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/post_widget.dart';
 import 'package:campcon/main/widgets/floating_widget.dart';
 import 'package:campcon/main/widgets/navigate_profile_widget.dart';
@@ -31,7 +28,7 @@ class ProfilePostsList {
   }) {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final currentUserId = authProvider.currentUser?.uid ?? '';
-    
+
     final posts = _getPostsListStatic(provider, tabType);
     final isLoading = _isLoadingStatic(provider, tabType);
     final hasMore = _hasMoreStatic(provider, tabType);
@@ -42,7 +39,7 @@ class ProfilePostsList {
       return [
         SliverFillRemaining(
           child: Container(
-            color: AppTheme.background,
+            color: AppTheme.surface,
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,

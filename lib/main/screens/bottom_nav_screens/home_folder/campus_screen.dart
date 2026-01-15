@@ -178,157 +178,161 @@ class _CampusScreenState extends State<CampusScreen> {
               ),
 
               // Posts List
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final postWithAuthor = feedProvider.campusPosts[index];
-                    final post = postWithAuthor.post;
-                    final author = postWithAuthor.author;
-                    final postState = feedProvider.getPostState(post.postId);
-                    final isMyPost = post.userId == currentUserId;
+              SliverPadding(
+                padding: EdgeInsets.only(bottom: 80.sp),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final postWithAuthor = feedProvider.campusPosts[index];
+                      final post = postWithAuthor.post;
+                      final author = postWithAuthor.author;
+                      final postState = feedProvider.getPostState(post.postId);
+                      final isMyPost = post.userId == currentUserId;
 
-                    return PostWidget(
-                      key: ValueKey(post.postId),
-                      post: post,
-                      author: author,
-                      postState: postState,
-                      currentUserId: currentUserId,
-                      onTap: () {
-                        // Navigate to post view when post is tapped
-                        navigateToPostView(
-                          context: context,
-                          post: post,
-                          author: author,
-                          postState: postState,
-                          currentUserId: currentUserId,
-                          feedProvider: feedProvider,
-                          isMyPost: isMyPost,
-                          focusComment: false,
-                        );
-                      },
-                      onLike: () async {
-                        try {
-                          // Get current user from auth provider
-                          final currentUser = authProvider.currentUser;
-
-                          // Get post image URL (first image if available)
-                          String? postImageUrl;
-                          if (post.imageUrls.isNotEmpty) {
-                            postImageUrl = post.imageUrls.first;
-                          }
-
-                          await feedProvider.toggleLike(
-                            post.postId,
-                            currentUserId,
-                            post.userId,
-                            Provider.of<NotifyProvider>(
-                              context,
-                              listen: false,
-                            ),
-                            currentUser, 
-                            postImageUrl, 
+                      return PostWidget(
+                        key: ValueKey(post.postId),
+                        post: post,
+                        author: author,
+                        postState: postState,
+                        currentUserId: currentUserId,
+                        onTap: () {
+                          // Navigate to post view when post is tapped
+                          navigateToPostView(
+                            context: context,
+                            post: post,
+                            author: author,
+                            postState: postState,
+                            currentUserId: currentUserId,
+                            feedProvider: feedProvider,
+                            isMyPost: isMyPost,
+                            focusComment: false,
                           );
-                        } catch (e) {
-                          if (mounted) {
-                            showFloatingSnackBar(
-                                context, 'Failed to like post');
-                          }
-                        }
-                      },
-                      onComment: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => CommentsScreen(
-                              postId: post.postId,
-                            ),
-                          ),
-                        );
-                      },
-                      onRepost: () {
-                        debugPrint('Repost: ${post.postId}');
-                      },
-                      onShare: () {
-                        PostOptionsWidget.showShareOptions(
-                          context: context,
-                          postId: post.postId,
-                          postContent: post.content,
-                        );
-                      },
-                      onBookmark: () async {
-                        try {
-                          await feedProvider.toggleBookmark(
-                            post.postId,
-                            currentUserId,
-                          );
-                        } catch (e) {
-                          if (mounted) {
-                            showFloatingSnackBar(
-                                context, 'Failed to bookmark post');
-                          }
-                        }
-                      },
-                      onMoreOptions: () {
-                        PostOptionsWidget.showPostOptions(
-                          context: context,
-                          isMyPost: isMyPost,
-                          postId: post.postId,
-                          onDelete: () async {
-                            bool? confirm = await showDialog<bool>(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                backgroundColor: AppTheme.surface,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15.r),
-                                ),
-                                title: Text(
-                                  'Delete Post',
-                                  style: TextStyle(color: AppTheme.textPrimary),
-                                ),
-                                content: Text(
-                                  'Are you sure you want to delete this post? This action cannot be undone.',
-                                  style:
-                                      TextStyle(color: AppTheme.textSecondary),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, false),
-                                    child: Text(
-                                      'Cancel',
-                                      style: TextStyle(
-                                          color: AppTheme.textSecondary),
-                                    ),
-                                  ),
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, true),
-                                    style: TextButton.styleFrom(
-                                      foregroundColor: AppTheme.error,
-                                    ),
-                                    child: const Text('Delete'),
-                                  ),
-                                ],
-                              ),
-                            );
+                        },
+                        onLike: () async {
+                          try {
+                            // Get current user from auth provider
+                            final currentUser = authProvider.currentUser;
 
-                            if (confirm == true && mounted) {
-                              feedProvider.deletePostLocally(post.postId);
-                              showFloatingSnackBar(context, 'Post deleted');
+                            // Get post image URL (first image if available)
+                            String? postImageUrl;
+                            if (post.imageUrls.isNotEmpty) {
+                              postImageUrl = post.imageUrls.first;
                             }
-                          },
-                          onShare: () {
-                            PostOptionsWidget.showShareOptions(
-                              context: context,
-                              postId: post.postId,
-                              postContent: post.content,
+
+                            await feedProvider.toggleLike(
+                              post.postId,
+                              currentUserId,
+                              post.userId,
+                              Provider.of<NotifyProvider>(
+                                context,
+                                listen: false,
+                              ),
+                              currentUser,
+                              postImageUrl,
                             );
-                          },
-                        );
-                      },
-                      index: index,
-                    );
-                  },
-                  childCount: feedProvider.campusPosts.length,
+                          } catch (e) {
+                            if (mounted) {
+                              showFloatingSnackBar(
+                                  context, 'Failed to like post');
+                            }
+                          }
+                        },
+                        onComment: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => CommentsScreen(
+                                postId: post.postId,
+                              ),
+                            ),
+                          );
+                        },
+                        onRepost: () {
+                          debugPrint('Repost: ${post.postId}');
+                        },
+                        onShare: () {
+                          PostOptionsWidget.showShareOptions(
+                            context: context,
+                            postId: post.postId,
+                            postContent: post.content,
+                          );
+                        },
+                        onBookmark: () async {
+                          try {
+                            await feedProvider.toggleBookmark(
+                              post.postId,
+                              currentUserId,
+                            );
+                          } catch (e) {
+                            if (mounted) {
+                              showFloatingSnackBar(
+                                  context, 'Failed to bookmark post');
+                            }
+                          }
+                        },
+                        onMoreOptions: () {
+                          PostOptionsWidget.showPostOptions(
+                            context: context,
+                            isMyPost: isMyPost,
+                            postId: post.postId,
+                            onDelete: () async {
+                              bool? confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  backgroundColor: AppTheme.surface,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(15.r),
+                                  ),
+                                  title: Text(
+                                    'Delete Post',
+                                    style:
+                                        TextStyle(color: AppTheme.textPrimary),
+                                  ),
+                                  content: Text(
+                                    'Are you sure you want to delete this post? This action cannot be undone.',
+                                    style: TextStyle(
+                                        color: AppTheme.textSecondary),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      child: Text(
+                                        'Cancel',
+                                        style: TextStyle(
+                                            color: AppTheme.textSecondary),
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, true),
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: AppTheme.error,
+                                      ),
+                                      child: const Text('Delete'),
+                                    ),
+                                  ],
+                                ),
+                              );
+
+                              if (confirm == true && mounted) {
+                                feedProvider.deletePostLocally(post.postId);
+                                showFloatingSnackBar(context, 'Post deleted');
+                              }
+                            },
+                            onShare: () {
+                              PostOptionsWidget.showShareOptions(
+                                context: context,
+                                postId: post.postId,
+                                postContent: post.content,
+                              );
+                            },
+                          );
+                        },
+                        index: index,
+                      );
+                    },
+                    childCount: feedProvider.campusPosts.length,
+                  ),
                 ),
               ),
             ],

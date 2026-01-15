@@ -36,7 +36,7 @@ class ProfileHeaderWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(24.w, 60.h, 24.w, 0),
+      padding: EdgeInsets.fromLTRB(24.w, 50.h, 24.w, 0),
       child: Column(
         children: [
           // Profile Image

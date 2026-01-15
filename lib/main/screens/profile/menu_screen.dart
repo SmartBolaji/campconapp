@@ -420,18 +420,29 @@ class MenuScreen extends StatelessWidget {
                             onPressed: authProvider.isLoading
                                 ? null
                                 : () async {
+                                    // Close the dialog first
+                                    Navigator.pop(dialogContext);
+
                                     // Perform logout
                                     await authProvider.signOut();
 
-                                    // Navigate to onboarding
+                                    // Navigate to onboarding after dialog is closed
                                     if (context.mounted) {
-                                      Navigator.of(context).pushAndRemoveUntil(
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const Onboarding(),
-                                        ),
-                                        (route) => false,
-                                      );
+                                      // Use a slight delay to ensure dialog is fully dismissed
+                                      await Future.delayed(
+                                          const Duration(milliseconds: 100));
+
+                                      if (context.mounted) {
+                                        Navigator.of(context,
+                                                rootNavigator: true)
+                                            .pushAndRemoveUntil(
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const Onboarding(),
+                                          ),
+                                          (route) => false,
+                                        );
+                                      }
                                     }
                                   },
                             style: ElevatedButton.styleFrom(
