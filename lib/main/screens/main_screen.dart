@@ -1,6 +1,7 @@
 import 'package:campcon/main/screens/bottom_nav_screens/messaging_folder/message_screen.dart';
-import 'package:campcon/main/screens/bottom_nav_screens/home_folder/events/widgets/event_upload_bar.dart'; //  Add this
+import 'package:campcon/main/screens/bottom_nav_screens/home_folder/events/widgets/event_upload_bar.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/market_folder/widgets/market_upload_bar.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/resource_folder/widgets/resource_upload_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/resource_folder/resource_screen.dart';
@@ -39,10 +40,10 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      statusBarColor: AppTheme.surface,
-      statusBarIconBrightness: Brightness.dark,
-    ));
+    // SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    //   statusBarColor: AppTheme.surface,
+    //   statusBarIconBrightness: Brightness.dark,
+    // ));
 
     // Show initial selected item animation
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -101,63 +102,79 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBody: true,
-      body: Stack(
-        children: [
-          // Main content
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 400),
-            transitionBuilder: (child, animation) {
-              return FadeTransition(
-                opacity: animation,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0.1, 0.0),
-                    end: Offset.zero,
-                  ).animate(animation),
-                  child: child,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: AppTheme.surface,
+        statusBarIconBrightness: Brightness.dark,
+      ),
+      child: SafeArea(
+        child: Scaffold(
+          extendBody: true,
+          body: Stack(
+            children: [
+              // Main content
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 400),
+                transitionBuilder: (child, animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0.1, 0.0),
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: child,
+                    ),
+                  );
+                },
+                child: _screens[_currentIndex],
+              ),
+
+              // Upload Progress Bar (Posts)
+              const Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: UploadProgressBar(),
+              ),
+
+              // Market Upload Progress Bar
+              const Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: UploadMarketProgressBar(),
+              ),
+
+              //  Event Upload Progress Bar
+              const Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: EventUploadProgressBar(),
+              ),
+
+              // Resource Upload Progress Bar
+              const Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: ResourceUploadProgressBar(),
+              ),
+
+              // Bottom Nav
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: BottomNavWidget(
+                  currentIndex: _currentIndex,
+                  onTap: _onNavTap,
                 ),
-              );
-            },
-            child: _screens[_currentIndex],
+              ),
+            ],
           ),
-
-          // Upload Progress Bar (Posts)
-          const Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: UploadProgressBar(),
-          ),
-
-          // Market Upload Progress Bar
-          const Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: UploadMarketProgressBar(),
-          ),
-
-          //  Event Upload Progress Bar
-          const Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: EventUploadProgressBar(),
-          ),
-
-          // Bottom Nav
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: BottomNavWidget(
-              currentIndex: _currentIndex,
-              onTap: _onNavTap,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

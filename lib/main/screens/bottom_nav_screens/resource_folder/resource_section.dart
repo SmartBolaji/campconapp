@@ -5,10 +5,12 @@ import 'package:campcon/main/provider/resource_provider.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/resource_folder/widgets/dept_card.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/resource_folder/widgets/level_card.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/resource_folder/widgets/faculty_card.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/resource_folder/widgets/resource_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ph.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 
 class ResourceSection extends StatelessWidget {
@@ -67,38 +69,35 @@ class ResourceSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Back button and faculty title
-          Padding(
-            padding: EdgeInsets.only(
-                left: 30.w, right: 30.w, top: 20.h, bottom: 10.h),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () => provider.clearFacultySelection(),
-                  child: Container(
-                    padding: EdgeInsets.all(8.w),
-                    decoration: BoxDecoration(
-                      color: AppTheme.background,
-                      borderRadius: BorderRadius.circular(8.r),
-                      border: Border.all(color: AppTheme.border),
-                    ),
-                    child: Iconify(
-                      Ph.arrow_left,
-                      size: 18.sp,
-                      color: AppTheme.textPrimary,
+          GestureDetector(
+            onTap: () => provider.clearFacultySelection(),
+            child: Container(
+              padding: EdgeInsets.only(
+                  top: 16.h, bottom: 16.h, left: 28.w, right: 20.w),
+              decoration: BoxDecoration(
+                color: AppTheme.surface,
+                border: Border(bottom: BorderSide(color: AppTheme.border)),
+              ),
+              child: Row(
+                children: [
+                  Iconify(
+                    Ph.arrow_left,
+                    size: 20.sp,
+                    color: AppTheme.textSecondary,
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Text(
+                      provider.selectedFaculty!,
+                      style: TextConstants.smallText.copyWith(
+                        color: AppTheme.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14.sp,
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: Text(
-                    provider.selectedFaculty!,
-                    style: TextConstants.mediumText.copyWith(
-                      color: AppTheme.textPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
 
@@ -131,38 +130,35 @@ class ResourceSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Back button and department title
-          Padding(
-            padding: EdgeInsets.only(
-                left: 30.w, right: 30.w, top: 20.h, bottom: 10.h),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () => provider.clearDepartmentSelection(),
-                  child: Container(
-                    padding: EdgeInsets.all(8.w),
-                    decoration: BoxDecoration(
-                      color: AppTheme.background,
-                      borderRadius: BorderRadius.circular(8.r),
-                      border: Border.all(color: AppTheme.border),
-                    ),
-                    child: Iconify(
-                      Ph.arrow_left,
-                      size: 18.sp,
-                      color: AppTheme.textPrimary,
+          GestureDetector(
+            onTap: () => provider.clearDepartmentSelection(),
+            child: Container(
+              padding: EdgeInsets.only(
+                  top: 16.h, bottom: 16.h, left: 28.w, right: 20.w),
+              decoration: BoxDecoration(
+                color: AppTheme.surface,
+                border: Border(bottom: BorderSide(color: AppTheme.border)),
+              ),
+              child: Row(
+                children: [
+                  Iconify(
+                    Ph.arrow_left,
+                    size: 20.sp,
+                    color: AppTheme.textSecondary,
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Text(
+                      provider.selectedDepartment!,
+                      style: TextConstants.smallText.copyWith(
+                        color: AppTheme.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14.sp,
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: Text(
-                    provider.selectedDepartment!,
-                    style: TextConstants.mediumText.copyWith(
-                      color: AppTheme.textPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
 
@@ -179,14 +175,17 @@ class ResourceSection extends StatelessWidget {
                   context,
                   level,
                   () {
-                    // TODO: Navigate to courses/materials for this level
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Opening materials for ${provider.selectedDepartment} - $level',
+                    // Navigate to ResourceListScreen
+                    Navigator.push(
+                      context,
+                      PageTransition(
+                        type: PageTransitionType.rightToLeft,
+                        child: ResourceListScreen(
+                          faculty: provider.selectedFaculty!,
+                          department: provider.selectedDepartment!,
+                          level: level,
+                          currentUserId: provider.currentUserId,
                         ),
-                        backgroundColor: AppTheme.primary,
-                        behavior: SnackBarBehavior.floating,
                       ),
                     );
                   },

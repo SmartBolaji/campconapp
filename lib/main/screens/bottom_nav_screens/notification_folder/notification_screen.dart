@@ -3,11 +3,14 @@ import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/notification_model.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/notify_provider.dart';
+import 'package:campcon/main/provider/search_provider.dart';
+import 'package:campcon/main/screens/search/search_screen.dart';
 import 'package:campcon/main/widgets/action_search_bar.dart';
 import 'package:campcon/main/widgets/custom_top_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconly/iconly.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 
 class NotificationScreen extends StatefulWidget {
@@ -331,13 +334,18 @@ class _NotificationScreenState extends State<NotificationScreen> {
                             SizedBox(height: 20.h),
 
                             //  Search Bar using ActionSearchBar
-                            ActionSearchBar.search(
-                              controller: _searchController,
+                            ActionSearchBar.navigate(
                               hintText: 'Search notifications',
-                              onChanged: (value) {
-                                setState(() {
-                                  _searchQuery = value;
-                                });
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  PageTransition(
+                                    type: PageTransitionType.fade,
+                                    duration: const Duration(milliseconds: 200),
+                                    child: const SearchScreen(
+                                        context: SearchContext.notifications),
+                                  ),
+                                );
                               },
                             ),
                           ],

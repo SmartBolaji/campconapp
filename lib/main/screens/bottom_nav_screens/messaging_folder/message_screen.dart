@@ -2,8 +2,11 @@
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
+import 'package:campcon/main/provider/search_provider.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/messaging_folder/new_message.dart';
+import 'package:campcon/main/screens/search/search_screen.dart';
 import 'package:campcon/main/services/cache.dart';
+import 'package:campcon/main/widgets/action_search_bar.dart';
 import 'package:campcon/main/widgets/custom_top_bar.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/messaging_folder/message.dart';
 import 'package:campcon/main/widgets/navigation_helper.dart';
@@ -13,6 +16,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconly/iconly.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ph.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -369,50 +373,21 @@ class _MessagingScreenState extends State<MessagingScreen> {
                       ),
                       SizedBox(height: 20.h),
 
-                      // Search Bar
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 15.w),
-                        decoration: BoxDecoration(
-                          color: AppTheme.buttonBorder,
-                          borderRadius: BorderRadius.circular(30.r),
-                          border: Border.all(
-                            color: AppTheme.border,
-                            width: 1,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.03),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              IconlyLight.search,
-                              size: 22.sp,
-                              color: AppTheme.textLight,
-                            ),
-                            SizedBox(width: 10.w),
-                            Expanded(
-                              child: TextField(
-                                controller: _searchController,
-                                decoration: InputDecoration(
-                                  hintText: 'Search conversations',
-                                  hintStyle: TextConstants.smallText.copyWith(
-                                    color: AppTheme.textLight,
-                                  ),
-                                  filled: true,
-                                  fillColor: AppTheme.buttonBorder,
-                                  border: InputBorder.none,
-                                  contentPadding:
-                                      EdgeInsets.symmetric(vertical: 10.h),
-                                ),
+                      // Search Bar using ActionSearchBar - navigates to search screen
+                      ActionSearchBar.navigate(
+                        hintText: 'Search conversations',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            PageTransition(
+                              type: PageTransitionType.fade,
+                              duration: const Duration(milliseconds: 200),
+                              child: const SearchScreen(
+                                context: SearchContext.messaging,
                               ),
                             ),
-                          ],
-                        ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -626,7 +601,7 @@ class _MessagingScreenState extends State<MessagingScreen> {
                 return SliverPadding(
                   padding: EdgeInsets.only(
                     bottom: 60.h,
-                    top: 8.h,
+                    // top: 8.h,
                   ),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(

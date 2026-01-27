@@ -8,11 +8,13 @@ import 'package:iconly/iconly.dart';
 class FacultyCard extends StatelessWidget {
   final String faculty;
   final VoidCallback onTap;
+  final bool showIcon;
 
   const FacultyCard({
     Key? key,
     required this.faculty,
     required this.onTap,
+    this.showIcon = false,
   }) : super(key: key);
 
   @override
@@ -24,31 +26,25 @@ class FacultyCard extends StatelessWidget {
             EdgeInsets.only(top: 12.h, bottom: 12.h, left: 10.w, right: 10.w),
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          // borderRadius: BorderRadius.circular(12.r),
           border: Border(bottom: BorderSide(color: AppTheme.border)),
-          // boxShadow: [
-          //   BoxShadow(
-          //     color: Colors.black.withOpacity(0.03),
-          //     blurRadius: 8,
-          //     offset: const Offset(0, 2),
-          //   ),
-          // ],
         ),
         child: Row(
           children: [
-            Container(
-              padding: EdgeInsets.all(14.w),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryBackground,
-                borderRadius: BorderRadius.circular(10.r),
+            if (showIcon) ...[
+              Container(
+                padding: EdgeInsets.all(14.w),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryBackground,
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: Icon(
+                  IconlyBold.folder,
+                  color: AppTheme.primary,
+                  size: 26.sp,
+                ),
               ),
-              child: Icon(
-                IconlyBold.folder,
-                color: AppTheme.primary,
-                size: 26.sp,
-              ),
-            ),
-            SizedBox(width: 16.w),
+              SizedBox(width: 16.w),
+            ],
             Expanded(
               child: Text(
                 faculty,

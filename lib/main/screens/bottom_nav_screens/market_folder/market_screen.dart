@@ -2,10 +2,12 @@ import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/market_provider.dart';
+import 'package:campcon/main/provider/search_provider.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/market_folder/product/post_product_screen.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/market_folder/market_cart.dart';
 import 'package:campcon/main/provider/buyer_orders_provider.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/market_folder/product/post_service_screen.dart';
+import 'package:campcon/main/screens/search/search_screen.dart';
 import 'package:campcon/main/widgets/custom_top_bar.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/market_folder/widgets/empty_state.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/market_folder/widgets/market_tabbar.dart';
@@ -128,8 +130,16 @@ class _MarketScreenState extends State<MarketScreen> {
                             ActionSearchBar.navigate(
                               hintText: 'Search products & services',
                               onTap: () {
-                                // TODO: Navigate to MarketSearchScreen
-                                debugPrint('Navigate to market search');
+                                Navigator.push(
+                                  context,
+                                  PageTransition(
+                                    type: PageTransitionType.fade,
+                                    duration: const Duration(milliseconds: 200),
+                                    child: const SearchScreen(
+                                      context: SearchContext.market,
+                                    ),
+                                  ),
+                                );
                               },
                             ),
                           ],

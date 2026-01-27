@@ -5,7 +5,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconly/iconly.dart';
 
 Widget buildDepartmentCard(
-    BuildContext context, String department, VoidCallback onTap) {
+    BuildContext context, String department, VoidCallback onTap,
+    {bool showIcon = false}) {
   return GestureDetector(
     onTap: onTap,
     child: Container(
@@ -17,19 +18,21 @@ Widget buildDepartmentCard(
       ),
       child: Row(
         children: [
-          Container(
-            padding: EdgeInsets.all(14.w),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryBackground,
-              borderRadius: BorderRadius.circular(10.r),
+          if (showIcon) ...[
+            Container(
+              padding: EdgeInsets.all(14.w),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryBackground,
+                borderRadius: BorderRadius.circular(10.r),
+              ),
+              child: Icon(
+                IconlyBold.document,
+                color: AppTheme.primary,
+                size: 26.sp,
+              ),
             ),
-            child: Icon(
-              IconlyBold.document,
-              color: AppTheme.primary,
-              size: 26.sp,
-            ),
-          ),
-          SizedBox(width: 16.w),
+            SizedBox(width: 16.w),
+          ],
           Expanded(
             child: Text(
               department,

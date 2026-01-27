@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconly/iconly.dart';
 
-Widget buildLevelCard(BuildContext context, String level, VoidCallback onTap) {
+Widget buildLevelCard(BuildContext context, String level, VoidCallback onTap,
+    {bool showIcon = false}) {
   return GestureDetector(
     onTap: onTap,
     child: Container(
@@ -17,19 +18,21 @@ Widget buildLevelCard(BuildContext context, String level, VoidCallback onTap) {
       ),
       child: Row(
         children: [
-          Container(
-            padding: EdgeInsets.all(14.w),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryBackground,
-              borderRadius: BorderRadius.circular(10.r),
+          if (showIcon) ...[
+            Container(
+              padding: EdgeInsets.all(14.w),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryBackground,
+                borderRadius: BorderRadius.circular(10.r),
+              ),
+              child: Icon(
+                IconlyBold.bookmark,
+                color: AppTheme.primary,
+                size: 26.sp,
+              ),
             ),
-            child: Icon(
-              IconlyBold.bookmark,
-              color: AppTheme.primary,
-              size: 26.sp,
-            ),
-          ),
-          SizedBox(width: 16.w),
+            SizedBox(width: 16.w),
+          ],
           Expanded(
             child: Text(
               level,

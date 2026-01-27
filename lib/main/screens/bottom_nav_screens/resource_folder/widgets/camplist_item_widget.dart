@@ -1,4 +1,3 @@
-// lib/main/widgets/resources/camplist_item_widget.dart
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:flutter/material.dart';
@@ -7,11 +6,15 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 class CamplistItemWidget extends StatelessWidget {
   final Map<String, dynamic> category;
   final VoidCallback onTap;
+  final int taskCount;
+  final bool showIcon;
 
   const CamplistItemWidget({
     Key? key,
     required this.category,
     required this.onTap,
+    this.taskCount = 0,
+    this.showIcon = false,
   }) : super(key: key);
 
   @override
@@ -32,36 +35,63 @@ class CamplistItemWidget extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
-              padding: EdgeInsets.all(14.w),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10.r),
+            if (showIcon) ...[
+              Container(
+                padding: EdgeInsets.all(14.w),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 26.sp,
+                ),
               ),
-              child: Icon(
-                icon,
-                color: color,
-                size: 26.sp,
-              ),
-            ),
-            SizedBox(width: 16.w),
+              SizedBox(width: 16.w),
+            ],
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    label,
-                    style: TextConstants.smallText.copyWith(
-                      color: AppTheme.textPrimary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15.sp,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        label,
+                        style: TextConstants.smallText.copyWith(
+                          color: AppTheme.textPrimary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15.sp,
+                        ),
+                      ),
+                      if (taskCount > 0) ...[
+                        SizedBox(width: 8.w),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 8.w, vertical: 2.h),
+                          decoration: BoxDecoration(
+                            color: color.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(10.r),
+                          ),
+                          child: Text(
+                            '$taskCount',
+                            style: TextConstants.smallText.copyWith(
+                              color: color,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 11.sp,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   SizedBox(height: 4.h),
                   Text(
-                    subtitle,
+                    taskCount > 0
+                        ? '$taskCount task${taskCount > 1 ? 's' : ''}'
+                        : subtitle,
                     style: TextConstants.smallText.copyWith(
-                      color: AppTheme.textLight,
+                      color: taskCount > 0 ? color : AppTheme.textLight,
                       fontSize: 12.sp,
                     ),
                   ),

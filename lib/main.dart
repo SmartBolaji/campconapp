@@ -13,6 +13,7 @@ import 'package:campcon/main/provider/post_provider.dart';
 import 'package:campcon/main/provider/market_post_provider.dart';
 import 'package:campcon/main/provider/product_provider.dart';
 import 'package:campcon/main/provider/resource_provider.dart';
+import 'package:campcon/main/provider/resource_post_provider.dart';
 import 'package:campcon/main/provider/notify_provider.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/messaging_folder/message_cache.dart';
 import 'package:campcon/main/screens/onboarding/onboarding.dart';
@@ -32,6 +33,7 @@ import 'main/provider/sales_provider.dart';
 import 'main/provider/buyer_orders_provider.dart';
 import 'main/provider/pickup_provider.dart';
 import 'package:campcon/main/provider/new_post_provider.dart';
+import 'main/provider/search_provider.dart';
 
 Future<void> main() async {
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
@@ -71,6 +73,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => MediaSelectionProvider()),
         ChangeNotifierProvider(create: (_) => EventProvider()),
         ChangeNotifierProvider(create: (_) => ResourceProvider()),
+        ChangeNotifierProvider(create: (_) => ResourcePostProvider()),
         ChangeNotifierProvider(create: (_) => NotifyProvider()),
         ChangeNotifierProvider(create: (_) => MessageProvider()),
         ChangeNotifierProvider(create: (_) => ProfileProvider()),
@@ -78,6 +81,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => BuyerOrdersProvider()),
         ChangeNotifierProvider(create: (_) => PickupProvider()),
         ChangeNotifierProvider(create: (_) => NewPostProvider()),
+        ChangeNotifierProvider(create: (_) => SearchProvider()),
       ],
       child: const MyApp(),
     ),
