@@ -1,9 +1,12 @@
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/event_model.dart';
+import 'package:campcon/main/models/report_model.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/event_provider.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/home_folder/events/widgets/event_description/widgets.dart';
+import 'package:campcon/main/widgets/report_bottom_sheet.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
@@ -94,6 +97,73 @@ class _EventDescriptionState extends State<EventDescription> {
                                       },
                               ),
                               SizedBox(height: 24.h),
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  ReportBottomSheet.show(
+                                    context: context,
+                                    targetTitle: widget.event.title,
+
+                                    reportType: ReportType.event,
+                                    targetId: widget.event.id,
+                                    targetDescription: widget
+                                            .event.description.isNotEmpty
+                                        ? widget.event.description.length > 50
+                                            ? '${widget.event.description.substring(0, 50)}...'
+                                            : widget.event.description
+                                        : 'Event by ${widget.event.organizerName}',
+                                    targetImageUrl:
+                                        widget.event.imageUrl?.isNotEmpty ??
+                                                false
+                                            ? widget.event.imageUrl!
+                                            : null,
+                                    reporterId: widget.event.organizerId,
+                                    // Replace with actual user ID
+                                    reporterName: FirebaseAuth.instance
+                                            .currentUser!.displayName ??
+                                        'Anonymous User', // Replace with actual user name
+                                    school: widget.event.school,
+                                  );
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.surface,
+                                    borderRadius: BorderRadius.circular(12.r),
+                                    border: Border.all(color: AppTheme.border),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        padding: EdgeInsets.all(10.w),
+                                        decoration: BoxDecoration(
+                                          color:
+                                              AppTheme.primary.withOpacity(0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(10.r),
+                                        ),
+                                        child: Iconify(
+                                          Ph.warning_circle,
+                                          size: 20.sp,
+                                          color: AppTheme.primary,
+                                        ),
+                                      ),
+                                      SizedBox(width: 12.w),
+                                      Text(
+                                        'Report Event',
+                                        style:
+                                            TextConstants.mediumText.copyWith(
+                                          fontSize: 16.sp,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppTheme.textPrimary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 24.h),
 
                               // Stats with Attend Button
                               AttendeeStatsCard(
@@ -138,6 +208,7 @@ class _EventDescriptionState extends State<EventDescription> {
                     currentUserName,
                   ),
                 ),
+                SizedBox(height: 20),
               ],
             ),
           ),

@@ -222,6 +222,7 @@ class _MyForYouScreenState extends State<MyForYouScreen> {
                     context: context,
                     isMyPost: isMyPost,
                     postId: post.postId,
+                    post: post,
                     onDelete: () async {
                       bool? confirm = await showDialog<bool>(
                         context: context,

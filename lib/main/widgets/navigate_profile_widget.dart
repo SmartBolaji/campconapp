@@ -88,6 +88,7 @@ void navigateToPostView({
         },
         onMoreOptions: () {
           PostOptionsWidget.showPostOptions(
+            post: post,
             context: context,
             isMyPost: isMyPost,
             postId: post.postId,
