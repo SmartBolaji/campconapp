@@ -214,6 +214,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                     context: context,
                     isMyPost: isMyPost,
                     postId: post.postId,
+                    post: post,
                     onDelete: () async {
                       bool? confirm = await showDialog<bool>(
                         context: context,

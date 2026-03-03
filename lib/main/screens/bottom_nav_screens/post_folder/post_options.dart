@@ -1,5 +1,9 @@
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
+import 'package:campcon/main/models/post_model.dart';
+import 'package:campcon/main/models/report_model.dart';
+import 'package:campcon/main/widgets/report_bottom_sheet.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -10,6 +14,7 @@ class PostOptionsWidget {
     required BuildContext context,
     required bool isMyPost,
     required String postId,
+    required PostModel post,
     required VoidCallback onDelete,
     required VoidCallback onShare,
   }) {
@@ -98,7 +103,30 @@ class PostOptionsWidget {
                   color: AppTheme.warning,
                   onTap: () {
                     Navigator.pop(context);
-                    _showReportDialog(context);
+                    // Navigator.pop(context);
+                    // _showReportDialog(context);
+                    ReportBottomSheet.show(
+                      context: context,
+                      targetTitle: post.username,
+
+                      reportType: ReportType.post,
+                      targetId: post.postId,
+                      targetDescription: post.content.isNotEmpty
+                          ? post.content.length > 50
+                              ? '${post.content.substring(0, 50)}...'
+                              : post.content
+                          : 'Post by ${post.username}',
+                      targetImageUrl: post.imageUrls.isNotEmpty
+                          ? post.imageUrls.first
+                          : null,
+                      reporterId: post.userId,
+                      // Replace with actual user ID
+                      reporterName:
+                          FirebaseAuth.instance.currentUser!.displayName ??
+                              'Anonymous User', // Replace with actual user name
+                      school:
+                          post.campus ?? "", // Replace with actual school name
+                    );
                   },
                 ),
               _buildOption(
@@ -278,7 +306,8 @@ class CommentOptionsWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 child: Text(
                   'Comment Options',
                   style: TextConstants.mediumText.copyWith(
