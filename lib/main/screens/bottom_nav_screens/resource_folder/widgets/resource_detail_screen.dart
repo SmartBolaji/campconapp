@@ -26,52 +26,58 @@ class ResourceDetailScreen extends StatelessWidget {
         currentUserId != null && resource.uploaderId == currentUserId;
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: Column(
           children: [
             _buildHeader(context, isOwner),
             Expanded(
               child: SingleChildScrollView(
-                padding: EdgeInsets.all(20.w),
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Resource type icon and title
-                    _buildResourceHeader(),
                     SizedBox(height: 24.h),
 
-                    // Info cards
+                    // Resource type icon and title
+                    _buildResourceHeader(),
+                    SizedBox(height: 20.h),
+
+                    // Info metadata row
                     _buildInfoCards(),
-                    SizedBox(height: 24.h),
 
                     // Description
                     if (resource.description.isNotEmpty) ...[
-                      _buildSectionTitle('Description'),
-                      SizedBox(height: 8.h),
+                      SizedBox(height: 20.h),
                       Text(
                         resource.description,
                         style: TextConstants.mediumText.copyWith(
                           fontSize: 14.sp,
                           color: AppTheme.textSecondary,
-                          height: 1.5,
+                          height: 1.6,
                         ),
                       ),
-                      SizedBox(height: 24.h),
                     ],
 
                     // File info
-                    if (resource.fileName != null) ...[
-                      _buildSectionTitle('File'),
-                      SizedBox(height: 8.h),
+                    if (resource.fileName != null ||
+                        resource.isExternalLink) ...[
+                      Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20.h),
+                        child: Divider(
+                            color: AppTheme.border, height: 1, thickness: 1),
+                      ),
                       _buildFileInfo(),
-                      SizedBox(height: 24.h),
                     ],
 
                     // Stats
-                    _buildSectionTitle('Statistics'),
-                    SizedBox(height: 8.h),
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20.h),
+                      child: Divider(
+                          color: AppTheme.border, height: 1, thickness: 1),
+                    ),
                     _buildStats(),
+                    SizedBox(height: 20.h),
                   ],
                 ),
               ),
@@ -84,111 +90,65 @@ class ResourceDetailScreen extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context, bool isOwner) {
-    return Container(
+    return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        border: Border(
-          bottom: BorderSide(color: AppTheme.border, width: 1),
-        ),
-      ),
       child: Row(
         children: [
           GestureDetector(
             onTap: () => Navigator.pop(context),
-            child: Container(
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                color: AppTheme.background,
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Iconify(
-                Ph.arrow_left,
-                color: AppTheme.textPrimary,
-                size: 20.sp,
-              ),
+            child: Iconify(
+              Ph.arrow_left,
+              color: AppTheme.textPrimary,
+              size: 24.sp,
             ),
           ),
-          Expanded(
-            child: Center(
-              child: Text(
-                'Resource Details',
-                style: TextConstants.mediumText.copyWith(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-            ),
-          ),
+          const Spacer(),
           if (isOwner)
             GestureDetector(
               onTap: () => _showDeleteDialog(context),
-              child: Container(
-                padding: EdgeInsets.all(8.w),
-                decoration: BoxDecoration(
-                  color: AppTheme.error.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: Iconify(
-                  Ph.trash,
-                  color: AppTheme.error,
-                  size: 20.sp,
-                ),
+              child: Iconify(
+                Ph.trash,
+                color: AppTheme.error,
+                size: 22.sp,
               ),
-            )
-          else
-            SizedBox(width: 40.w),
+            ),
         ],
       ),
     );
   }
 
   Widget _buildResourceHeader() {
-    return Row(
+    final typeColor = _getTypeColor(resource.resourceType);
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: EdgeInsets.all(16.w),
+          padding: EdgeInsets.all(14.w),
           decoration: BoxDecoration(
-            color: _getTypeColor(resource.resourceType).withOpacity(0.1),
+            color: typeColor.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(14.r),
           ),
           child: Iconify(
             _getTypeIcon(resource.resourceType),
-            size: 40.sp,
-            color: _getTypeColor(resource.resourceType),
+            size: 32.sp,
+            color: typeColor,
           ),
         ),
-        SizedBox(width: 16.w),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                resource.title,
-                style: TextConstants.boldText.copyWith(
-                  fontSize: 20.sp,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-              SizedBox(height: 8.h),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: _getTypeColor(resource.resourceType).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6.r),
-                ),
-                child: Text(
-                  resource.resourceType,
-                  style: TextConstants.smallText.copyWith(
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w600,
-                    color: _getTypeColor(resource.resourceType),
-                  ),
-                ),
-              ),
-            ],
+        SizedBox(height: 16.h),
+        Text(
+          resource.title,
+          style: TextConstants.boldText.copyWith(
+            fontSize: 22.sp,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+        SizedBox(height: 6.h),
+        Text(
+          resource.resourceType,
+          style: TextConstants.mediumText.copyWith(
+            fontSize: 13.sp,
+            fontWeight: FontWeight.w500,
+            color: typeColor,
           ),
         ),
       ],
@@ -196,193 +156,74 @@ class ResourceDetailScreen extends StatelessWidget {
   }
 
   Widget _buildInfoCards() {
+    final items = <Widget>[];
+    // if (resource.faculty != null)
+    //   items.add(_buildInfoRow(Ph.buildings, resource.faculty!));
+    if (resource.department != null)
+      items.add(_buildInfoRow(Ph.buildings, resource.department!));
+    if (resource.level != null)
+      items.add(_buildInfoRow(Ph.graduation_cap, resource.level!));
+    if (resource.course != null && resource.course!.isNotEmpty)
+      items.add(_buildInfoRow(Ph.book_open, resource.course!));
+
+    if (items.isEmpty) return const SizedBox.shrink();
+
     return Wrap(
-      spacing: 12.w,
-      runSpacing: 12.h,
+      spacing: 16.w,
+      runSpacing: 8.h,
+      children: items,
+    );
+  }
+
+  Widget _buildInfoRow(String icon, String value) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        if (resource.faculty != null)
-          _buildInfoChip(Ph.buildings, 'Faculty', resource.faculty!),
-        if (resource.department != null)
-          _buildInfoChip(Ph.buildings, 'Department', resource.department!),
-        if (resource.level != null)
-          _buildInfoChip(Ph.graduation_cap, 'Level', resource.level!),
-        if (resource.course != null && resource.course!.isNotEmpty)
-          _buildInfoChip(Ph.book_open, 'Course', resource.course!),
+        Iconify(icon, size: 15.sp, color: AppTheme.textLight),
+        SizedBox(width: 5.w),
+        Text(
+          value,
+          style: TextConstants.mediumText.copyWith(
+            fontSize: 13.sp,
+            color: AppTheme.textSecondary,
+          ),
+        ),
       ],
-    );
-  }
-
-  Widget _buildInfoChip(String icon, String label, String value) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-      decoration: BoxDecoration(
-        color: AppTheme.background,
-        borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Iconify(
-            icon,
-            size: 16.sp,
-            color: AppTheme.primary,
-          ),
-          SizedBox(width: 8.w),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextConstants.smallText.copyWith(
-                  fontSize: 10.sp,
-                  color: AppTheme.textLight,
-                ),
-              ),
-              Text(
-                value,
-                style: TextConstants.mediumText.copyWith(
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w500,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: TextConstants.mediumText.copyWith(
-        fontSize: 16.sp,
-        fontWeight: FontWeight.w600,
-        color: AppTheme.textPrimary,
-      ),
     );
   }
 
   Widget _buildFileInfo() {
-    return Container(
-      padding: EdgeInsets.all(14.w),
-      decoration: BoxDecoration(
-        color: AppTheme.background,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Row(
-        children: [
-          Iconify(
-            resource.isExternalLink
-                ? Ph.link
-                : _getFileIcon(resource.fileName ?? ''),
-            size: 32.sp,
-            color: AppTheme.primary,
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  resource.isExternalLink
-                      ? 'External Link'
-                      : (resource.fileName ?? 'Unknown file'),
-                  style: TextConstants.mediumText.copyWith(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.textPrimary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                SizedBox(height: 2.h),
-                Text(
-                  resource.isExternalLink
-                      ? 'Shared link to external resource'
-                      : 'Uploaded ${DateFormat('MMM d, yyyy').format(resource.createdAt)}',
-                  style: TextConstants.smallText.copyWith(
-                    fontSize: 12.sp,
-                    color: AppTheme.textLight,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (resource.isExternalLink)
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-              decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(6.r),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Iconify(
-                    Ph.arrow_square_out,
-                    size: 12.sp,
-                    color: AppTheme.primary,
-                  ),
-                  SizedBox(width: 4.w),
-                  Text(
-                    'Link',
-                    style: TextConstants.smallText.copyWith(
-                      fontSize: 11.sp,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.primary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStats() {
     return Row(
       children: [
-        _buildStatItem(
-            Ph.download_simple, '${resource.downloadCount}', 'Downloads'),
-        SizedBox(width: 24.w),
-        _buildStatItem(Ph.heart, '${resource.likes}', 'Likes'),
-      ],
-    );
-  }
-
-  Widget _buildStatItem(String icon, String value, String label) {
-    return Container(
-      padding: EdgeInsets.all(14.w),
-      decoration: BoxDecoration(
-        color: AppTheme.background,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Row(
-        children: [
-          Iconify(
-            icon,
-            size: 24.sp,
-            color: AppTheme.primary,
-          ),
-          SizedBox(width: 10.w),
-          Column(
+        Iconify(
+          resource.isExternalLink
+              ? Ph.link
+              : _getFileIcon(resource.fileName ?? ''),
+          size: 28.sp,
+          color: AppTheme.primary,
+        ),
+        SizedBox(width: 12.w),
+        Expanded(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                value,
-                style: TextConstants.boldText.copyWith(
-                  fontSize: 18.sp,
+                resource.isExternalLink
+                    ? 'External Link'
+                    : (resource.fileName ?? 'Unknown file'),
+                style: TextConstants.mediumText.copyWith(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w500,
                   color: AppTheme.textPrimary,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
+              SizedBox(height: 2.h),
               Text(
-                label,
+                resource.isExternalLink
+                    ? 'Shared link to external resource'
+                    : 'Uploaded ${DateFormat('MMM d, yyyy').format(resource.createdAt)}',
                 style: TextConstants.smallText.copyWith(
                   fontSize: 12.sp,
                   color: AppTheme.textLight,
@@ -390,14 +231,54 @@ class ResourceDetailScreen extends StatelessWidget {
               ),
             ],
           ),
-        ],
-      ),
+        ),
+        if (resource.isExternalLink)
+          Iconify(
+            Ph.arrow_square_out,
+            size: 16.sp,
+            color: AppTheme.primary,
+          ),
+      ],
+    );
+  }
+
+  Widget _buildStats() {
+    return Row(
+      children: [
+        _buildStatItem(Ph.eye_bold, '${resource.downloadCount}', 'Views'),
+        // SizedBox(width: 32.w),
+        // _buildStatItem(Ph.heart, '${resource.likes}', 'Likes'),
+      ],
+    );
+  }
+
+  Widget _buildStatItem(String icon, String value, String label) {
+    return Row(
+      children: [
+        Iconify(icon, size: 18.sp, color: AppTheme.textLight),
+        SizedBox(width: 8.w),
+        Text(
+          value,
+          style: TextConstants.boldText.copyWith(
+            fontSize: 16.sp,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+        SizedBox(width: 4.w),
+        Text(
+          label,
+          style: TextConstants.smallText.copyWith(
+            fontSize: 13.sp,
+            color: AppTheme.textLight,
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildBottomActions(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
       decoration: BoxDecoration(
         color: AppTheme.surface,
         border: Border(
@@ -406,45 +287,18 @@ class ResourceDetailScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Share button
-          Expanded(
-            child: GestureDetector(
-              onTap: () {
-                // TODO: Implement share
-              },
-              child: Container(
-                padding: EdgeInsets.symmetric(vertical: 14.h),
-                decoration: BoxDecoration(
-                  color: AppTheme.background,
-                  borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(color: AppTheme.border),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Iconify(
-                      Ph.share_network,
-                      size: 20.sp,
-                      color: AppTheme.textPrimary,
-                    ),
-                    SizedBox(width: 8.w),
-                    Text(
-                      'Share',
-                      style: TextConstants.mediumText.copyWith(
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+          GestureDetector(
+            onTap: () {
+              // TODO: Implement share
+            },
+            child: Iconify(
+              Ph.share_network,
+              size: 22.sp,
+              color: AppTheme.textSecondary,
             ),
           ),
-          SizedBox(width: 12.w),
-          // Download/Open button
+          SizedBox(width: 16.w),
           Expanded(
-            flex: 2,
             child: GestureDetector(
               onTap: () => _downloadResource(context),
               child: Container(

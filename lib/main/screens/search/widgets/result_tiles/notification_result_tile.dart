@@ -10,13 +10,13 @@ import 'package:timeago/timeago.dart' as timeago;
 class NotificationResultTile extends StatelessWidget {
   final NotificationModel notification;
   final VoidCallback onTap;
-  
+
   const NotificationResultTile({
     super.key,
     required this.notification,
     required this.onTap,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -28,7 +28,9 @@ class NotificationResultTile extends StatelessWidget {
         padding: EdgeInsets.all(16.w),
         margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
         decoration: BoxDecoration(
-          color: notification.isRead ? AppTheme.surface : AppTheme.primaryBackground,
+          color: notification.isRead
+              ? AppTheme.surface
+              : AppTheme.primaryBackground,
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(color: AppTheme.border),
         ),
@@ -49,7 +51,7 @@ class NotificationResultTile extends StatelessWidget {
               ),
             ),
             SizedBox(width: 12.w),
-            
+
             // Content
             Expanded(
               child: Column(
@@ -84,7 +86,7 @@ class NotificationResultTile extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             // Unread indicator
             if (!notification.isRead)
               Container(
@@ -100,21 +102,25 @@ class NotificationResultTile extends StatelessWidget {
       ),
     );
   }
-  
+
   String _getNotificationIcon() {
     switch (notification.type) {
-      case 'like':
+      case NotificationType.like:
         return Ph.heart;
-      case 'comment':
+      case NotificationType.comment:
+      case NotificationType.reply:
         return Ph.chat_circle;
-      case 'follow':
+      case NotificationType.follow:
         return Ph.user_plus;
-      case 'message':
+      case NotificationType.mention:
+      case NotificationType.share:
         return Ph.envelope;
-      case 'order':
+      case NotificationType.marketplacePurchase:
+      case NotificationType.marketplaceInterest:
         return Ph.shopping_bag;
-      default:
-        return Ph.bell;
+      case NotificationType.eventInterested:
+      case NotificationType.eventAttending:
+        return Ph.calendar_blank;
     }
   }
 }

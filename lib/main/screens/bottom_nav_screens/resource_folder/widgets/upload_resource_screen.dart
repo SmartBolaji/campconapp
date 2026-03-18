@@ -19,7 +19,7 @@ class UploadResourceScreen extends StatelessWidget {
     return Consumer<ResourcePostProvider>(
       builder: (context, provider, child) {
         return Scaffold(
-          backgroundColor: AppTheme.surface,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           body: SafeArea(
             child: Column(
               children: [
@@ -180,7 +180,7 @@ class UploadResourceScreen extends StatelessWidget {
                   padding: EdgeInsets.all(14.w),
                   decoration: BoxDecoration(
                     color: provider.isFileUpload
-                        ? AppTheme.primary.withOpacity(0.1)
+                        ? AppTheme.primary.withValues(alpha: 0.1)
                         : AppTheme.background,
                     borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(
@@ -238,7 +238,7 @@ class UploadResourceScreen extends StatelessWidget {
                   padding: EdgeInsets.all(14.w),
                   decoration: BoxDecoration(
                     color: !provider.isFileUpload
-                        ? AppTheme.primary.withOpacity(0.1)
+                        ? AppTheme.primary.withValues(alpha: 0.1)
                         : AppTheme.background,
                     borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(
@@ -312,7 +312,7 @@ class UploadResourceScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(12.r),
             border: Border.all(
               color: provider.fileUrlController.text.isNotEmpty
-                  ? AppTheme.primary.withOpacity(0.5)
+                  ? AppTheme.primary.withValues(alpha: 0.5)
                   : AppTheme.border,
             ),
           ),
@@ -367,7 +367,7 @@ class UploadResourceScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
             color: provider.selectedFile != null
-                ? AppTheme.primary.withOpacity(0.5)
+                ? AppTheme.primary.withValues(alpha: 0.5)
                 : AppTheme.border,
             width: 1.5,
           ),
@@ -382,7 +382,7 @@ class UploadResourceScreen extends StatelessWidget {
                         Container(
                           padding: EdgeInsets.all(16.w),
                           decoration: BoxDecoration(
-                            color: AppTheme.primary.withOpacity(0.1),
+                            color: AppTheme.primary.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: Iconify(
@@ -416,7 +416,7 @@ class UploadResourceScreen extends StatelessWidget {
                       child: Container(
                         padding: EdgeInsets.all(6.w),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.6),
+                          color: Colors.black.withValues(alpha: 0.6),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(

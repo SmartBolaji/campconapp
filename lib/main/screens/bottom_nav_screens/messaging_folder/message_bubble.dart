@@ -552,7 +552,7 @@ class MessageBubble extends StatelessWidget {
   void _editMessage(BuildContext context) {
     final chatManager = ChatManager(
       chatId: chatId,
-      currentUserId: '',
+      currentUserId: currentUserId,
     );
 
     TextEditingController editController = TextEditingController(text: message);
@@ -630,7 +630,7 @@ class MessageBubble extends StatelessWidget {
   void _deleteMessage(BuildContext context) {
     final chatManager = ChatManager(
       chatId: chatId,
-      currentUserId: '',
+      currentUserId: currentUserId,
     );
 
     showDialog(

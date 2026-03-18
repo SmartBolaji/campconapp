@@ -264,7 +264,7 @@ class BuyerOrdersProvider extends ChangeNotifier {
 
       final avgRating = totalRating / reviewsSnapshot.docs.length;
 
-      await _firestore.collection('products').doc(productId).update({
+      await _firestore.collection('marketplace').doc(productId).update({
         'averageRating': avgRating,
         'reviewCount': reviewsSnapshot.docs.length,
       });

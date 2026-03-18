@@ -1,15 +1,24 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/notification_model.dart';
+import 'package:campcon/main/models/user_model.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/notify_provider.dart';
+import 'package:campcon/main/services/navigation_helper.dart';
 import 'package:campcon/main/provider/search_provider.dart';
 import 'package:campcon/main/screens/search/search_screen.dart';
+import 'package:campcon/main/screens/profile/profile_screen.dart';
 import 'package:campcon/main/widgets/action_search_bar.dart';
 import 'package:campcon/main/widgets/custom_top_bar.dart';
+import 'package:campcon/main/widgets/empty_state_view.dart';
+import 'package:campcon/main/widgets/profile_drawer.dart';
+import 'package:campcon/main/widgets/shimmer_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconly/iconly.dart';
+import 'package:iconify_flutter/icons/ph.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 
@@ -259,7 +268,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
     return Consumer<NotifyProvider>(
       builder: (context, notifyProvider, child) {
         return Scaffold(
-          backgroundColor: AppTheme.surface,
+          endDrawer: const ProfileDrawer(),
+          backgroundColor: Theme.of(context).colorScheme.surface,
           body: SafeArea(
             child: RefreshIndicator(
               onRefresh: _onRefresh,
@@ -268,88 +278,79 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 controller: _scrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
-                  //  Floating App Bar with Search
-                  SliverAppBar(
-                    backgroundColor: AppTheme.surface,
-                    elevation: 0,
-                    floating: true,
-                    snap: true,
-                    pinned: true,
-                    expandedHeight: 120.h,
-                    surfaceTintColor: AppTheme.surface,
-                    flexibleSpace: FlexibleSpaceBar(
-                      background: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w),
-                        child: Column(
-                          children: [
-                            SizedBox(height: 10.h),
-                            // Top Bar
-                            CustomTopBar(
-                              centerText: 'Notifications',
-                              showSearch: false,
-                              showCustom: true,
-                              customIcon: // Filter Icon
-                                  GestureDetector(
-                                onTap: () => _showFilterBottomSheet(context),
-                                child: Container(
-                                  padding: EdgeInsets.all(8.w),
-                                  decoration: BoxDecoration(
-                                    color: notifyProvider.selectedTab != 0
-                                        ? AppTheme.primary.withOpacity(0.1)
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(8.r),
-                                  ),
-                                  child: Stack(
-                                    children: [
-                                      Icon(
-                                        IconlyLight.filter,
-                                        size: 22.sp,
-                                        color: notifyProvider.selectedTab != 0
-                                            ? AppTheme.primary
-                                            : AppTheme.textLight,
-                                      ),
-                                      // Active filter indicator
-                                      if (notifyProvider.selectedTab != 0)
-                                        Positioned(
-                                          right: 0,
-                                          top: 0,
-                                          child: Container(
-                                            width: 8.w,
-                                            height: 8.w,
-                                            decoration: BoxDecoration(
-                                              color: AppTheme.primary,
-                                              shape: BoxShape.circle,
-                                              border: Border.all(
-                                                color: AppTheme.surface,
-                                                width: 1.5,
-                                              ),
+                  // Top section (search bar + filter icon)
+                  SliverToBoxAdapter(
+                    child: Container(
+                      color: AppTheme.surface,
+                      padding: EdgeInsets.fromLTRB(20.w, 5.h, 20.w, 20.h),
+                      child: Column(
+                        children: [
+                          // Top Bar
+                          CustomTopBar(
+                            centerText: 'Notifications',
+                            showSearch: false,
+                            showCustom: true,
+                            customIcon: // Filter Icon
+                                GestureDetector(
+                              onTap: () => _showFilterBottomSheet(context),
+                              child: Container(
+                                padding: EdgeInsets.all(8.w),
+                                decoration: BoxDecoration(
+                                  color: notifyProvider.selectedTab != 0
+                                      ? AppTheme.primary.withValues(alpha: 0.1)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(8.r),
+                                ),
+                                child: Stack(
+                                  children: [
+                                    Icon(
+                                      IconlyLight.filter,
+                                      size: 22.sp,
+                                      color: notifyProvider.selectedTab != 0
+                                          ? AppTheme.primary
+                                          : AppTheme.textLight,
+                                    ),
+                                    // Active filter indicator
+                                    if (notifyProvider.selectedTab != 0)
+                                      Positioned(
+                                        right: 0,
+                                        top: 0,
+                                        child: Container(
+                                          width: 8.w,
+                                          height: 8.w,
+                                          decoration: BoxDecoration(
+                                            color: AppTheme.primary,
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: AppTheme.surface,
+                                              width: 1.5,
                                             ),
                                           ),
                                         ),
-                                    ],
-                                  ),
+                                      ),
+                                  ],
                                 ),
                               ),
                             ),
-                            SizedBox(height: 20.h),
+                          ),
+                          SizedBox(height: 20.h),
 
-                            //  Search Bar using ActionSearchBar
-                            ActionSearchBar.navigate(
-                              hintText: 'Search notifications',
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  PageTransition(
-                                    type: PageTransitionType.fade,
-                                    duration: const Duration(milliseconds: 200),
-                                    child: const SearchScreen(
-                                        context: SearchContext.notifications),
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
+                          //  Search Bar using ActionSearchBar
+                          ActionSearchBar.navigate(
+                            hintText: 'Search notifications',
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                PageTransition(
+                                  type: PageTransitionType.fade,
+                                  duration: const Duration(milliseconds: 200),
+                                  child: const SearchScreen(
+                                      context: SearchContext.notifications),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -371,7 +372,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                 vertical: 6.h,
                               ),
                               decoration: BoxDecoration(
-                                color: AppTheme.primary.withOpacity(0.1),
+                                color: AppTheme.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(16.r),
                               ),
                               child: Row(
@@ -469,10 +470,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
     // Loading state
     if (notifyProvider.isLoading && notifyProvider.allNotifications.isEmpty) {
       return SliverFillRemaining(
-        child: Center(
-          child: CircularProgressIndicator(
-            color: AppTheme.primary,
-          ),
+        child: ShimmerList(
+          itemCount: 6,
+          type: ShimmerCardType.notification,
+          padding: EdgeInsets.only(top: 10.h, bottom: 60.h),
         ),
       );
     }
@@ -527,45 +528,20 @@ class _NotificationScreenState extends State<NotificationScreen> {
     // Empty state (after filtering)
     if (filteredNotifications.isEmpty) {
       return SliverFillRemaining(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                IconlyBold.notification,
-                size: 64.sp,
-                color: AppTheme.textLight,
-              ),
-              SizedBox(height: 16.h),
-              Text(
-                _searchQuery.isNotEmpty
-                    ? 'No results found'
-                    : notifyProvider.allNotifications.isEmpty
-                        ? 'No notifications yet'
-                        : 'No ${notifyProvider.currentTabLabel.toLowerCase()} notifications',
-                style: TextConstants.boldText.copyWith(
-                  fontSize: 18.sp,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-              SizedBox(height: 8.h),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 40.w),
-                child: Text(
-                  _searchQuery.isNotEmpty
-                      ? 'Try a different search term'
-                      : notifyProvider.allNotifications.isEmpty
-                          ? 'When you get notifications, they\'ll show up here'
-                          : 'Try changing the filter to see more notifications',
-                  style: TextConstants.smallText.copyWith(
-                    fontSize: 14.sp,
-                    color: AppTheme.textLight,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ],
-          ),
+        child: EmptyStateView(
+          icon: Ph.bell,
+          title: _searchQuery.isNotEmpty
+              ? 'No results found'
+              : notifyProvider.allNotifications.isEmpty
+                  ? 'No notifications yet'
+                  : 'No ${notifyProvider.currentTabLabel.toLowerCase()} notifications',
+          subtitle: _searchQuery.isNotEmpty
+              ? 'Try a different search term.'
+              : notifyProvider.allNotifications.isEmpty
+                  ? 'When you get notifications, they will show up here.'
+                  : 'Try changing the filter to see more notifications.',
+          buttonText: 'Retry',
+          onPressed: _loadNotifications,
         ),
       );
     }
@@ -605,9 +581,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
     }
 
     // Navigate to target
-    // TODO: Implement navigation based on targetType and targetId
-    debugPrint(
-        'Navigate to: ${notification.targetType} - ${notification.targetId}');
+    NavigationHelper.handleNotificationTap(context, notification);
   }
 }
 
@@ -622,8 +596,35 @@ class _NotificationCard extends StatelessWidget {
     required this.onDismiss,
   });
 
+  void _navigateToProfile(BuildContext context) {
+    final initialUserData = UserModel(
+      uid: notification.actorId,
+      email: '',
+      username: notification.actorName,
+      name: notification.actorName,
+      profileImageUrl: notification.actorProfileImage ?? '',
+      phoneNumber: '',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+
+    Navigator.push(
+      context,
+      PageTransition(
+        type: PageTransitionType.rightToLeft,
+        child: ProfileScreen(
+          userId: notification.actorId,
+          initialUserData: initialUserData,
+        ),
+        duration: const Duration(milliseconds: 300),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    //
+    final colorScheme = Theme.of(context).colorScheme;
     return Dismissible(
       key: Key(notification.id),
       direction: DismissDirection.endToStart,
@@ -650,7 +651,7 @@ class _NotificationCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: notification.isRead
                 ? AppTheme.surface
-                : AppTheme.primary.withOpacity(0.05),
+                : AppTheme.primary.withValues(alpha: 0.05),
             border: Border(
               bottom: BorderSide(
                 color: AppTheme.border,
@@ -662,19 +663,25 @@ class _NotificationCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Actor profile image
-              CircleAvatar(
-                radius: 20.r,
-                backgroundImage: notification.actorProfileImage != null
-                    ? NetworkImage(notification.actorProfileImage!)
-                    : null,
-                backgroundColor: AppTheme.primary.withOpacity(0.1),
-                child: notification.actorProfileImage == null
-                    ? Icon(
-                        IconlyBold.profile,
-                        size: 20.sp,
-                        color: AppTheme.primary,
-                      )
-                    : null,
+              GestureDetector(
+                onTap: () {
+                  _navigateToProfile(context);
+                },
+                child: CircleAvatar(
+                  radius: 20.r,
+                  backgroundImage: notification.actorProfileImage != null
+                      ? CachedNetworkImageProvider(
+                          notification.actorProfileImage!)
+                      : null,
+                  backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+                  child: notification.actorProfileImage == null
+                      ? Iconify(
+                          Ph.user,
+                          size: 20.sp,
+                          color: colorScheme.primary,
+                        )
+                      : null,
+                ),
               ),
               SizedBox(width: 12.w),
 
@@ -723,12 +730,12 @@ class _NotificationCard extends StatelessWidget {
                 SizedBox(width: 12.w),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4.r),
-                  child: Image.network(
-                    notification.imageUrl!,
+                  child: CachedNetworkImage(
+                    imageUrl: notification.imageUrl!,
                     width: 40.w,
                     height: 40.w,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
+                    errorWidget: (context, error, stackTrace) {
                       return Container(
                         width: 40.w,
                         height: 40.w,

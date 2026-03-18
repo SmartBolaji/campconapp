@@ -2,10 +2,13 @@ import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/user_model.dart';
 import 'package:campcon/main/provider/profile_provider.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/post_folder/new_post.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/full_image_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ph.dart';
+import 'package:page_transition/page_transition.dart';
 
 class ProfileHeaderWidget extends StatelessWidget {
   final UserModel user;
@@ -42,38 +45,98 @@ class ProfileHeaderWidget extends StatelessWidget {
           // Profile Image
           Stack(
             children: [
-              CircleAvatar(
-                radius: 40.r,
-                backgroundColor: AppTheme.primary.withOpacity(0.1),
-                backgroundImage:
+              GestureDetector(
+                onTap:
                     user.profileImageUrl != null && user.profileImageUrl != ''
-                        ? NetworkImage(user.profileImageUrl!)
+                        ? () {
+                            Navigator.push(
+                              context,
+                              PageTransition(
+                                type: PageTransitionType.fade,
+                                child: FullScreenImageView(
+                                  imageUrls: [user.profileImageUrl!],
+                                  isLiked: false,
+                                  onLike: () {},
+                                  initialIndex: 0,
+                                  showLikeButton: false,
+                                ),
+                              ),
+                            );
+                          }
                         : null,
-                child:
-                    user.profileImageUrl == null || user.profileImageUrl == ''
-                        ? Iconify(
-                            Ph.user,
-                            size: 40.sp,
-                            color: AppTheme.primary,
-                          )
-                        : null,
+                child: CircleAvatar(
+                  radius: 40.r,
+                  backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+                  backgroundImage:
+                      user.profileImageUrl != null && user.profileImageUrl != ''
+                          ? NetworkImage(user.profileImageUrl!)
+                          : null,
+                  child:
+                      user.profileImageUrl == null || user.profileImageUrl == ''
+                          ? Iconify(
+                              Ph.user,
+                              size: 40.sp,
+                              color: AppTheme.primary,
+                            )
+                          : null,
+                ),
               ),
               if (isLoading)
                 Positioned.fill(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withValues(alpha: 0.3),
                       shape: BoxShape.circle,
                     ),
                     child: Center(
                       child: SizedBox(
                         width: 20.w,
                         height: 20.h,
-                        child: CircularProgressIndicator(
+                        child: const CircularProgressIndicator(
                           strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation<Color>(
                             AppTheme.white,
                           ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              // Plus icon badge at bottom right - only show for current user
+              if (isCurrentUser)
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        PageTransition(
+                          type: PageTransitionType.bottomToTop,
+                          child: const NewPostScreen(),
+                          duration: const Duration(milliseconds: 300),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      height: 30.w,
+                      width: 30.w,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.primary.withValues(alpha: 0.3),
+                            blurRadius: 8.r,
+                            offset: Offset(0, 2.h),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Iconify(
+                          Ph.plus,
+                          size: 16.sp,
+                          color: AppTheme.white,
                         ),
                       ),
                     ),

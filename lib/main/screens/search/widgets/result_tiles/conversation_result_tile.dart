@@ -9,13 +9,13 @@ import 'package:iconify_flutter/icons/ph.dart';
 class ConversationResultTile extends StatelessWidget {
   final Map<String, dynamic> conversation;
   final VoidCallback onTap;
-  
+
   const ConversationResultTile({
     super.key,
     required this.conversation,
     required this.onTap,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     final userData = conversation['userData'] as Map<String, dynamic>;
@@ -23,7 +23,7 @@ class ConversationResultTile extends StatelessWidget {
     final profileUrl = userData['profileImageUrl'];
     final lastMessage = conversation['lastMessage'] ?? '';
     final unreadCount = conversation['unreadCount'] ?? 0;
-    
+
     return GestureDetector(
       onTap: () {
         onTap();
@@ -33,7 +33,7 @@ class ConversationResultTile extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
         decoration: BoxDecoration(
           border: Border(
-            bottom: BorderSide(color: AppTheme.border.withOpacity(0.5)),
+            bottom: BorderSide(color: AppTheme.border.withValues(alpha: 0.5)),
           ),
         ),
         child: Row(
@@ -63,7 +63,7 @@ class ConversationResultTile extends StatelessWidget {
                   : null,
             ),
             SizedBox(width: 14.w),
-            
+
             // Info
             Expanded(
               child: Column(
@@ -73,7 +73,8 @@ class ConversationResultTile extends StatelessWidget {
                     name,
                     style: TextConstants.smallText.copyWith(
                       fontSize: 15.sp,
-                      fontWeight: unreadCount > 0 ? FontWeight.w700 : FontWeight.w600,
+                      fontWeight:
+                          unreadCount > 0 ? FontWeight.w700 : FontWeight.w600,
                       color: AppTheme.textPrimary,
                     ),
                   ),
@@ -82,8 +83,11 @@ class ConversationResultTile extends StatelessWidget {
                     lastMessage,
                     style: TextConstants.smallText.copyWith(
                       fontSize: 13.sp,
-                      color: unreadCount > 0 ? AppTheme.textPrimary : AppTheme.textSecondary,
-                      fontWeight: unreadCount > 0 ? FontWeight.w500 : FontWeight.w400,
+                      color: unreadCount > 0
+                          ? AppTheme.textPrimary
+                          : AppTheme.textSecondary,
+                      fontWeight:
+                          unreadCount > 0 ? FontWeight.w500 : FontWeight.w400,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -91,7 +95,7 @@ class ConversationResultTile extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             // Unread badge
             if (unreadCount > 0)
               Container(

@@ -3,14 +3,15 @@ import 'package:campcon/main/screens/bottom_nav_screens/home_folder/events/widge
 import 'package:campcon/main/screens/bottom_nav_screens/market_folder/widgets/market_upload_bar.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/resource_folder/widgets/resource_upload_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/resource_folder/resource_screen.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/home_folder/home_screen.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/market_folder/market_screen.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/notification_folder/notification_screen.dart';
 import 'package:campcon/main/widgets/dialogs/user_type_dialog.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
+import 'package:campcon/main/provider/notify_provider.dart';
 import 'package:campcon/main/provider/animated_provider.dart';
+import 'package:campcon/main/widgets/profile_drawer.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:campcon/main/widgets/upload_progress_bar.dart';
@@ -49,7 +50,19 @@ class _MainScreenState extends State<MainScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _navAnimations[0].show();
       _showUserTypeDialogAfterDelay();
+      _loadNotifications();
     });
+  }
+
+  Future<void> _loadNotifications() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final notifyProvider = Provider.of<NotifyProvider>(context, listen: false);
+
+    final userId = authProvider.currentUser?.uid;
+    if (userId != null) {
+      // Load only unread count for badge (lightweight)
+      await notifyProvider.loadUnreadCount(userId);
+    }
   }
 
   @override
@@ -102,13 +115,19 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final isDark = brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
-        statusBarColor: AppTheme.surface,
-        statusBarIconBrightness: Brightness.dark,
+        statusBarColor: colorScheme.surface,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
       ),
       child: SafeArea(
         child: Scaffold(
+          endDrawer: const ProfileDrawer(),
           extendBody: true,
           body: Stack(
             children: [

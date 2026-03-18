@@ -1,14 +1,16 @@
-import 'package:campcon/main/services/notification_helper.dart';
 import 'package:campcon/main/provider/notify_provider.dart'; //  Add this import
+import 'package:campcon/main/provider/post_interaction_mixin.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:campcon/main/models/post_model.dart';
 import 'package:campcon/main/models/user_model.dart';
 import 'dart:async';
+import 'dart:collection';
+import 'dart:math';
 import 'package:campcon/main/services/user_engagement_service.dart';
 import 'package:campcon/main/services/post_tagging_service.dart';
 
-class FeedProvider with ChangeNotifier {
+class FeedProvider with ChangeNotifier, PostInteractionMixin<PostState> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final UserEngagementService _engagementService = UserEngagementService();
 
@@ -18,8 +20,10 @@ class FeedProvider with ChangeNotifier {
   // Store post data with post ID as key
   final Map<String, PostState> _posts = {};
 
-  // Cache for user data
-  final Map<String, UserModel> _userCache = {};
+  // LRU Cache for user data (max 100 entries)
+  static const int _userCacheMaxSize = 100;
+  final LinkedHashMap<String, UserModel> _userCache =
+      LinkedHashMap<String, UserModel>();
 
   // Feed state
   bool _isLoadingForYou = true;
@@ -40,10 +44,45 @@ class FeedProvider with ChangeNotifier {
   StreamSubscription<List<PostWithAuthor>>? _friendsSubscription;
   StreamSubscription<List<PostWithAuthor>>? _campusSubscription;
 
+  // ✅ Polling subscriptions for new posts detection
+  StreamSubscription<void>? _forYouPollingSubscription;
+  StreamSubscription<void>? _friendsPollingSubscription;
+  StreamSubscription<void>? _campusPollingSubscription;
+
+  // ✅ NEW: Twitter-style "New posts" counter + timestamps
+  int _forYouNewPostsCount = 0;
+  int _friendsNewPostsCount = 0;
+  int _campusNewPostsCount = 0;
+  DateTime? _forYouLastLoadedTime;
+  DateTime? _friendsLastLoadedTime;
+  DateTime? _campusLastLoadedTime;
+  bool _isLoadingNewForYou = false;
+  bool _isLoadingNewFriends = false;
+  bool _isLoadingNewCampus = false;
+
+  // Pagination state
+  DocumentSnapshot? _forYouLastDoc;
+  DocumentSnapshot? _friendsLastDoc;
+  DocumentSnapshot? _campusLastDoc;
+  bool _forYouHasMore = true;
+  bool _friendsHasMore = true;
+  bool _campusHasMore = true;
+  bool _isLoadingMoreForYou = false;
+  bool _isLoadingMoreFriends = false;
+  bool _isLoadingMoreCampus = false;
+  static const int _initialPageSize = 15;
+  static const int _pageSize = 10;
+
   // Getters
   bool get isLoadingForYou => _isLoadingForYou;
   bool get isLoadingFriends => _isLoadingFriends;
   bool get isLoadingCampus => _isLoadingCampus; //  Added
+  bool get isLoadingMoreForYou => _isLoadingMoreForYou;
+  bool get isLoadingMoreFriends => _isLoadingMoreFriends;
+  bool get isLoadingMoreCampus => _isLoadingMoreCampus;
+  bool get forYouHasMore => _forYouHasMore;
+  bool get friendsHasMore => _friendsHasMore;
+  bool get campusHasMore => _campusHasMore;
   String? get errorForYou => _errorForYou;
   String? get errorFriends => _errorFriends;
   String? get errorCampus => _errorCampus; //  Added
@@ -51,12 +90,43 @@ class FeedProvider with ChangeNotifier {
   List<PostWithAuthor> get friendsPosts => _friendsPosts;
   List<PostWithAuthor> get campusPosts => _campusPosts; //  Added
 
+  // ✅ NEW: New posts getters
+  int get forYouNewPostsCount => _forYouNewPostsCount;
+  int get friendsNewPostsCount => _friendsNewPostsCount;
+  int get campusNewPostsCount => _campusNewPostsCount;
+  bool get isLoadingNewForYou => _isLoadingNewForYou;
+  bool get isLoadingNewFriends => _isLoadingNewFriends;
+  bool get isLoadingNewCampus => _isLoadingNewCampus;
+
   // Get post state (always returns a valid state)
   PostState getPostState(String postId) {
     if (!_posts.containsKey(postId)) {
       _posts[postId] = PostState();
     }
     return _posts[postId]!;
+  }
+
+  @override
+  FirebaseFirestore get firestore => _firestore;
+
+  @override
+  Map<String, PostState> get postStates => _posts;
+
+  @override
+  PostState createPostState() => PostState();
+
+  /// Add user to cache with LRU eviction (max 100 entries)
+  void _cacheUser(String userId, UserModel user) {
+    // Move to end (most recently used)
+    _userCache.remove(userId);
+    _userCache[userId] = user;
+
+    // Evict oldest entries if cache exceeds max size
+    if (_userCache.length > _userCacheMaxSize) {
+      final firstKey = _userCache.keys.first;
+      _userCache.remove(firstKey);
+      debugPrint('🗑️ Evicted user from cache: $firstKey');
+    }
   }
 
   // Load For You feed
@@ -101,37 +171,23 @@ class FeedProvider with ChangeNotifier {
       }
 
       _forYouPosts = postsWithAuthors;
+      _forYouLastLoadedTime = DateTime.now();
       _isLoadingForYou = false;
       _forYouLoaded = true;
+      _forYouNewPostsCount = 0;
       notifyListeners();
 
-      // Listen for updates
-      _forYouSubscription = getPersonalizedForYouFeed(currentUserId).listen(
-        (newPosts) {
-          if (newPosts.length != _forYouPosts.length) {
-            _forYouPosts = newPosts;
-            notifyListeners();
-          } else {
-            bool hasChanges = false;
-            for (int i = 0; i < newPosts.length; i++) {
-              if (i < _forYouPosts.length &&
-                  newPosts[i].post.comments != _forYouPosts[i].post.comments) {
-                hasChanges = true;
-                break;
-              }
-            }
-            if (hasChanges) {
-              _forYouPosts = newPosts;
-              notifyListeners();
-            }
-          }
-        },
-        onError: (error) {
-          debugPrint('For You stream error: $error');
-        },
-      );
+      debugPrint('✅ For You feed loaded at $_forYouLastLoadedTime');
 
-      debugPrint('✅ For You feed loaded successfully');
+      // ✅ START: Twitter-style "New posts" polling (check every 30 seconds)
+      await _forYouPollingSubscription?.cancel();
+      _forYouPollingSubscription =
+          Stream.periodic(const Duration(seconds: 30)).listen((_) async {
+        debugPrint('🔍 Checking for new For You posts...');
+        await _checkForNewForYouPosts(currentUserId);
+      });
+
+      debugPrint('✅ For You feed loaded successfully with polling enabled');
     } catch (e) {
       _isLoadingForYou = false;
       _errorForYou = 'Failed to load posts';
@@ -146,7 +202,7 @@ class FeedProvider with ChangeNotifier {
     return _firestore
         .collection('posts')
         .orderBy('createdAt', descending: true)
-        .limit(30) // Fetch more to filter/sort
+        .limit(_initialPageSize)
         .snapshots()
         .asyncMap((snapshot) async {
       List<PostWithAuthor> postsWithAuthors = [];
@@ -164,54 +220,23 @@ class FeedProvider with ChangeNotifier {
                   await _firestore.collection('users').doc(post.userId).get();
               if (userDoc.exists && userDoc.data() != null) {
                 author = UserModel.fromMap(userDoc.data()!);
-                _userCache[post.userId] = author;
+                _cacheUser(post.userId, author);
               }
             } catch (e) {
               debugPrint('Error fetching user ${post.userId}: $e');
             }
           }
 
-          // Get counts from subcollections
-          int likesCount = 0;
-          int bookmarksCount = 0;
-          int commentsCount = 0;
-          int repostsCount = 0;
-
-          try {
-            final counts = await Future.wait([
-              _firestore
-                  .collection('posts')
-                  .doc(post.postId)
-                  .collection('likes')
-                  .count()
-                  .get(),
-              _firestore
-                  .collection('posts')
-                  .doc(post.postId)
-                  .collection('bookmarks')
-                  .count()
-                  .get(),
-              _firestore
-                  .collection('posts')
-                  .doc(post.postId)
-                  .collection('comments')
-                  .count()
-                  .get(),
-              _firestore
-                  .collection('posts')
-                  .doc(post.postId)
-                  .collection('reposts')
-                  .count()
-                  .get(),
-            ]);
-
-            likesCount = counts[0].count ?? 0;
-            bookmarksCount = counts[1].count ?? 0;
-            commentsCount = counts[2].count ?? 0;
-            repostsCount = counts[3].count ?? 0;
-          } catch (e) {
-            debugPrint('Error getting counts for ${post.postId}: $e');
-          }
+          // Get counts from denormalized fields instead of subcollection queries
+          final likesCount = postData.containsKey('likesCount')
+              ? postData['likesCount'] ?? 0
+              : 0;
+          final bookmarksCount = postData.containsKey('bookmarksCount')
+              ? postData['bookmarksCount'] ?? 0
+              : 0;
+          final commentsCount = postData.containsKey('commentsCount')
+              ? postData['commentsCount'] ?? 0
+              : 0;
 
           // Initialize post state
           if (!_posts.containsKey(post.postId)) {
@@ -254,52 +279,75 @@ class FeedProvider with ChangeNotifier {
   }
 
   // ✅ NEW: Score and sort posts based on user preferences
+  // Prioritizes new posts while still rewarding engagement
   List<PostWithAuthor> _scoreAndSortPosts(
     List<PostWithAuthor> posts,
     String currentUserId,
   ) {
     if (_personalizationData == null) return posts;
 
+    final now = DateTime.now();
+
     final scoredPosts = posts.map((postWithAuthor) {
       double score = 0.0;
       final post = postWithAuthor.post;
       final author = postWithAuthor.author;
 
-      // 1. Tag matching (highest weight)
+      // 1. RECENCY BOOST (highest priority for new posts)
+      final hoursAgo = now.difference(post.createdAt).inHours;
+      if (hoursAgo < 1) {
+        score += 10.0; // Brand new posts get strong boost
+      } else if (hoursAgo < 3) {
+        score += 8.0;
+      } else if (hoursAgo < 6) {
+        score += 6.0;
+      } else if (hoursAgo < 12) {
+        score += 4.0;
+      } else if (hoursAgo < 24) {
+        score += 2.0;
+      } else if (hoursAgo < 48) {
+        score += 1.0;
+      } else {
+        // Apply exponential decay for posts older than 48 hours
+        final daysOld = hoursAgo / 24.0;
+        score += (1.0 / (1.0 + (daysOld - 2.0))).clamp(0, 1);
+      }
+
+      // 2. Tag matching (contextual relevance)
       final postTags = post.tags.isNotEmpty
           ? post.tags
           : PostTaggingService.extractTags(post.content);
 
       for (final tag in postTags) {
-        // Match against user interests (weight: 3)
+        // Match against user interests (weight: 2.5)
         if (_personalizationData!.interests.contains(tag)) {
-          score += 3.0;
+          score += 2.5;
         }
-        // Match against engaged tags (weight: 2)
+        // Match against engaged tags (weight: 1.5)
         if (_personalizationData!.engagedTags.contains(tag)) {
-          score += 2.0;
+          score += 1.5;
         }
       }
 
-      // 2. Author engagement (weight: 4)
+      // 3. Author engagement
       if (_personalizationData!.engagedAuthors.contains(post.userId)) {
-        score += 4.0;
-      }
-
-      // 3. Campus matching (weight: 2)
-      if (post.campus != null && post.campus == _personalizationData!.campus) {
         score += 2.0;
       }
 
-      // 4. School/Department matching (weight: 1.5)
+      // 4. Campus matching
+      if (post.campus != null && post.campus == _personalizationData!.campus) {
+        score += 1.5;
+      }
+
+      // 5. School/Department matching
       if (author != null) {
         if (author.school != null &&
             author.school == _personalizationData!.school) {
-          score += 1.5;
+          score += 1.0;
         }
         if (author.department != null &&
             author.department == _personalizationData!.department) {
-          score += 1.0;
+          score += 0.75;
         }
         if (author.level != null &&
             author.level == _personalizationData!.level) {
@@ -307,25 +355,18 @@ class FeedProvider with ChangeNotifier {
         }
       }
 
-      // 5. Engagement boost (popular posts)
+      // 6. Engagement boost (logarithmic so huge numbers don't dominate)
+      // Post with 0 engagement = 0, 50 engagement = ~1.7, 100 engagement = ~2.3
       final engagement = post.likes + post.comments * 2 + post.shares * 3;
-      score += (engagement / 100).clamp(0, 2); // Max 2 points from engagement
-
-      // 6. Recency boost (newer posts get slight boost)
-      final hoursAgo = DateTime.now().difference(post.createdAt).inHours;
-      if (hoursAgo < 6) {
-        score += 1.5;
-      } else if (hoursAgo < 24) {
-        score += 1.0;
-      } else if (hoursAgo < 48) {
-        score += 0.5;
+      if (engagement > 0) {
+        score += (1 + log(engagement / 50) / 2).clamp(0, 2.5);
       }
 
       // 7. Content matching with search history
       final contentLower = post.content.toLowerCase();
       for (final term in _personalizationData!.searchHistory.take(10)) {
         if (contentLower.contains(term)) {
-          score += 1.0;
+          score += 0.5;
           break; // Only count once
         }
       }
@@ -341,7 +382,7 @@ class FeedProvider with ChangeNotifier {
     });
 
     debugPrint(
-        '📊 Personalized feed: Top scores: ${scoredPosts.take(5).map((s) => s.score.toStringAsFixed(1)).join(", ")}');
+        '📊 Personalized feed (recency-first): Top scores: ${scoredPosts.take(5).map((s) => s.score.toStringAsFixed(1)).join(", ")}');
 
     return scoredPosts.map((s) => s.post).toList();
   }
@@ -382,40 +423,21 @@ class FeedProvider with ChangeNotifier {
       }
 
       _friendsPosts = postsWithAuthors;
+      _friendsLastLoadedTime = DateTime.now();
       _isLoadingFriends = false;
       _friendsLoaded = true;
+      _friendsNewPostsCount = 0;
       notifyListeners();
 
-      // Listen for updates
-      _friendsSubscription = getFollowingFeed(currentUserId).listen(
-        (newPosts) {
-          // Only update if there's actual change
-          if (newPosts.length != _friendsPosts.length) {
-            _friendsPosts = newPosts;
-            notifyListeners();
-          } else {
-            // Check if comment counts changed
-            bool hasChanges = false;
-            for (int i = 0; i < newPosts.length; i++) {
-              if (i < _friendsPosts.length &&
-                  newPosts[i].post.comments != _friendsPosts[i].post.comments) {
-                hasChanges = true;
-                break;
-              }
-            }
+      // ✅ START: Twitter-style "New posts" polling (check every 30 seconds)
+      await _friendsPollingSubscription?.cancel();
+      _friendsPollingSubscription =
+          Stream.periodic(const Duration(seconds: 30)).listen((_) async {
+        debugPrint('🔍 Checking for new Friends posts...');
+        await _checkForNewFriendsPosts(currentUserId);
+      });
 
-            if (hasChanges) {
-              _friendsPosts = newPosts;
-              notifyListeners();
-            }
-          }
-        },
-        onError: (error) {
-          debugPrint('Friends stream error: $error');
-        },
-      );
-
-      debugPrint(' Friends feed loaded successfully');
+      debugPrint(' Friends feed loaded successfully with polling enabled');
     } catch (e) {
       _isLoadingFriends = false;
       _errorFriends = 'Failed to load posts';
@@ -489,40 +511,21 @@ class FeedProvider with ChangeNotifier {
       }
 
       _campusPosts = postsWithAuthors;
+      _campusLastLoadedTime = DateTime.now();
       _isLoadingCampus = false;
       _campusLoaded = true;
+      _campusNewPostsCount = 0;
       notifyListeners();
 
-      // Listen for updates
-      _campusSubscription = getCampusFeed(campus).listen(
-        (newPosts) {
-          // Only update if there's actual change
-          if (newPosts.length != _campusPosts.length) {
-            _campusPosts = newPosts;
-            notifyListeners();
-          } else {
-            // Check if comment counts changed
-            bool hasChanges = false;
-            for (int i = 0; i < newPosts.length; i++) {
-              if (i < _campusPosts.length &&
-                  newPosts[i].post.comments != _campusPosts[i].post.comments) {
-                hasChanges = true;
-                break;
-              }
-            }
+      // ✅ START: Twitter-style "New posts" polling (check every 30 seconds)
+      await _campusPollingSubscription?.cancel();
+      _campusPollingSubscription =
+          Stream.periodic(const Duration(seconds: 30)).listen((_) async {
+        debugPrint('🔍 Checking for new Campus posts...');
+        await _checkForNewCampusPosts(campus);
+      });
 
-            if (hasChanges) {
-              _campusPosts = newPosts;
-              notifyListeners();
-            }
-          }
-        },
-        onError: (error) {
-          debugPrint('Campus stream error: $error');
-        },
-      );
-
-      debugPrint(' Campus feed loaded successfully');
+      debugPrint(' Campus feed loaded successfully with polling enabled');
     } catch (e) {
       _isLoadingCampus = false;
       _errorCampus = 'Failed to load campus posts';
@@ -579,11 +582,225 @@ class FeedProvider with ChangeNotifier {
 
   // Delete post from local lists
   void deletePostLocally(String postId) {
+    debugPrint('🗑️ deletePostLocally called for postId=$postId');
+    debugPrint(
+        '📍 Before delete - forYouPosts: ${_forYouPosts.length}, friendsPosts: ${_friendsPosts.length}, campusPosts: ${_campusPosts.length}');
+
     _forYouPosts.removeWhere((p) => p.post.postId == postId);
     _friendsPosts.removeWhere((p) => p.post.postId == postId);
-    _campusPosts.removeWhere((p) => p.post.postId == postId); //  Added
+    _campusPosts.removeWhere((p) => p.post.postId == postId);
     _posts.remove(postId);
+
+    debugPrint(
+        '📍 After delete - forYouPosts: ${_forYouPosts.length}, friendsPosts: ${_friendsPosts.length}, campusPosts: ${_campusPosts.length}');
+    debugPrint('✅ Post removed from all lists');
+
     notifyListeners();
+  }
+
+  // ✅ NEW: Check for new posts since last load (For You)
+  Future<void> _checkForNewForYouPosts(String currentUserId) async {
+    if (_forYouLastLoadedTime == null) {
+      debugPrint('⚠️ _forYouLastLoadedTime is null, skipping check');
+      return;
+    }
+
+    try {
+      debugPrint('📍 Checking posts created after: $_forYouLastLoadedTime');
+
+      final query = _firestore
+          .collection('posts')
+          .where('createdAt', isGreaterThan: _forYouLastLoadedTime!)
+          .count();
+
+      final snapshot = await query.get();
+      _forYouNewPostsCount = snapshot.count ?? 0;
+
+      debugPrint('📊 New For You posts count: $_forYouNewPostsCount');
+
+      if (_forYouNewPostsCount > 0) {
+        debugPrint(
+            '✨ Found $_forYouNewPostsCount new For You posts - notifying listeners');
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('❌ Error checking for new For You posts: $e');
+    }
+  }
+
+  // ✅ NEW: Load new posts and prepend to feed (For You)
+  Future<void> loadNewForYouPosts(String currentUserId) async {
+    _isLoadingNewForYou = true;
+    notifyListeners();
+
+    try {
+      debugPrint('🆕 Loading $_forYouNewPostsCount new For You posts...');
+
+      final newPostsWithAuthors = await getPersonalizedForYouFeed(currentUserId)
+          .first
+          .then((posts) => posts
+              .where((p) => p.post.createdAt.isAfter(_forYouLastLoadedTime ??
+                  DateTime.now().subtract(Duration(hours: 1))))
+              .toList());
+
+      // Initialize post states for new posts
+      for (var postWithAuthor in newPostsWithAuthors) {
+        await Future.wait([
+          checkIfLiked(postWithAuthor.post.postId, currentUserId),
+          checkIfBookmarked(postWithAuthor.post.postId, currentUserId),
+          checkIfReposted(postWithAuthor.post.postId, currentUserId),
+        ]);
+      }
+
+      // Prepend new posts to top of feed
+      _forYouPosts = [...newPostsWithAuthors, ..._forYouPosts];
+      _forYouLastLoadedTime = DateTime.now();
+      _forYouNewPostsCount = 0;
+
+      debugPrint(
+          '✅ Added ${newPostsWithAuthors.length} new posts to top of feed');
+      _isLoadingNewForYou = false;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('❌ Error loading new For You posts: $e');
+      _isLoadingNewForYou = false;
+      notifyListeners();
+    }
+  }
+
+  // ✅ NEW: Check for new posts since last load (Friends)
+  Future<void> _checkForNewFriendsPosts(String currentUserId) async {
+    if (_friendsLastLoadedTime == null) return;
+
+    try {
+      final followingSnapshot = await _firestore
+          .collection('users')
+          .doc(currentUserId)
+          .collection('following')
+          .get();
+
+      final followingIds = followingSnapshot.docs.map((doc) => doc.id).toList();
+      if (followingIds.isEmpty) return;
+
+      int totalCount = 0;
+      for (int i = 0; i < followingIds.length; i += 10) {
+        final batch = followingIds.skip(i).take(10).toList();
+        final query = _firestore
+            .collection('posts')
+            .where('userId', whereIn: batch)
+            .where('createdAt', isGreaterThan: _friendsLastLoadedTime!)
+            .count();
+        final snapshot = await query.get();
+        totalCount += (snapshot.count ?? 0);
+      }
+
+      _friendsNewPostsCount = totalCount;
+      if (_friendsNewPostsCount > 0) {
+        debugPrint('✨ Found $_friendsNewPostsCount new Friends posts');
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error checking for new Friends posts: $e');
+    }
+  }
+
+  // ✅ NEW: Load new posts and prepend to feed (Friends)
+  Future<void> loadNewFriendsPosts(String currentUserId) async {
+    _isLoadingNewFriends = true;
+    notifyListeners();
+
+    try {
+      debugPrint('🆕 Loading $_friendsNewPostsCount new Friends posts...');
+
+      final newPostsWithAuthors = await getFollowingFeed(currentUserId)
+          .first
+          .then((posts) => posts
+              .where((p) => p.post.createdAt.isAfter(_friendsLastLoadedTime ??
+                  DateTime.now().subtract(Duration(hours: 1))))
+              .toList());
+
+      // Initialize post states for new posts
+      for (var postWithAuthor in newPostsWithAuthors) {
+        await Future.wait([
+          checkIfLiked(postWithAuthor.post.postId, currentUserId),
+          checkIfBookmarked(postWithAuthor.post.postId, currentUserId),
+          checkIfReposted(postWithAuthor.post.postId, currentUserId),
+        ]);
+      }
+
+      // Prepend new posts to top of feed
+      _friendsPosts = [...newPostsWithAuthors, ..._friendsPosts];
+      _friendsLastLoadedTime = DateTime.now();
+      _friendsNewPostsCount = 0;
+
+      debugPrint(
+          '✅ Added ${newPostsWithAuthors.length} new posts to top of feed');
+      _isLoadingNewFriends = false;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('❌ Error loading new Friends posts: $e');
+      _isLoadingNewFriends = false;
+      notifyListeners();
+    }
+  }
+
+  // ✅ NEW: Check for new posts since last load (Campus)
+  Future<void> _checkForNewCampusPosts(String campus) async {
+    if (_campusLastLoadedTime == null) return;
+
+    try {
+      final query = _firestore
+          .collection('posts')
+          .where('campus', isEqualTo: campus)
+          .where('createdAt', isGreaterThan: _campusLastLoadedTime!)
+          .count();
+
+      final snapshot = await query.get();
+      _campusNewPostsCount = snapshot.count ?? 0;
+
+      if (_campusNewPostsCount > 0) {
+        debugPrint('✨ Found $_campusNewPostsCount new Campus posts');
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error checking for new Campus posts: $e');
+    }
+  }
+
+  // ✅ NEW: Load new posts and prepend to feed (Campus)
+  Future<void> loadNewCampusPosts(String campus) async {
+    _isLoadingNewCampus = true;
+    notifyListeners();
+
+    try {
+      debugPrint('🆕 Loading $_campusNewPostsCount new Campus posts...');
+
+      final newPostsWithAuthors = await getCampusFeed(campus).first.then(
+          (posts) => posts
+              .where((p) => p.post.createdAt.isAfter(_campusLastLoadedTime ??
+                  DateTime.now().subtract(Duration(hours: 1))))
+              .toList());
+
+      // Initialize post states for new posts (no userId needed for campus feed interaction check)
+      for (var postWithAuthor in newPostsWithAuthors) {
+        // Just create empty post state, actual init will happen in UI
+        getOrCreatePostState(postWithAuthor.post.postId);
+      }
+
+      // Prepend new posts to top of feed
+      _campusPosts = [...newPostsWithAuthors, ..._campusPosts];
+      _campusLastLoadedTime = DateTime.now();
+      _campusNewPostsCount = 0;
+
+      debugPrint(
+          '✅ Added ${newPostsWithAuthors.length} new posts to top of feed');
+      _isLoadingNewCampus = false;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('❌ Error loading new Campus posts: $e');
+      _isLoadingNewCampus = false;
+      notifyListeners();
+    }
   }
 
   //  Force reload (useful after posting new content)
@@ -623,6 +840,9 @@ class FeedProvider with ChangeNotifier {
     _forYouSubscription?.cancel();
     _friendsSubscription?.cancel();
     _campusSubscription?.cancel(); //  Added
+    _forYouPollingSubscription?.cancel();
+    _friendsPollingSubscription?.cancel();
+    _campusPollingSubscription?.cancel();
 
     notifyListeners();
     debugPrint('🗑️ Feed cache invalidated');
@@ -633,7 +853,7 @@ class FeedProvider with ChangeNotifier {
     return _firestore
         .collection('posts')
         .orderBy('createdAt', descending: true)
-        .limit(50)
+        .limit(_initialPageSize)
         .snapshots()
         .asyncMap((snapshot) async {
       List<PostWithAuthor> postsWithAuthors = [];
@@ -651,54 +871,23 @@ class FeedProvider with ChangeNotifier {
                   await _firestore.collection('users').doc(post.userId).get();
               if (userDoc.exists && userDoc.data() != null) {
                 author = UserModel.fromMap(userDoc.data()!);
-                _userCache[post.userId] = author;
+                _cacheUser(post.userId, author);
               }
             } catch (e) {
               debugPrint('Error fetching user ${post.userId}: $e');
             }
           }
 
-          // Get counts from subcollections
-          int likesCount = 0;
-          int bookmarksCount = 0;
-          int commentsCount = 0;
-          int repostsCount = 0;
-
-          try {
-            final counts = await Future.wait([
-              _firestore
-                  .collection('posts')
-                  .doc(post.postId)
-                  .collection('likes')
-                  .count()
-                  .get(),
-              _firestore
-                  .collection('posts')
-                  .doc(post.postId)
-                  .collection('bookmarks')
-                  .count()
-                  .get(),
-              _firestore
-                  .collection('posts')
-                  .doc(post.postId)
-                  .collection('comments')
-                  .count()
-                  .get(),
-              _firestore
-                  .collection('posts')
-                  .doc(post.postId)
-                  .collection('reposts')
-                  .count()
-                  .get(),
-            ]);
-
-            likesCount = counts[0].count ?? 0;
-            bookmarksCount = counts[1].count ?? 0;
-            commentsCount = counts[2].count ?? 0;
-            repostsCount = counts[3].count ?? 0; //  NEW
-          } catch (e) {
-            debugPrint('Error getting counts for ${post.postId}: $e');
-          }
+          // Get counts from denormalized fields instead of subcollection queries
+          final likesCount = postData.containsKey('likesCount')
+              ? postData['likesCount'] ?? 0
+              : 0;
+          final bookmarksCount = postData.containsKey('bookmarksCount')
+              ? postData['bookmarksCount'] ?? 0
+              : 0;
+          final commentsCount = postData.containsKey('commentsCount')
+              ? postData['commentsCount'] ?? 0
+              : 0;
 
           // Initialize post state if not exists (without notifying)
           if (!_posts.containsKey(post.postId)) {
@@ -734,6 +923,196 @@ class FeedProvider with ChangeNotifier {
     });
   }
 
+  Future<void> loadMoreForYouFeed(String currentUserId) async {
+    if (_isLoadingMoreForYou || !_forYouHasMore) return;
+
+    _isLoadingMoreForYou = true;
+    notifyListeners();
+
+    try {
+      Query query = _firestore
+          .collection('posts')
+          .orderBy('createdAt', descending: true)
+          .limit(_pageSize);
+
+      if (_forYouLastDoc != null) {
+        query = query.startAfterDocument(_forYouLastDoc!);
+      }
+
+      final snapshot = await query.get();
+      if (snapshot.docs.isEmpty) {
+        _forYouHasMore = false;
+      } else {
+        _forYouLastDoc = snapshot.docs.last;
+        for (final doc in snapshot.docs) {
+          final postData = doc.data() as Map<String, dynamic>;
+          final post = PostModel.fromMap(postData);
+          UserModel? author = _userCache[post.userId];
+          if (author == null) {
+            final userDoc =
+                await _firestore.collection('users').doc(post.userId).get();
+            if (userDoc.exists && userDoc.data() != null) {
+              author = UserModel.fromMap(userDoc.data()!);
+              _cacheUser(post.userId, author);
+            }
+          }
+
+          final likesCount = postData.containsKey('likesCount')
+              ? postData['likesCount'] ?? 0
+              : 0;
+          final commentsCount = postData.containsKey('commentsCount')
+              ? postData['commentsCount'] ?? 0
+              : 0;
+          final repostsCount = postData.containsKey('repostsCount')
+              ? postData['repostsCount'] ?? 0
+              : 0;
+          final bookmarksCount = postData.containsKey('bookmarksCount')
+              ? postData['bookmarksCount'] ?? 0
+              : 0;
+
+          await Future.wait([
+            checkIfLiked(post.postId, currentUserId),
+            checkIfBookmarked(post.postId, currentUserId),
+            checkIfReposted(post.postId, currentUserId),
+          ]);
+
+          if (!_forYouPosts.any((p) => p.post.postId == post.postId)) {
+            _forYouPosts.add(PostWithAuthor(
+              post: post.copyWith(
+                likes: likesCount,
+                comments: commentsCount,
+                repostsCount: repostsCount,
+                bookmarksCount: bookmarksCount,
+              ),
+              author: author,
+            ));
+          }
+        }
+
+        _forYouHasMore = snapshot.docs.length >= _pageSize;
+      }
+    } catch (e) {
+      debugPrint('Error loading more For You posts: $e');
+    }
+
+    _isLoadingMoreForYou = false;
+    notifyListeners();
+  }
+
+  Future<void> loadMoreFriendsFeed(String currentUserId) async {
+    if (_isLoadingMoreFriends || !_friendsHasMore) return;
+
+    _isLoadingMoreFriends = true;
+    notifyListeners();
+
+    try {
+      final followingSnapshot = await _firestore
+          .collection('users')
+          .doc(currentUserId)
+          .collection('following')
+          .get();
+
+      final followingIds = followingSnapshot.docs.map((doc) => doc.id).toList();
+      if (followingIds.isEmpty) {
+        _friendsHasMore = false;
+      } else {
+        List<PostWithAuthor> newPosts = [];
+        for (int i = 0; i < followingIds.length; i += 10) {
+          final batch = followingIds.skip(i).take(10).toList();
+          Query query = _firestore
+              .collection('posts')
+              .where('userId', whereIn: batch)
+              .orderBy('createdAt', descending: true)
+              .limit(_pageSize);
+
+          if (_friendsLastDoc != null) {
+            query = query.startAfterDocument(_friendsLastDoc!);
+          }
+
+          final snapshot = await query.get();
+          if (snapshot.docs.isNotEmpty) {
+            _friendsLastDoc = snapshot.docs.last;
+            for (final doc in snapshot.docs) {
+              final post =
+                  PostModel.fromMap(doc.data() as Map<String, dynamic>);
+              UserModel? author = _userCache[post.userId];
+              if (author == null) {
+                final authorDoc =
+                    await _firestore.collection('users').doc(post.userId).get();
+                if (authorDoc.exists && authorDoc.data() != null) {
+                  author = UserModel.fromMap(authorDoc.data()!);
+                  _cacheUser(post.userId, author);
+                }
+              }
+              if (!_friendsPosts.any((p) => p.post.postId == post.postId)) {
+                newPosts.add(PostWithAuthor(post: post, author: author));
+              }
+            }
+          }
+        }
+
+        if (newPosts.isEmpty) {
+          _friendsHasMore = false;
+        } else {
+          _friendsPosts.addAll(newPosts);
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading more Friends posts: $e');
+    }
+
+    _isLoadingMoreFriends = false;
+    notifyListeners();
+  }
+
+  Future<void> loadMoreCampusFeed(String campus) async {
+    if (_isLoadingMoreCampus || !_campusHasMore) return;
+
+    _isLoadingMoreCampus = true;
+    notifyListeners();
+
+    try {
+      Query query = _firestore
+          .collection('posts')
+          .where('campus', isEqualTo: campus)
+          .orderBy('createdAt', descending: true)
+          .limit(_pageSize);
+
+      if (_campusLastDoc != null) {
+        query = query.startAfterDocument(_campusLastDoc!);
+      }
+
+      final snapshot = await query.get();
+      if (snapshot.docs.isEmpty) {
+        _campusHasMore = false;
+      } else {
+        _campusLastDoc = snapshot.docs.last;
+        for (final doc in snapshot.docs) {
+          final post = PostModel.fromMap(doc.data() as Map<String, dynamic>);
+          UserModel? author = _userCache[post.userId];
+          if (author == null) {
+            final userDoc =
+                await _firestore.collection('users').doc(post.userId).get();
+            if (userDoc.exists && userDoc.data() != null) {
+              author = UserModel.fromMap(userDoc.data()!);
+              _cacheUser(post.userId, author);
+            }
+          }
+          if (!_campusPosts.any((p) => p.post.postId == post.postId)) {
+            _campusPosts.add(PostWithAuthor(post: post, author: author));
+          }
+        }
+
+        _campusHasMore = snapshot.docs.length >= _pageSize;
+      }
+    } catch (e) {
+      debugPrint('Error loading more Campus posts: $e');
+    }
+
+    _isLoadingMoreCampus = false;
+    notifyListeners();
+  }
+
   /// Get posts from users that current user is following (for Friends tab)
   Stream<List<PostWithAuthor>> getFollowingFeed(String currentUserId) {
     return _firestore
@@ -761,7 +1140,7 @@ class FeedProvider with ChangeNotifier {
             .collection('posts')
             .where('userId', whereIn: batch)
             .orderBy('createdAt', descending: true)
-            .limit(100)
+            .limit(_initialPageSize)
             .get();
 
         for (var doc in postsSnapshot.docs) {
@@ -863,7 +1242,7 @@ class FeedProvider with ChangeNotifier {
         .collection('posts')
         .where('campus', isEqualTo: campus)
         .orderBy('createdAt', descending: true)
-        .limit(50)
+        .limit(_initialPageSize)
         .snapshots()
         .asyncMap((snapshot) async {
       List<PostWithAuthor> postsWithAuthors = [];
@@ -881,54 +1260,26 @@ class FeedProvider with ChangeNotifier {
                   await _firestore.collection('users').doc(post.userId).get();
               if (userDoc.exists && userDoc.data() != null) {
                 author = UserModel.fromMap(userDoc.data()!);
-                _userCache[post.userId] = author;
+                _cacheUser(post.userId, author);
               }
             } catch (e) {
               debugPrint('Error fetching user ${post.userId}: $e');
             }
           }
 
-          // Get counts from subcollections
-          int likesCount = 0;
-          int bookmarksCount = 0;
-          int commentsCount = 0;
-          int repostsCount = 0; //  NEW
-
-          try {
-            final counts = await Future.wait([
-              _firestore
-                  .collection('posts')
-                  .doc(post.postId)
-                  .collection('likes')
-                  .count()
-                  .get(),
-              _firestore
-                  .collection('posts')
-                  .doc(post.postId)
-                  .collection('bookmarks')
-                  .count()
-                  .get(),
-              _firestore
-                  .collection('posts')
-                  .doc(post.postId)
-                  .collection('comments')
-                  .count()
-                  .get(),
-              _firestore
-                  .collection('posts')
-                  .doc(post.postId)
-                  .collection('reposts')
-                  .count()
-                  .get(), //  NEW
-            ]);
-
-            likesCount = counts[0].count ?? 0;
-            bookmarksCount = counts[1].count ?? 0;
-            commentsCount = counts[2].count ?? 0;
-            repostsCount = counts[3].count ?? 0; //  NEW
-          } catch (e) {
-            debugPrint('Error getting counts for ${post.postId}: $e');
-          }
+          // Get counts from denormalized fields instead of subcollection queries
+          final likesCount = postData.containsKey('likesCount')
+              ? postData['likesCount'] ?? 0
+              : 0;
+          final bookmarksCount = postData.containsKey('bookmarksCount')
+              ? postData['bookmarksCount'] ?? 0
+              : 0;
+          final commentsCount = postData.containsKey('commentsCount')
+              ? postData['commentsCount'] ?? 0
+              : 0;
+          final repostsCount = postData.containsKey('repostsCount')
+              ? postData['repostsCount'] ?? 0
+              : 0;
 
           // Initialize or update post state
           if (!_posts.containsKey(post.postId)) {
@@ -965,77 +1316,17 @@ class FeedProvider with ChangeNotifier {
 
   // Check if current user liked a post
   Future<bool> checkIfLiked(String postId, String userId) async {
-    try {
-      final likeDoc = await _firestore
-          .collection('posts')
-          .doc(postId)
-          .collection('likes')
-          .doc(userId)
-          .get();
-
-      final isLiked = likeDoc.exists;
-
-      // Update local state
-      if (!_posts.containsKey(postId)) {
-        _posts[postId] = PostState();
-      }
-      _posts[postId]!.isLiked = isLiked;
-
-      return isLiked;
-    } catch (e) {
-      debugPrint('Error checking like status: $e');
-      return false;
-    }
+    return super.checkIfLiked(postId, userId);
   }
 
   // Check if current user bookmarked a post
   Future<bool> checkIfBookmarked(String postId, String userId) async {
-    try {
-      final bookmarkDoc = await _firestore
-          .collection('posts')
-          .doc(postId)
-          .collection('bookmarks')
-          .doc(userId)
-          .get();
-
-      final isBookmarked = bookmarkDoc.exists;
-
-      // Update local state
-      if (!_posts.containsKey(postId)) {
-        _posts[postId] = PostState();
-      }
-      _posts[postId]!.isBookmarked = isBookmarked;
-
-      return isBookmarked;
-    } catch (e) {
-      debugPrint('Error checking bookmark status: $e');
-      return false;
-    }
+    return super.checkIfBookmarked(postId, userId);
   }
 
   //  NEW: Check if current user reposted a post
   Future<bool> checkIfReposted(String postId, String userId) async {
-    try {
-      final repostDoc = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('reposts')
-          .doc(postId)
-          .get();
-
-      final isReposted = repostDoc.exists;
-
-      // Update local state
-      if (!_posts.containsKey(postId)) {
-        _posts[postId] = PostState();
-      }
-      _posts[postId]!.isReposted = isReposted;
-
-      return isReposted;
-    } catch (e) {
-      debugPrint('Error checking repost status: $e');
-      return false;
-    }
+    return super.checkIfReposted(postId, userId);
   }
 
   // Update like state with optimistic updates
@@ -1047,241 +1338,69 @@ class FeedProvider with ChangeNotifier {
     UserModel? currentUser,
     String? postImageUrl,
   ) async {
-    // Ensure post state exists
-    if (!_posts.containsKey(postId)) {
-      _posts[postId] = PostState();
-    }
-
-    final post = _posts[postId]!;
-    final wasLiked = post.isLiked;
-
-    // Optimistically update UI IMMEDIATELY
-    post.isLiked = !wasLiked;
-    post.likesCount =
-        (post.likesCount + (wasLiked ? -1 : 1)).clamp(0, 999999999);
-    notifyListeners();
-
-    try {
-      final likeDoc = _firestore
-          .collection('posts')
-          .doc(postId)
-          .collection('likes')
-          .doc(userId);
-
-      await _firestore.runTransaction((transaction) async {
-        final likeSnapshot = await transaction.get(likeDoc);
-
-        if (!likeSnapshot.exists && !wasLiked) {
-          // Add like
-          final userRef = _firestore.collection('users').doc(userId);
-          transaction.set(likeDoc, {
-            'likedby': userRef,
-            'timestamp': FieldValue.serverTimestamp(),
-          });
-
-          //  Create notification if not liking own post
-          if (postAuthorId != userId && currentUser != null) {
-            await NotificationHelper.createLikeNotification(
-              notifyProvider: notifyProvider, //  Uncomment this line
-              recipientId: postAuthorId,
-              actorId: userId,
-              actorName: currentUser.username,
-              actorProfileImage: currentUser.profileImageUrl,
-              postId: postId,
-              postImageUrl: postImageUrl,
-            );
-          }
-        } else if (likeSnapshot.exists && wasLiked) {
-          // Remove like
-          transaction.delete(likeDoc);
-        }
-      });
-
-      debugPrint(' Like synced successfully: $postId');
-    } catch (e) {
-      // Revert on error
-      post.isLiked = wasLiked;
-      post.likesCount =
-          (post.likesCount + (wasLiked ? -1 : 1)).clamp(0, 999999999);
-      notifyListeners();
-      debugPrint('❌ Error toggling like: $e');
-      rethrow;
-    }
-
-    // ✅ After successful like, track engagement
-    if (_posts[postId]?.isLiked == true) {
-      // Get post to extract tags
-      final post = _forYouPosts.firstWhere(
-        (p) => p.post.postId == postId,
-        orElse: () => _friendsPosts.firstWhere(
+    await super.toggleLikeInteraction(
+      postId: postId,
+      userId: userId,
+      postAuthorId: postAuthorId,
+      notifyProvider: notifyProvider,
+      currentUser: currentUser,
+      postImageUrl: postImageUrl,
+      onLikeCompleted: () async {
+        // Get post to extract tags
+        final post = _forYouPosts.firstWhere(
           (p) => p.post.postId == postId,
-          orElse: () => _campusPosts.firstWhere(
+          orElse: () => _friendsPosts.firstWhere(
             (p) => p.post.postId == postId,
-            orElse: () => PostWithAuthor(
-              post: PostModel(
-                postId: '',
-                userId: '',
-                username: '',
-                userProfileImage: '',
-                content: '',
-                imageUrls: [],
-                likes: 0,
-                comments: 0,
-                shares: 0,
-                createdAt: DateTime.now(),
-                updatedAt: DateTime.now(),
+            orElse: () => _campusPosts.firstWhere(
+              (p) => p.post.postId == postId,
+              orElse: () => PostWithAuthor(
+                post: PostModel(
+                  postId: '',
+                  userId: '',
+                  username: '',
+                  userProfileImage: '',
+                  content: '',
+                  imageUrls: [],
+                  likes: 0,
+                  comments: 0,
+                  shares: 0,
+                  createdAt: DateTime.now(),
+                  updatedAt: DateTime.now(),
+                ),
               ),
             ),
           ),
-        ),
-      );
+        );
 
-      if (post.post.postId.isNotEmpty) {
-        // Track author engagement
-        _engagementService.trackEngagedAuthor(userId, postAuthorId);
+        if (post.post.postId.isNotEmpty) {
+          // Track author engagement
+          _engagementService.trackEngagedAuthor(userId, postAuthorId);
 
-        // Track tag engagement
-        final tags = post.post.tags.isNotEmpty
-            ? post.post.tags
-            : PostTaggingService.extractTags(post.post.content);
-        if (tags.isNotEmpty) {
-          _engagementService.trackEngagedTags(userId, tags);
+          // Track tag engagement
+          final tags = post.post.tags.isNotEmpty
+              ? post.post.tags
+              : PostTaggingService.extractTags(post.post.content);
+          if (tags.isNotEmpty) {
+            _engagementService.trackEngagedTags(userId, tags);
+          }
+
+          // Track campus if available
+          if (post.post.campus != null) {
+            _engagementService.trackViewedCampus(userId, post.post.campus!);
+          }
         }
-
-        // Track campus if available
-        if (post.post.campus != null) {
-          _engagementService.trackViewedCampus(userId, post.post.campus!);
-        }
-      }
-    }
+      },
+    );
   }
 
   // Update bookmark state with optimistic updates
   Future<void> toggleBookmark(String postId, String userId) async {
-    // Ensure post state exists
-    if (!_posts.containsKey(postId)) {
-      _posts[postId] = PostState();
-    }
-
-    final post = _posts[postId]!;
-    final wasBookmarked = post.isBookmarked;
-
-    // Optimistically update UI IMMEDIATELY
-    post.isBookmarked = !wasBookmarked;
-    post.bookmarksCount =
-        (post.bookmarksCount + (wasBookmarked ? -1 : 1)).clamp(0, 999999999);
-    notifyListeners(); //  Updates UI instantly
-
-    try {
-      final bookmarkDoc = _firestore
-          .collection('posts')
-          .doc(postId)
-          .collection('bookmarks')
-          .doc(userId);
-
-      final userBookmarkDoc = _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('bookmarks')
-          .doc(postId);
-
-      await _firestore.runTransaction((transaction) async {
-        final bookmarkSnapshot = await transaction.get(bookmarkDoc);
-
-        if (!bookmarkSnapshot.exists && !wasBookmarked) {
-          // Add bookmark
-          final userRef = _firestore.collection('users').doc(userId);
-          final postRef = _firestore.collection('posts').doc(postId);
-
-          transaction.set(bookmarkDoc, {
-            'bookmarkedby': userRef,
-            'timestamp': FieldValue.serverTimestamp(),
-          });
-
-          transaction.set(userBookmarkDoc, {
-            'postRef': postRef,
-            'type': 'media',
-            'timestamp': FieldValue.serverTimestamp(),
-          });
-        } else if (bookmarkSnapshot.exists && wasBookmarked) {
-          // Remove bookmark
-          transaction.delete(bookmarkDoc);
-          transaction.delete(userBookmarkDoc);
-        }
-      });
-
-      debugPrint(' Bookmark synced successfully: $postId');
-    } catch (e) {
-      // Revert on error
-      post.isBookmarked = wasBookmarked;
-      post.bookmarksCount =
-          (post.bookmarksCount + (wasBookmarked ? -1 : 1)).clamp(0, 999999999);
-      notifyListeners(); //  Reverts UI
-      debugPrint('❌ Error toggling bookmark: $e');
-      rethrow;
-    }
+    await super.toggleBookmarkInteraction(postId: postId, userId: userId);
   }
 
   //  NEW: Toggle repost with optimistic updates
   Future<void> toggleRepost(String postId, String userId) async {
-    // Ensure post state exists
-    if (!_posts.containsKey(postId)) {
-      _posts[postId] = PostState();
-    }
-
-    final post = _posts[postId]!;
-    final wasReposted = post.isReposted;
-
-    // Optimistically update UI IMMEDIATELY
-    post.isReposted = !wasReposted;
-    post.repostsCount =
-        (post.repostsCount + (wasReposted ? -1 : 1)).clamp(0, 999999999);
-    notifyListeners();
-
-    try {
-      final userRepostDoc = _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('reposts')
-          .doc(postId);
-
-      final postRef = _firestore.collection('posts').doc(postId);
-
-      await _firestore.runTransaction((transaction) async {
-        final repostSnapshot = await transaction.get(userRepostDoc);
-
-        if (!repostSnapshot.exists && !wasReposted) {
-          // Add repost
-          transaction.set(userRepostDoc, {
-            'postRef': postRef,
-            'timestamp': FieldValue.serverTimestamp(),
-          });
-
-          // Update shares count on the post
-          transaction.update(postRef, {
-            'shares': FieldValue.increment(1),
-          });
-        } else if (repostSnapshot.exists && wasReposted) {
-          // Remove repost
-          transaction.delete(userRepostDoc);
-
-          // Update shares count on the post
-          transaction.update(postRef, {
-            'shares': FieldValue.increment(-1),
-          });
-        }
-      });
-
-      debugPrint(' Repost synced successfully: $postId');
-    } catch (e) {
-      // Revert on error
-      post.isReposted = wasReposted;
-      post.repostsCount =
-          (post.repostsCount + (wasReposted ? 1 : -1)).clamp(0, 999999999);
-      notifyListeners();
-      debugPrint('❌ Error toggling repost: $e');
-      rethrow;
-    }
+    await super.toggleRepostInteraction(postId: postId, userId: userId);
   }
 
   // Update replies count
@@ -1306,12 +1425,15 @@ class FeedProvider with ChangeNotifier {
     _forYouSubscription?.cancel();
     _friendsSubscription?.cancel();
     _campusSubscription?.cancel();
+    _forYouPollingSubscription?.cancel();
+    _friendsPollingSubscription?.cancel();
+    _campusPollingSubscription?.cancel();
     super.dispose();
   }
 }
 
 //  UPDATED: PostState with repost support
-class PostState {
+class PostState implements PostInteractionState {
   int likesCount;
   int bookmarksCount;
   int repliesCount;

@@ -31,7 +31,7 @@ class ResourceTile extends StatelessWidget {
           border: Border.all(color: AppTheme.border),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -44,7 +44,8 @@ class ResourceTile extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
-                color: _getTypeColor(resource.resourceType).withOpacity(0.1),
+                color:
+                    _getTypeColor(resource.resourceType).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10.r),
               ),
               child: Iconify(
@@ -78,8 +79,8 @@ class ResourceTile extends StatelessWidget {
                     padding:
                         EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
                     decoration: BoxDecoration(
-                      color:
-                          _getTypeColor(resource.resourceType).withOpacity(0.1),
+                      color: _getTypeColor(resource.resourceType)
+                          .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4.r),
                     ),
                     child: Text(
@@ -181,7 +182,7 @@ class ResourceTile extends StatelessWidget {
                           child: Container(
                             padding: EdgeInsets.all(8.w),
                             decoration: BoxDecoration(
-                              color: AppTheme.primary.withOpacity(0.1),
+                              color: AppTheme.primary.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8.r),
                             ),
                             child: Iconify(

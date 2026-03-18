@@ -3,9 +3,9 @@ import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/market_post_provider.dart';
+import 'package:campcon/main/widgets/multi_image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ph.dart';
@@ -18,7 +18,7 @@ class PostItemScreen extends StatefulWidget {
 }
 
 class _PostItemScreenState extends State<PostItemScreen> {
-  File? _selectedImage;
+  List<File> _selectedImages = [];
   final _nameController = TextEditingController();
   final _locationController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -40,20 +40,6 @@ class _PostItemScreenState extends State<PostItemScreen> {
     'Health & Beauty',
     'Other',
   ];
-
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
-    );
-
-    if (pickedFile != null) {
-      setState(() {
-        _selectedImage = File(pickedFile.path);
-      });
-    }
-  }
 
   double? get _calculatedDiscountedPrice {
     if (!_hasDiscount) return null;
@@ -110,15 +96,17 @@ class _PostItemScreenState extends State<PostItemScreen> {
 
     FocusScope.of(context).unfocus();
 
+    // Capture values - create copy of images list
     final name = _nameController.text.trim();
     final location = _locationController.text.trim();
     final description = _descriptionController.text.trim();
     final category = _selectedCategory!;
-    final image = _selectedImage;
+    final images = List<File>.from(_selectedImages);
     final stock = _hasStock ? int.tryParse(_stockController.text.trim()) : null;
     final discount =
         _hasDiscount ? double.tryParse(_discountController.text.trim()) : null;
 
+    // Clear form
     _nameController.clear();
     _locationController.clear();
     _descriptionController.clear();
@@ -126,7 +114,7 @@ class _PostItemScreenState extends State<PostItemScreen> {
     _stockController.clear();
     _discountController.clear();
     setState(() {
-      _selectedImage = null;
+      _selectedImages = [];
       _selectedCategory = null;
       _hasStock = true;
       _hasDiscount = false;
@@ -143,10 +131,10 @@ class _PostItemScreenState extends State<PostItemScreen> {
       price: price,
       stock: stock,
       discount: discount,
-      image: image,
+      images: images.isNotEmpty ? images : null,
     );
 
-    debugPrint(success ? ' Item posted' : '❌ Failed to post item');
+    debugPrint(success ? '✓ Item posted' : '❌ Failed to post item');
   }
 
   void _showError(String message) {
@@ -173,12 +161,20 @@ class _PostItemScreenState extends State<PostItemScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildImageUpload(),
+                    // Multi-Image Picker
+                    MultiImagePicker(
+                      images: _selectedImages,
+                      onImagesChanged: (images) {
+                        setState(() => _selectedImages = images);
+                      },
+                      placeholderTitle: 'Add Item Image',
+                      placeholderSubtitle: 'Tap to upload',
+                    ),
                     SizedBox(height: 20.h),
                     _buildTextField(
-                      label: 'Item name *',
+                      label: 'Item Name *',
                       controller: _nameController,
-                      hint: 'e.g. iPhone 13 Pro',
+                      hint: 'e.g. iPhone 13 Pro Max',
                     ),
                     SizedBox(height: 16.h),
                     _buildCategoryDropdown(),
@@ -186,7 +182,14 @@ class _PostItemScreenState extends State<PostItemScreen> {
                     _buildTextField(
                       label: 'Location *',
                       controller: _locationController,
-                      hint: 'e.g. Main Campus, Block A',
+                      hint: 'e.g. Campus Gate, Hostel Block A',
+                    ),
+                    SizedBox(height: 16.h),
+                    _buildTextField(
+                      label: 'Description *',
+                      controller: _descriptionController,
+                      hint: 'Describe your item, condition, features...',
+                      maxLines: 4,
                     ),
                     SizedBox(height: 16.h),
                     _buildTextField(
@@ -197,21 +200,9 @@ class _PostItemScreenState extends State<PostItemScreen> {
                       prefix: '₦',
                     ),
                     SizedBox(height: 20.h),
-
-                    // Stock Section
                     _buildStockSection(),
-                    SizedBox(height: 20.h),
-
-                    // Discount Section
-                    _buildDiscountSection(),
                     SizedBox(height: 16.h),
-
-                    _buildTextField(
-                      label: 'Description *',
-                      controller: _descriptionController,
-                      hint: 'Describe your item, condition, features...',
-                      maxLines: 5,
-                    ),
+                    _buildDiscountSection(),
                   ],
                 ),
               ),
@@ -252,7 +243,7 @@ class _PostItemScreenState extends State<PostItemScreen> {
           Expanded(
             child: Center(
               child: Text(
-                'Post Item',
+                'List an Item',
                 style: TextConstants.mediumText.copyWith(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
@@ -262,320 +253,6 @@ class _PostItemScreenState extends State<PostItemScreen> {
             ),
           ),
           SizedBox(width: 40.w),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildImageUpload() {
-    return GestureDetector(
-      onTap: _pickImage,
-      child: Container(
-        height: 200.h,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: AppTheme.background,
-          border: Border.all(
-            color: AppTheme.border,
-            width: 1.5,
-          ),
-        ),
-        child: _selectedImage != null
-            ? Stack(
-                children: [
-                  Image.file(
-                    _selectedImage!,
-                    width: double.infinity,
-                    height: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                  Positioned(
-                    top: 8.h,
-                    right: 8.w,
-                    child: GestureDetector(
-                      onTap: () => setState(() => _selectedImage = null),
-                      child: Container(
-                        padding: EdgeInsets.all(6.w),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.6),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.close,
-                          color: Colors.white,
-                          size: 18.sp,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Iconify(
-                    Ph.image,
-                    size: 48.sp,
-                    color: AppTheme.textLight,
-                  ),
-                  SizedBox(height: 12.h),
-                  Text(
-                    'Add Item Photo',
-                    style: TextConstants.mediumText.copyWith(
-                      fontSize: 16.sp,
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    'Tap to upload',
-                    style: TextConstants.smallText.copyWith(
-                      fontSize: 13.sp,
-                      color: AppTheme.textLight,
-                    ),
-                  ),
-                ],
-              ),
-      ),
-    );
-  }
-
-  Widget _buildStockSection() {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: _hasStock
-            ? AppTheme.primary.withOpacity(0.05)
-            : AppTheme.background,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(
-          color:
-              _hasStock ? AppTheme.primary.withOpacity(0.3) : AppTheme.border,
-        ),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Iconify(
-                Ph.package,
-                size: 20.sp,
-                color: _hasStock ? AppTheme.primary : AppTheme.textSecondary,
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'In Stock',
-                      style: TextConstants.mediumText.copyWith(
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
-                    SizedBox(height: 2.h),
-                    Text(
-                      'Set quantity available',
-                      style: TextConstants.smallText.copyWith(
-                        fontSize: 12.sp,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Switch(
-                value: _hasStock,
-                onChanged: (value) {
-                  setState(() {
-                    _hasStock = value;
-                    if (!value) {
-                      _stockController.clear();
-                    }
-                  });
-                },
-                activeColor: AppTheme.primary,
-              ),
-            ],
-          ),
-          if (_hasStock) ...[
-            SizedBox(height: 16.h),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
-              decoration: BoxDecoration(
-                color: AppTheme.buttonBorder,
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: AppTheme.border, width: 1),
-              ),
-              child: TextField(
-                controller: _stockController,
-                keyboardType: TextInputType.number,
-                style: TextConstants.mediumText.copyWith(
-                  fontSize: 15.sp,
-                  color: AppTheme.textPrimary,
-                ),
-                decoration: InputDecoration(
-                  hintText: 'Enter quantity (e.g. 5)',
-                  hintStyle: TextConstants.smallText.copyWith(
-                    color: AppTheme.textLight,
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(vertical: 12.h),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDiscountSection() {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: _hasDiscount
-            ? AppTheme.success.withOpacity(0.05)
-            : AppTheme.background,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(
-          color: _hasDiscount
-              ? AppTheme.success.withOpacity(0.3)
-              : AppTheme.border,
-        ),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Iconify(
-                Ph.percent,
-                size: 20.sp,
-                color: _hasDiscount ? AppTheme.success : AppTheme.textSecondary,
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Discount',
-                      style: TextConstants.mediumText.copyWith(
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
-                    SizedBox(height: 2.h),
-                    Text(
-                      'Apply discount percentage',
-                      style: TextConstants.smallText.copyWith(
-                        fontSize: 12.sp,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Switch(
-                value: _hasDiscount,
-                onChanged: (value) {
-                  setState(() {
-                    _hasDiscount = value;
-                    if (!value) {
-                      _discountController.clear();
-                    }
-                  });
-                },
-                activeColor: AppTheme.success,
-              ),
-            ],
-          ),
-          if (_hasDiscount) ...[
-            SizedBox(height: 16.h),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
-              decoration: BoxDecoration(
-                color: AppTheme.buttonBorder,
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: AppTheme.border, width: 1),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _discountController,
-                      keyboardType: TextInputType.number,
-                      style: TextConstants.mediumText.copyWith(
-                        fontSize: 15.sp,
-                        color: AppTheme.textPrimary,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'Enter discount % (e.g. 10)',
-                        hintStyle: TextConstants.smallText.copyWith(
-                          color: AppTheme.textLight,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 12.h),
-                      ),
-                      onChanged: (value) => setState(() {}),
-                    ),
-                  ),
-                  Text(
-                    '%',
-                    style: TextConstants.mediumText.copyWith(
-                      fontSize: 16.sp,
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (_calculatedDiscountedPrice != null) ...[
-              SizedBox(height: 12.h),
-              Container(
-                padding: EdgeInsets.all(12.w),
-                decoration: BoxDecoration(
-                  color: AppTheme.success.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Final Price:',
-                      style: TextConstants.smallText.copyWith(
-                        fontSize: 13.sp,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          '₦${_calculatedDiscountedPrice!.toStringAsFixed(0)}',
-                          style: TextConstants.boldText.copyWith(
-                            fontSize: 16.sp,
-                            color: AppTheme.success,
-                          ),
-                        ),
-                        Text(
-                          '₦${_priceController.text.trim()}',
-                          style: TextConstants.smallText.copyWith(
-                            fontSize: 12.sp,
-                            color: AppTheme.textLight,
-                            decoration: TextDecoration.lineThrough,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
         ],
       ),
     );
@@ -692,11 +369,186 @@ class _PostItemScreenState extends State<PostItemScreen> {
                   child: Text(category),
                 );
               }).toList(),
-              onChanged: (value) => setState(() => _selectedCategory = value),
+              onChanged: (value) {
+                setState(() => _selectedCategory = value);
+              },
             ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildStockSection() {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: _hasStock
+            ? AppTheme.primary.withValues(alpha: 0.05)
+            : AppTheme.background,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(
+          color: _hasStock
+              ? AppTheme.primary.withValues(alpha: 0.3)
+              : AppTheme.border,
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Iconify(
+                Ph.package,
+                size: 20.sp,
+                color: _hasStock ? AppTheme.primary : AppTheme.textSecondary,
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Track Stock',
+                      style: TextConstants.mediumText.copyWith(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      'Set available quantity',
+                      style: TextConstants.smallText.copyWith(
+                        fontSize: 12.sp,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: _hasStock,
+                onChanged: (value) {
+                  setState(() {
+                    _hasStock = value;
+                    if (!value) _stockController.clear();
+                  });
+                },
+                activeColor: AppTheme.primary,
+              ),
+            ],
+          ),
+          if (_hasStock) ...[
+            SizedBox(height: 16.h),
+            _buildTextField(
+              label: 'Stock Quantity *',
+              controller: _stockController,
+              hint: 'Enter available quantity',
+              keyboardType: TextInputType.number,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDiscountSection() {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: _hasDiscount
+            ? AppTheme.success.withValues(alpha: 0.05)
+            : AppTheme.background,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(
+          color: _hasDiscount
+              ? AppTheme.success.withValues(alpha: 0.3)
+              : AppTheme.border,
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Iconify(
+                Ph.percent,
+                size: 20.sp,
+                color: _hasDiscount ? AppTheme.success : AppTheme.textSecondary,
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Add Discount',
+                      style: TextConstants.mediumText.copyWith(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      'Offer a special price',
+                      style: TextConstants.smallText.copyWith(
+                        fontSize: 12.sp,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: _hasDiscount,
+                onChanged: (value) {
+                  setState(() {
+                    _hasDiscount = value;
+                    if (!value) _discountController.clear();
+                  });
+                },
+                activeColor: AppTheme.success,
+              ),
+            ],
+          ),
+          if (_hasDiscount) ...[
+            SizedBox(height: 16.h),
+            _buildTextField(
+              label: 'Discount Percentage *',
+              controller: _discountController,
+              hint: 'e.g. 10',
+              keyboardType: TextInputType.number,
+              prefix: '%',
+            ),
+            if (_calculatedDiscountedPrice != null) ...[
+              SizedBox(height: 12.h),
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: AppTheme.success.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'New Price:',
+                      style: TextConstants.smallText.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                    Text(
+                      '₦${_calculatedDiscountedPrice!.toStringAsFixed(0)}',
+                      style: TextConstants.boldText.copyWith(
+                        fontSize: 16.sp,
+                        color: AppTheme.success,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ],
+      ),
     );
   }
 

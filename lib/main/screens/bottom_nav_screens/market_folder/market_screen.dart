@@ -13,7 +13,9 @@ import 'package:campcon/main/screens/bottom_nav_screens/market_folder/widgets/em
 import 'package:campcon/main/screens/bottom_nav_screens/market_folder/widgets/market_tabbar.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/market_folder/widgets/sort_filter_bar.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/market_folder/widgets/product_card.dart';
+import 'package:campcon/main/widgets/shimmer_card.dart';
 import 'package:campcon/main/widgets/action_search_bar.dart';
+import 'package:campcon/main/widgets/profile_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
@@ -35,6 +37,7 @@ class _MarketScreenState extends State<MarketScreen> {
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadInitialData();
       _initializeBuyerOrders();
@@ -42,8 +45,20 @@ class _MarketScreenState extends State<MarketScreen> {
     });
   }
 
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final provider = Provider.of<MarketplaceProvider>(context, listen: false);
+    final position = _scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - 280) {
+      if (provider.hasMore && !provider.isLoadingMore && !provider.isLoading) {
+        provider.loadMoreCurrentTab();
+      }
+    }
+  }
+
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
   }
@@ -80,7 +95,8 @@ class _MarketScreenState extends State<MarketScreen> {
     return Consumer<MarketplaceProvider>(
       builder: (context, provider, child) {
         return Scaffold(
-          backgroundColor: AppTheme.surface,
+          endDrawer: const ProfileDrawer(),
+          backgroundColor: Theme.of(context).colorScheme.surface,
           body: SafeArea(
             child: RefreshIndicator(
               onRefresh: _onRefresh,
@@ -89,102 +105,82 @@ class _MarketScreenState extends State<MarketScreen> {
                 controller: _scrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
-                  //  Floating App Bar with Search and Tabs
-                  SliverAppBar(
-                    backgroundColor: AppTheme.surface,
-                    elevation: 0,
-                    floating: true,
-                    snap: true,
-                    pinned: true,
-                    expandedHeight: 160.h,
-                    surfaceTintColor: AppTheme.surface,
-                    flexibleSpace: FlexibleSpaceBar(
-                      background: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w),
-                        child: Column(
-                          children: [
-                            SizedBox(height: 10.h),
-                            // Top Bar
-                            CustomTopBar(
-                              centerText: 'Marketplace',
-                              showAdd: true,
-                              showCart: true,
-                              onAddTap: () => _showPostOptions(context),
-                              cartItemCount:
-                                  Provider.of<BuyerOrdersProvider>(context)
-                                      .activeOrdersCount,
-                              onCartTap: () {
-                                Navigator.push(
-                                  context,
-                                  PageTransition(
-                                    type: PageTransitionType.rightToLeft,
-                                    child: const MarketCartScreen(),
-                                    duration: const Duration(milliseconds: 300),
-                                  ),
-                                );
-                              },
-                            ),
-                            SizedBox(height: 20.h),
+                  // Top section (search bar)
+                  SliverToBoxAdapter(
+                    child: Container(
+                      color: Theme.of(context).colorScheme.surface,
+                      padding: EdgeInsets.fromLTRB(20.w, 5.h, 20.w, 20.h),
+                      child: Column(
+                        children: [
+                          // Top Bar
+                          CustomTopBar(
+                            centerText: 'Marketplace',
+                            showAdd: true,
+                            showCart: true,
+                            onAddTap: () => _showPostOptions(context),
+                            cartItemCount:
+                                Provider.of<BuyerOrdersProvider>(context)
+                                    .activeOrdersCount,
+                            onCartTap: () {
+                              Navigator.push(
+                                context,
+                                PageTransition(
+                                  type: PageTransitionType.rightToLeft,
+                                  child: const MarketCartScreen(),
+                                  duration: const Duration(milliseconds: 300),
+                                ),
+                              );
+                            },
+                          ),
+                          SizedBox(height: 20.h),
 
-                            // Search Bar using ActionSearchBar - navigates to search screen
-                            ActionSearchBar.navigate(
-                              hintText: 'Search products & services',
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  PageTransition(
-                                    type: PageTransitionType.fade,
-                                    duration: const Duration(milliseconds: 200),
-                                    child: const SearchScreen(
-                                      context: SearchContext.market,
-                                    ),
+                          // Search Bar using ActionSearchBar - navigates to search screen
+                          ActionSearchBar.navigate(
+                            hintText: 'Search products & services',
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                PageTransition(
+                                  type: PageTransitionType.fade,
+                                  duration: const Duration(milliseconds: 200),
+                                  child: const SearchScreen(
+                                    context: SearchContext.market,
                                   ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
                       ),
                     ),
-                    bottom: PreferredSize(
-                      preferredSize: Size.fromHeight(50.h),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: AppTheme.surface,
-                          border: Border(
-                            bottom: BorderSide(
-                              color: AppTheme.border,
-                              width: 1,
-                            ),
+                  ),
+
+                  // Tab Bar
+                  SliverToBoxAdapter(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.surface,
+                        border: Border(
+                          bottom: BorderSide(
+                            color: AppTheme.border,
+                            width: 1,
                           ),
                         ),
-                        child: TabBarWidget(
-                          selectedTab: provider.selectedTab,
-                          onTabChanged: (index) {
-                            provider.changeTab(index);
-                          },
-                        ),
+                      ),
+                      child: TabBarWidget(
+                        selectedTab: provider.selectedTab,
+                        onTabChanged: (index) {
+                          provider.changeTab(index);
+                        },
                       ),
                     ),
                   ),
 
                   // Filters Section
-                  SliverPersistentHeader(
-                    // pinned: true,
-                    delegate: _FilterHeaderDelegate(
-                      minHeight: 90.h,
-                      maxHeight: 90.h,
-                      child: Container(
-                        color: AppTheme.surface,
-                        padding: EdgeInsets.symmetric(horizontal: 20.w),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const SortFilterBar(),
-                            SizedBox(height: 8.h),
-                          ],
-                        ),
-                      ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20.w),
+                      child: const SortFilterBar(),
                     ),
                   ),
 
@@ -204,10 +200,10 @@ class _MarketScreenState extends State<MarketScreen> {
     if (provider.isLoading) {
       return [
         SliverFillRemaining(
-          child: Center(
-            child: CircularProgressIndicator(
-              color: AppTheme.primary,
-            ),
+          child: ShimmerList(
+            itemCount: 6,
+            type: ShimmerCardType.product,
+            padding: EdgeInsets.only(top: 8.h, bottom: 80.h),
           ),
         ),
       ];
@@ -278,24 +274,26 @@ class _MarketScreenState extends State<MarketScreen> {
         ),
       );
 
-      slivers.add(
-        SliverPadding(
-          padding: EdgeInsets.symmetric(horizontal: 20.w),
-          sliver: SliverMasonryGrid.count(
-            crossAxisCount: 2,
-            mainAxisSpacing: 12.h,
-            crossAxisSpacing: 12.w,
-            childCount: myProducts.length,
-            itemBuilder: (context, index) {
-              return ProductCard(
-                product: myProducts[index],
-                imageHeight: _calculateImageHeight(index),
-                showOwnerBadge: true,
-              );
-            },
+      if (myProducts.isNotEmpty) {
+        slivers.add(
+          SliverPadding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            sliver: SliverMasonryGrid.count(
+              crossAxisCount: 2,
+              mainAxisSpacing: 12.h,
+              crossAxisSpacing: 12.w,
+              childCount: myProducts.length,
+              itemBuilder: (context, index) {
+                return ProductCard(
+                  product: myProducts[index],
+                  imageHeight: _calculateImageHeight(index),
+                  showOwnerBadge: true,
+                );
+              },
+            ),
           ),
-        ),
-      );
+        );
+      }
 
       // Divider between sections
       if (otherProducts.isNotEmpty) {
@@ -312,25 +310,25 @@ class _MarketScreenState extends State<MarketScreen> {
 
     // Other Products Section
     if (otherProducts.isNotEmpty) {
-      // slivers.add(
-      //   SliverToBoxAdapter(
-      //     child: _buildSectionHeader(
-      //       icon: Ph.buildings,
-      //       title: myProducts.isNotEmpty
-      //           ? 'Explore More'
-      //           : (provider.selectedTab == 0 ? 'All Items' : 'All Services'),
-      //       count: otherProducts.length,
-      //       color: AppTheme.textSecondary,
-      //     ),
-      //   ),
-      // );
+      slivers.add(
+        SliverToBoxAdapter(
+          child: _buildSectionHeader(
+            icon: Ph.buildings,
+            title: myProducts.isNotEmpty
+                ? 'Explore More'
+                : (provider.selectedTab == 0 ? 'Explore' : 'Explore'),
+            count: otherProducts.length,
+            color: AppTheme.textSecondary,
+          ),
+        ),
+      );
 
       slivers.add(
         SliverPadding(
           padding: EdgeInsets.only(
             left: 20.w,
             right: 20.w,
-            bottom: 60.h,
+            bottom: 120.h,
           ),
           sliver: SliverMasonryGrid.count(
             crossAxisCount: 2,
@@ -349,10 +347,30 @@ class _MarketScreenState extends State<MarketScreen> {
     }
 
     // Add bottom padding if only my products
-    if (myProducts.isNotEmpty && otherProducts.isEmpty) {
+    if (otherProducts.isEmpty) {
       slivers.add(
         SliverToBoxAdapter(
-          child: SizedBox(height: 60.h),
+          child: SizedBox(height: 100.h),
+        ),
+      );
+    }
+
+    if (provider.isLoadingMore) {
+      slivers.add(
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 14.h),
+            child: Center(
+              child: SizedBox(
+                width: 22.w,
+                height: 22.w,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.2,
+                  color: AppTheme.primary,
+                ),
+              ),
+            ),
+          ),
         ),
       );
     }
@@ -378,7 +396,7 @@ class _MarketScreenState extends State<MarketScreen> {
           Container(
             padding: EdgeInsets.all(6.w),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(6.r),
             ),
             child: Iconify(
@@ -396,22 +414,22 @@ class _MarketScreenState extends State<MarketScreen> {
               color: AppTheme.textPrimary,
             ),
           ),
-          SizedBox(width: 8.w),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10.r),
-            ),
-            child: Text(
-              '$count',
-              style: TextConstants.smallText.copyWith(
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w600,
-                color: color,
-              ),
-            ),
-          ),
+          // SizedBox(width: 8.w),
+          // Container(
+          //   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+          //   decoration: BoxDecoration(
+          //     color: color.withValues(alpha: 0.1),
+          //     borderRadius: BorderRadius.circular(10.r),
+          //   ),
+          //   child: Text(
+          //     '$count',
+          //     style: TextConstants.smallText.copyWith(
+          //       fontSize: 12.sp,
+          //       fontWeight: FontWeight.w600,
+          //       color: color,
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );
@@ -419,9 +437,9 @@ class _MarketScreenState extends State<MarketScreen> {
 
   //  Calculate dynamic image height for variety
   double _calculateImageHeight(int index) {
-    if (index % 7 == 0) return 180.h; // Tallest
-    if (index % 5 == 0) return 160.h; // Tall
-    if (index % 3 == 0) return 140.h; // Medium
+    // if (index % 7 == 0) return 180.h; // Tallest
+    // if (index % 5 == 0) return 160.h; // Tall
+    // if (index % 3 == 0) return 140.h; // Medium
     return 120.h; // Default/Short
   }
 
@@ -488,41 +506,6 @@ class _MarketScreenState extends State<MarketScreen> {
   }
 }
 
-//  Custom delegate for pinned filter header
-class _FilterHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final double minHeight;
-  final double maxHeight;
-  final Widget child;
-
-  _FilterHeaderDelegate({
-    required this.minHeight,
-    required this.maxHeight,
-    required this.child,
-  });
-
-  @override
-  double get minExtent => minHeight;
-
-  @override
-  double get maxExtent => maxHeight;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return SizedBox.expand(child: child);
-  }
-
-  @override
-  bool shouldRebuild(_FilterHeaderDelegate oldDelegate) {
-    return maxHeight != oldDelegate.maxHeight ||
-        minHeight != oldDelegate.minHeight ||
-        child != oldDelegate.child;
-  }
-}
-
 class _PostOptionButton extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -551,7 +534,7 @@ class _PostOptionButton extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.1),
+                color: AppTheme.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(

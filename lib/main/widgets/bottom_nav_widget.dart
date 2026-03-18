@@ -1,11 +1,10 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import 'package:iconify_flutter/iconify_flutter.dart';
-import 'package:iconify_flutter/icons/ph.dart';
+import 'package:iconly/iconly.dart';
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/provider/animated_provider.dart';
+import 'package:campcon/main/provider/notify_provider.dart';
 
 typedef NavTapCallback = void Function(int index);
 
@@ -54,47 +53,49 @@ class _BottomNavWidgetState extends State<BottomNavWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppTheme.surface.withOpacity(0.85),
-            border: Border(
-              top: BorderSide(
-                color: AppTheme.border.withOpacity(0.3),
-                width: 0.5,
-              ),
-            ),
+    final appColors = context.appColors;
+    return Container(
+      decoration: BoxDecoration(
+        color: appColors.surface,
+        border: Border(
+          top: BorderSide(
+            color: appColors.border,
+            width: 0.5,
           ),
-          child: SafeArea(
-            top: false,
-            child: Container(
-              height: 56.h,
-              padding: EdgeInsets.symmetric(horizontal: 8.w),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildNavItem(0, Ph.house_fill, Ph.house_bold),
-                  _buildNavItem(1, Ph.chats_circle_fill, Ph.chats_circle_bold),
-                  _buildNavItem(2, Ph.notebook_fill, Ph.notebook_bold),
-                  _buildNavItem(3, Ph.bell_fill, Ph.bell_bold),
-                  _buildNavItem(4, Ph.shopping_bag_fill, Ph.shopping_bag_bold),
-                ],
-              ),
-            ),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Container(
+          height: 56.h,
+          padding: EdgeInsets.symmetric(horizontal: 8.w),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(0, IconlyBold.home, IconlyLight.home),
+              _buildNavItem(1, IconlyBold.message, IconlyLight.message),
+              _buildNavItem(2, IconlyBold.document, IconlyLight.document),
+              _buildNavItem(
+                  3, IconlyBold.notification, IconlyLight.notification),
+              _buildNavItem(4, IconlyBold.bag, IconlyLight.bag),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildNavItem(int index, String filledIcon, String outlineIcon) {
+  Widget _buildNavItem(
+    int index,
+    IconData boldIcon,
+    IconData lightIcon,
+  ) {
     return ChangeNotifierProvider<AnimatedProvider>.value(
       value: _navAnimations[index],
       child: Consumer<AnimatedProvider>(
         builder: (context, animation, child) {
           final isSelected = widget.currentIndex == index;
+          final colorScheme = Theme.of(context).colorScheme;
 
           return Expanded(
             child: GestureDetector(
@@ -114,30 +115,73 @@ class _BottomNavWidgetState extends State<BottomNavWidget> {
                       scale: animation.isButtonPressed ? 0.85 : 1.0,
                       duration: const Duration(milliseconds: 150),
                       curve: Curves.easeOut,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: EdgeInsets.all(8.w),
-                        child: Iconify(
-                          isSelected ? filledIcon : outlineIcon,
-                          color: isSelected
-                              ? AppTheme.primary
-                              : AppTheme.textSecondary,
-                          size: 26.sp,
-                        ),
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: EdgeInsets.all(8.w),
+                            child: Icon(
+                              isSelected ? boldIcon : lightIcon,
+                              color: isSelected
+                                  ? colorScheme.primary
+                                  : context.appColors.textSecondary,
+                              size: isSelected ? 22.sp : 24.sp,
+                            ),
+                          ),
+                          // Notification badge (only for notification icon, index 3)
+                          if (index == 3)
+                            Consumer<NotifyProvider>(
+                              builder: (context, notifyProvider, child) {
+                                final unreadCount = notifyProvider.unreadCount;
+                                if (unreadCount == 0) {
+                                  return SizedBox.shrink();
+                                }
+
+                                final displayCount = unreadCount > 9
+                                    ? '9+'
+                                    : unreadCount.toString();
+
+                                return Positioned(
+                                  top: -4.h,
+                                  right: -4.w,
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal:
+                                          displayCount == '9+' ? 4.w : 5.w,
+                                      vertical: 2.h,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.error,
+                                      borderRadius: BorderRadius.circular(8.r),
+                                    ),
+                                    child: Text(
+                                      displayCount,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10.sp,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                        ],
                       ),
                     ),
                     SizedBox(height: 2.h),
                     // Bottom indicator
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeInOut,
-                      height: 3.h,
-                      width: isSelected ? 24.w : 0,
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary,
-                        borderRadius: BorderRadius.circular(1.5.r),
-                      ),
-                    ),
+                    // AnimatedContainer(
+                    //   duration: const Duration(milliseconds: 250),
+                    //   curve: Curves.easeInOut,
+                    //   height: 3.h,
+                    //   width: isSelected ? 24.w : 0,
+                    //   decoration: BoxDecoration(
+                    //     color: AppTheme.primary,
+                    //     borderRadius: BorderRadius.circular(1.5.r),
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
@@ -193,7 +237,7 @@ class _BottomNavWidgetState extends State<BottomNavWidget> {
         borderRadius: BorderRadius.circular(40.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 20,
             offset: const Offset(0, 20),
             spreadRadius: 2,
@@ -206,9 +250,9 @@ class _BottomNavWidgetState extends State<BottomNavWidget> {
           filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
           child: Container(
             decoration: BoxDecoration(
-              color: AppTheme.surface.withOpacity(0.7),
+              color: AppTheme.surface.withValues(alpha: 0.7),
               borderRadius: BorderRadius.circular(20.r),
-              border: Border.all(color: AppTheme.border.withOpacity(0.25)),
+              border: Border.all(color: AppTheme.border.withValues(alpha: 0.25)),
             ),
             padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 12.w),
             child: SafeArea(
@@ -271,7 +315,7 @@ class _BottomNavWidgetState extends State<BottomNavWidget> {
                       height: 48.h,
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? AppTheme.primary.withOpacity(0.15)
+                            ? AppTheme.primary.withValues(alpha: 0.15)
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(40.r),
                       ),
@@ -281,7 +325,7 @@ class _BottomNavWidgetState extends State<BottomNavWidget> {
                     Positioned.fill(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: AppTheme.primary.withOpacity(0.08),
+                          color: AppTheme.primary.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(14.r),
                         ),
                       ),
@@ -297,7 +341,7 @@ class _BottomNavWidgetState extends State<BottomNavWidget> {
                         isSelected ? filledIcon : outlineIcon,
                         color: isSelected
                             ? AppTheme.primary
-                            : AppTheme.textPrimary.withOpacity(0.8),
+                            : AppTheme.textPrimary.withValues(alpha: 0.8),
                         size: 30.sp,
                       ),
                     ),

@@ -191,7 +191,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             Container(
               padding: EdgeInsets.all(10.w),
               decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.1),
+                color: AppTheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10.r),
               ),
               child: Iconify(
@@ -330,10 +330,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     // Top-level scaffold doesn't need to rebuild on controller changes.
-    return WillPopScope(
-      onWillPop: _onWillPop,
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (bool didPop) {
+        if (didPop) return;
+        _onWillPop().then((shouldPop) {
+          if (shouldPop && context.mounted) Navigator.of(context).pop();
+        });
+      },
       child: Scaffold(
-        backgroundColor: AppTheme.surface,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         appBar: AppBar(
           backgroundColor: AppTheme.surface,
           elevation: 0,
@@ -513,7 +519,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                                     vertical: 8.h),
                                                 decoration: BoxDecoration(
                                                   color: AppTheme.primary
-                                                      .withOpacity(0.08),
+                                                      .withValues(alpha: 0.08),
                                                   borderRadius:
                                                       BorderRadius.circular(
                                                           12.r),

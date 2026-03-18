@@ -25,7 +25,7 @@ class EmptyStateWidget extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(24.w), //  Reduced from 32.w
               decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.1),
+                color: AppTheme.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -33,7 +33,7 @@ class EmptyStateWidget extends StatelessWidget {
                     ? Icons.shopping_bag_outlined
                     : Icons.home_repair_service_outlined,
                 size: 64.sp, //  Reduced from 80.sp
-                color: AppTheme.primary.withOpacity(0.5),
+                color: AppTheme.primary.withValues(alpha: 0.5),
               ),
             ),
             SizedBox(height: 20.h), //  Reduced from 24.h
@@ -66,7 +66,7 @@ class EmptyStateWidget extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12.r),
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.primary.withOpacity(0.3),
+                      color: AppTheme.primary.withValues(alpha: 0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),

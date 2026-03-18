@@ -112,13 +112,13 @@ class AttendeeStatsCard extends StatelessWidget {
                     padding: EdgeInsets.symmetric(vertical: 12.h),
                     decoration: BoxDecoration(
                       color: isAttending
-                          ? AppTheme.success.withOpacity(0.1)
-                          : AppTheme.primary.withOpacity(0.1),
+                          ? AppTheme.success.withValues(alpha: 0.1)
+                          : AppTheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12.r),
                       border: Border.all(
                         color: isAttending
-                            ? AppTheme.success.withOpacity(0.3)
-                            : AppTheme.primary.withOpacity(0.3),
+                            ? AppTheme.success.withValues(alpha: 0.3)
+                            : AppTheme.primary.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Row(
@@ -148,43 +148,43 @@ class AttendeeStatsCard extends StatelessWidget {
               ],
 
               // Already attending indicator for paid events
-              // if (!isOrganizer &&
-              //     !isPastEvent &&
-              //     event.sellOnCampcon &&
-              //     !event.isFree &&
-              //     isAttending) ...[
-              //   SizedBox(height: 16.h),
-              //   Container(
-              //     width: double.infinity,
-              //     padding: EdgeInsets.symmetric(vertical: 12.h),
-              //     decoration: BoxDecoration(
-              //       color: AppTheme.success.withOpacity(0.1),
-              //       borderRadius: BorderRadius.circular(12.r),
-              //       border: Border.all(
-              //         color: AppTheme.success.withOpacity(0.3),
-              //       ),
-              //     ),
-              //     child: Row(
-              //       mainAxisAlignment: MainAxisAlignment.center,
-              //       children: [
-              //         Iconify(
-              //           Ph.check_circle_fill,
-              //           size: 20.sp,
-              //           color: AppTheme.success,
-              //         ),
-              //         SizedBox(width: 8.w),
-              //         Text(
-              //           "You have a ticket!",
-              //           style: TextConstants.mediumText.copyWith(
-              //             fontSize: 14.sp,
-              //             fontWeight: FontWeight.w600,
-              //             color: AppTheme.success,
-              //           ),
-              //         ),
-              //       ],
-              //     ),
-              //   ),
-              // ],
+              if (!isOrganizer &&
+                  !isPastEvent &&
+                  event.sellOnCampcon &&
+                  !event.isFree &&
+                  isAttending) ...[
+                SizedBox(height: 16.h),
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                  decoration: BoxDecoration(
+                    color: AppTheme.success.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(
+                      color: AppTheme.success.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Iconify(
+                        Ph.check_circle_fill,
+                        size: 20.sp,
+                        color: AppTheme.success,
+                      ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        "You have a ticket!",
+                        style: TextConstants.mediumText.copyWith(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.success,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ),
         );

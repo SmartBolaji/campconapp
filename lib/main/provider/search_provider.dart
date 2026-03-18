@@ -333,7 +333,7 @@ class SearchProvider extends ChangeNotifier {
 
     final snapshot = await _firestore
         .collection('notifications')
-        .where('userId', isEqualTo: _currentUserId)
+        .where('recipientId', isEqualTo: _currentUserId)
         .orderBy('createdAt', descending: true)
         .limit(50)
         .get();

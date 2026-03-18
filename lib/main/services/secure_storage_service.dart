@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 
@@ -35,7 +36,7 @@ class SecureStorageService {
         );
       }
     } catch (e) {
-      print('Error saving auth status: $e');
+      debugPrint('Error saving auth status: $e');
       rethrow;
     }
   }
@@ -45,7 +46,7 @@ class SecureStorageService {
     try {
       return await _storage.read(key: _keyUserId);
     } catch (e) {
-      print('Error reading user ID: $e');
+      debugPrint('Error reading user ID: $e');
       return null;
     }
   }
@@ -55,7 +56,7 @@ class SecureStorageService {
     try {
       return await _storage.read(key: _keyUserEmail);
     } catch (e) {
-      print('Error reading user email: $e');
+      debugPrint('Error reading user email: $e');
       return null;
     }
   }
@@ -66,7 +67,7 @@ class SecureStorageService {
       final value = await _storage.read(key: _keyIsAuthenticated);
       return value == 'true';
     } catch (e) {
-      print('Error checking auth status: $e');
+      debugPrint('Error checking auth status: $e');
       return false;
     }
   }
@@ -80,7 +81,7 @@ class SecureStorageService {
       }
       return null;
     } catch (e) {
-      print('Error reading user data: $e');
+      debugPrint('Error reading user data: $e');
       return null;
     }
   }
@@ -93,7 +94,7 @@ class SecureStorageService {
       await _storage.delete(key: _keyIsAuthenticated);
       await _storage.delete(key: _keyUserData);
     } catch (e) {
-      print('Error clearing auth data: $e');
+      debugPrint('Error clearing auth data: $e');
       rethrow;
     }
   }
@@ -103,7 +104,7 @@ class SecureStorageService {
     try {
       await _storage.deleteAll();
     } catch (e) {
-      print('Error clearing all storage: $e');
+      debugPrint('Error clearing all storage: $e');
       rethrow;
     }
   }

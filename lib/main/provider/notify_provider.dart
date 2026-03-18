@@ -189,7 +189,37 @@ class NotifyProvider extends ChangeNotifier {
   //   notifyListeners();
   // }
 
-  // Load notifications for a user
+  // Load only unread notification count (lightweight)
+  Future<void> loadUnreadCount(String userId) async {
+    try {
+      final countQuery = await _firestore
+          .collection('notifications')
+          .where('recipientId', isEqualTo: userId)
+          .where('isRead', isEqualTo: false)
+          .count()
+          .get();
+
+      _unreadCount = countQuery.count!;
+      notifyListeners();
+
+      debugPrint(' Loaded unread count: $_unreadCount');
+
+      // Listen for real-time count updates
+      _notificationSubscription = _firestore
+          .collection('notifications')
+          .where('recipientId', isEqualTo: userId)
+          .where('isRead', isEqualTo: false)
+          .snapshots()
+          .listen((snapshot) {
+        _unreadCount = snapshot.docs.length;
+        notifyListeners();
+      });
+    } catch (e) {
+      debugPrint('❌ Error loading unread count: $e');
+    }
+  }
+
+  // Load all notifications (only when user opens notification screen)
   Future<void> loadNotifications(String userId) async {
     if (_hasLoaded || _isLoading) return;
 

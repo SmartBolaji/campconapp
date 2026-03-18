@@ -9,12 +9,7 @@ import 'package:image_picker/image_picker.dart';
 
 class MessageUploadService {
   static final ImagePicker _picker = ImagePicker();
-  static final backblazeService = BackblazeService(
-    keyId: '0050fae555030410000000003',
-    applicationKey: 'K005wG+vROJBYZFRpo0HVDn+Q4V3+zw',
-    bucketId: 'f0ef2ace6525c59093a00411',
-    bucketName: 'Campcon-Media',
-  );
+  static final backblazeService = BackblazeService.instance;
 
   // Main function to handle image selection, cropping and uploading
   static Future<void> pickAndUploadImage({
@@ -94,7 +89,11 @@ class MessageUploadService {
 
   static Future<String?> _uploadImage(File imageFile) async {
     try {
-      String downloadUrl = await backblazeService.uploadFile(imageFile);
+      // Compress image first
+      final compressedImage = await backblazeService.compressImage(imageFile);
+      // Upload compressed image via Cloud Function
+      String downloadUrl =
+          await backblazeService.uploadImageToCloud(compressedImage);
       return downloadUrl;
     } catch (e) {
       debugPrint("Image upload failed: $e");

@@ -3,6 +3,7 @@ import 'package:campcon/main/constants/vars_constants.dart';
 import 'package:campcon/main/models/resource_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 class ResourceProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -24,6 +25,18 @@ class ResourceProvider extends ChangeNotifier {
   String? _tasksError;
   String? _currentUserId;
 
+  // Faculty Resources State (for FacultyResourcesScreen)
+  Map<String, List<ResourceModel>> _facultyResourcesCache = {};
+  Map<String, bool> _facultyLoadingState = {};
+  Map<String, String?> _facultyErrorState = {};
+  StreamSubscription<QuerySnapshot>? _facultyResourcesSubscription;
+
+  // Faculty Resources Filters
+  String? _currentFacultyFilter;
+  String? _selectedDepartmentFilter;
+  String _selectedLevelFilter = 'All';
+  String _searchQuery = '';
+
   // Getters
   int get selectedTab => _selectedTab;
   String? get selectedFaculty => _selectedFaculty;
@@ -39,6 +52,53 @@ class ResourceProvider extends ChangeNotifier {
   bool get isLoadingTasks => _isLoadingTasks;
   String? get resourcesError => _resourcesError;
   String? get tasksError => _tasksError;
+
+  // Faculty Resources Getters
+  bool get isFacultyResourcesLoading =>
+      _currentFacultyFilter != null &&
+      (_facultyLoadingState[_currentFacultyFilter] ?? false);
+  String? get facultyResourcesError => _currentFacultyFilter != null
+      ? _facultyErrorState[_currentFacultyFilter]
+      : null;
+  String? get selectedDepartmentFilter => _selectedDepartmentFilter;
+  String get selectedLevelFilter => _selectedLevelFilter;
+  String get searchQuery => _searchQuery;
+
+  List<ResourceModel> get facultyResources {
+    if (_currentFacultyFilter == null) return [];
+
+    List<ResourceModel> resources =
+        _facultyResourcesCache[_currentFacultyFilter] ?? [];
+
+    // Apply filters
+    return resources.where((resource) {
+      // Department filter
+      if (_selectedDepartmentFilter != null &&
+          resource.department != _selectedDepartmentFilter) {
+        return false;
+      }
+
+      // Level filter
+      if (_selectedLevelFilter != 'All' &&
+          resource.level != _selectedLevelFilter) {
+        return false;
+      }
+
+      // Search filter
+      if (_searchQuery.isNotEmpty) {
+        final query = _searchQuery.toLowerCase();
+        final matchesTitle = resource.title.toLowerCase().contains(query);
+        final matchesDesc = resource.description.toLowerCase().contains(query);
+        final matchesCourse =
+            resource.course?.toLowerCase().contains(query) ?? false;
+        if (!matchesTitle && !matchesDesc && !matchesCourse) {
+          return false;
+        }
+      }
+
+      return true;
+    }).toList();
+  }
 
   // Get tasks filtered by category
   List<TaskModel> getTasksByCategory(String category) {
@@ -179,6 +239,152 @@ class ResourceProvider extends ChangeNotifier {
     if (userId != null) {
       loadTasks(userId);
     }
+  }
+
+  // === Faculty Resources Methods ===
+
+  // Initialize faculty resources screen
+  void initializeFacultyResources(String faculty) {
+    _currentFacultyFilter = faculty;
+    _selectedDepartmentFilter = null;
+    _selectedLevelFilter = 'All';
+    _searchQuery = '';
+
+    // Load if not cached
+    if (!_facultyResourcesCache.containsKey(faculty)) {
+      loadFacultyResources(faculty);
+    } else {
+      notifyListeners();
+    }
+  }
+
+  // Load faculty resources with caching
+  Future<void> loadFacultyResources(String faculty,
+      {bool forceRefresh = false}) async {
+    // Return cached if available and not force refresh
+    if (!forceRefresh && _facultyResourcesCache.containsKey(faculty)) {
+      return;
+    }
+
+    _currentFacultyFilter = faculty;
+    _facultyLoadingState[faculty] = true;
+    _facultyErrorState[faculty] = null;
+    notifyListeners();
+
+    try {
+      // Cancel existing subscription
+      await _facultyResourcesSubscription?.cancel();
+
+      // Get initial data
+      final snapshot = await _firestore
+          .collection('resources')
+          .where('faculty', isEqualTo: faculty)
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      _facultyResourcesCache[faculty] = snapshot.docs
+          .map((doc) {
+            try {
+              return ResourceModel.fromJson(doc.data());
+            } catch (e) {
+              debugPrint('Error parsing resource: $e');
+              return null;
+            }
+          })
+          .whereType<ResourceModel>()
+          .toList();
+
+      _facultyLoadingState[faculty] = false;
+      notifyListeners();
+
+      // Listen for new additions only
+      _facultyResourcesSubscription = _firestore
+          .collection('resources')
+          .where('faculty', isEqualTo: faculty)
+          .orderBy('createdAt', descending: true)
+          .limit(1)
+          .snapshots()
+          .listen((snapshot) {
+        if (snapshot.docChanges.isNotEmpty) {
+          for (var change in snapshot.docChanges) {
+            if (change.type == DocumentChangeType.added) {
+              try {
+                final resource = ResourceModel.fromJson(change.doc.data()!);
+                final cached = _facultyResourcesCache[faculty] ?? [];
+
+                // Only add if not already in cache
+                if (!cached.any((r) => r.id == resource.id)) {
+                  _facultyResourcesCache[faculty] = [resource, ...cached];
+                  notifyListeners();
+                }
+              } catch (e) {
+                debugPrint('Error adding new resource: $e');
+              }
+            }
+          }
+        }
+      });
+
+      debugPrint(
+          '✓ Loaded ${_facultyResourcesCache[faculty]?.length ?? 0} resources for $faculty');
+    } catch (e) {
+      debugPrint('❌ Error loading faculty resources: $e');
+      _facultyLoadingState[faculty] = false;
+      _facultyErrorState[faculty] = 'Failed to load resources';
+      notifyListeners();
+    }
+  }
+
+  // Update department filter
+  void setDepartmentFilter(String? department) {
+    _selectedDepartmentFilter = department;
+    notifyListeners();
+  }
+
+  // Update level filter
+  void setLevelFilter(String level) {
+    _selectedLevelFilter = level;
+    notifyListeners();
+  }
+
+  // Update search query
+  void setSearchQuery(String query) {
+    _searchQuery = query;
+    notifyListeners();
+  }
+
+  // Clear faculty filters
+  void clearFacultyFilters() {
+    _selectedDepartmentFilter = null;
+    _selectedLevelFilter = 'All';
+    _searchQuery = '';
+    notifyListeners();
+  }
+
+  // Refresh faculty resources
+  Future<void> refreshFacultyResources(String faculty) async {
+    await loadFacultyResources(faculty, forceRefresh: true);
+  }
+
+  // Clear faculty resources cache
+  void clearFacultyResourcesCache() {
+    _facultyResourcesCache.clear();
+    _facultyLoadingState.clear();
+    _facultyErrorState.clear();
+    _currentFacultyFilter = null;
+    _selectedDepartmentFilter = null;
+    _selectedLevelFilter = 'All';
+    _searchQuery = '';
+    notifyListeners();
+  }
+
+  // Cleanup faculty resources
+  void disposeFacultyResources() {
+    _facultyResourcesSubscription?.cancel();
+    _currentFacultyFilter = null;
+    _selectedDepartmentFilter = null;
+    _selectedLevelFilter = 'All';
+    _searchQuery = '';
   }
 
   // Load resources based on selected filters
@@ -332,6 +538,12 @@ class ResourceProvider extends ChangeNotifier {
     try {
       await _firestore.collection('resources').doc(resourceId).delete();
       _resources.removeWhere((r) => r.id == resourceId);
+
+      // Also remove from faculty cache
+      _facultyResourcesCache.forEach((faculty, resources) {
+        resources.removeWhere((r) => r.id == resourceId);
+      });
+
       notifyListeners();
       return true;
     } catch (e) {
@@ -347,6 +559,7 @@ class ResourceProvider extends ChangeNotifier {
         'downloadCount': FieldValue.increment(1),
       });
 
+      // Update in main resources list
       final index = _resources.indexWhere((r) => r.id == resourceId);
       if (index != -1) {
         final resource = _resources[index];
@@ -366,8 +579,33 @@ class ResourceProvider extends ChangeNotifier {
           downloadCount: resource.downloadCount + 1,
           likes: resource.likes,
         );
-        notifyListeners();
       }
+
+      // Update in faculty cache
+      _facultyResourcesCache.forEach((faculty, resources) {
+        final cacheIndex = resources.indexWhere((r) => r.id == resourceId);
+        if (cacheIndex != -1) {
+          final resource = resources[cacheIndex];
+          resources[cacheIndex] = ResourceModel(
+            id: resource.id,
+            title: resource.title,
+            description: resource.description,
+            faculty: resource.faculty,
+            department: resource.department,
+            level: resource.level,
+            course: resource.course,
+            resourceType: resource.resourceType,
+            fileUrl: resource.fileUrl,
+            fileName: resource.fileName,
+            uploaderId: resource.uploaderId,
+            createdAt: resource.createdAt,
+            downloadCount: resource.downloadCount + 1,
+            likes: resource.likes,
+          );
+        }
+      });
+
+      notifyListeners();
     } catch (e) {
       debugPrint('Error incrementing download count: $e');
     }
@@ -393,5 +631,11 @@ class ResourceProvider extends ChangeNotifier {
     }
     await Future.delayed(const Duration(milliseconds: 300));
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _facultyResourcesSubscription?.cancel();
+    super.dispose();
   }
 }

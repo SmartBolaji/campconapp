@@ -1,42 +1,26 @@
 import 'package:campcon/main/models/event_model.dart';
-import 'package:campcon/main/services/backblaze.dart';
+import 'package:campcon/main/provider/upload_status_mixin.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:io';
 
-enum EventUploadStatus {
-  idle,
-  uploading,
-  processing,
-  success,
-  cancelled,
-  failed,
-}
-
-class EventProvider extends ChangeNotifier {
+class EventProvider extends ChangeNotifier with UploadStatusMixin {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final BackblazeService _backblazeService = BackblazeService(
-    keyId: '0050fae555030410000000003',
-    applicationKey: 'K005wG+vROJBYZFRpo0HVDn+Q4V3+zw',
-    bucketId: 'f0ef2ace6525c59093a00411',
-    bucketName: 'Campcon-Media',
-  );
 
   String sortBy = 'Upcoming';
   String selectedCategory = 'All';
 
   // Loading states
   bool _isLoading = false;
+  bool _isLoadingMore = false;
   bool _hasLoaded = false;
+  bool _hasMore = true;
+  DocumentSnapshot? _lastEventDoc;
   String? _error;
 
-  // Silent upload properties
-  EventUploadStatus _uploadStatus = EventUploadStatus.idle;
-  String _uploadMessage = '';
-  bool _showUploadBar = false;
-  double _uploadProgress = 0.0;
-  Function? _cancelCallback;
+  static const int _initialPageSize = 15;
+  static const int _pageSize = 10;
 
   //  Form state management
   File? _selectedImage;
@@ -44,6 +28,9 @@ class EventProvider extends ChangeNotifier {
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
   bool _isFree = true;
+
+  // Selected tier index for ticket selling (new)
+  int? _selectedTierIndex;
 
   //  Form state - Add ticket stock fields
   bool _sellOnCampcon = false;
@@ -82,6 +69,10 @@ class EventProvider extends ChangeNotifier {
   // Cache for events
   List<EventModel> _allEvents = [];
 
+  // Related events
+  List<EventModel> _relatedEvents = [];
+  bool _isLoadingRelated = false;
+
   // User interactions
   Set<String> _attendingEvents = {};
 
@@ -90,13 +81,14 @@ class EventProvider extends ChangeNotifier {
 
   // Getters
   bool get isLoading => _isLoading;
+  bool get isLoadingMore => _isLoadingMore;
   bool get hasLoaded => _hasLoaded;
+  bool get hasMore => _hasMore;
   String? get error => _error;
   List<EventModel> get allEvents => _allEvents;
-  EventUploadStatus get uploadStatus => _uploadStatus;
-  String get uploadMessage => _uploadMessage;
-  bool get showUploadBar => _showUploadBar;
-  double get uploadProgress => _uploadProgress;
+  List<EventModel> get relatedEvents => _relatedEvents;
+  bool get isLoadingRelated => _isLoadingRelated;
+  int? get selectedTierIndex => _selectedTierIndex;
 
   //  Form getters
   File? get selectedImage => _selectedImage;
@@ -116,6 +108,67 @@ class EventProvider extends ChangeNotifier {
 
   // Check if user is attending
   bool isAttending(String eventId) => _attendingEvents.contains(eventId);
+
+  // Select tier
+  void selectTier(int index) {
+    _selectedTierIndex = index;
+    _ticketQuantity = 1; // Reset quantity on tier change
+    notifyListeners();
+  }
+
+  // Get selected tier
+  TicketTier? getSelectedTier(EventModel event) {
+    if (_selectedTierIndex == null ||
+        _selectedTierIndex! >= event.ticketTiers.length) {
+      return null;
+    }
+    return event.ticketTiers[_selectedTierIndex!];
+  }
+
+  // Fetch related events by category or organizer
+  Future<void> fetchRelatedEvents(EventModel event) async {
+    _isLoadingRelated = true;
+    _relatedEvents = [];
+    notifyListeners();
+
+    try {
+      // First try from cache
+      final cached = _allEvents
+          .where((e) =>
+              e.id != event.id &&
+              (e.category == event.category ||
+                  e.organizerId == event.organizerId))
+          .take(10)
+          .toList();
+
+      if (cached.isNotEmpty) {
+        _relatedEvents = cached;
+        _isLoadingRelated = false;
+        notifyListeners();
+        return;
+      }
+
+      // Fallback to Firestore query
+      final snapshot = await _firestore
+          .collection('events')
+          .where('category', isEqualTo: event.category)
+          .limit(11)
+          .get();
+
+      _relatedEvents = snapshot.docs
+          .map((doc) => EventModel.fromJson(doc.data()))
+          .where((e) => e.id != event.id)
+          .take(10)
+          .toList();
+
+      _isLoadingRelated = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoadingRelated = false;
+      notifyListeners();
+      debugPrint('❌ Error loading related events: $e');
+    }
+  }
 
   // Set current user ID (call this from UI on init)
   void setCurrentUserId(String? userId) {
@@ -277,6 +330,7 @@ class EventProvider extends ChangeNotifier {
   void resetTicketPurchase() {
     _ticketQuantity = 1;
     _selectedPaymentMethod = null;
+    _selectedTierIndex = null;
     _isProcessingPurchase = false;
     notifyListeners();
   }
@@ -327,195 +381,10 @@ class EventProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Start silent upload
-  void startSilentUpload({Function? onCancel}) {
-    _uploadStatus = EventUploadStatus.uploading;
-    _uploadProgress = 0.0;
-    _uploadMessage = 'Uploading image...';
-    _showUploadBar = true;
-    _cancelCallback = onCancel;
-    notifyListeners();
-  }
-
-  // Update silent upload progress
-  void updateSilentUploadProgress(double progress, {String? message}) {
-    _uploadProgress = progress;
-    if (message != null) {
-      _uploadMessage = message;
-    }
-    notifyListeners();
-  }
-
-  // Set processing status
-  void setProcessing(String message) {
-    _uploadStatus = EventUploadStatus.processing;
-    _uploadMessage = message;
-    notifyListeners();
-  }
-
-  // Set upload success
-  void setUploadSuccess() {
-    _uploadStatus = EventUploadStatus.success;
-    _uploadMessage = 'Event created successfully!';
-    _uploadProgress = 1.0;
-    notifyListeners();
-
-    // Auto-hide after 3 seconds
-    Future.delayed(const Duration(seconds: 3), () {
-      hideUploadBar();
-    });
-  }
-
-  // Set upload failed
-  void setUploadFailed(String error) {
-    _uploadStatus = EventUploadStatus.failed;
-    _uploadMessage = 'Upload failed: $error';
-    notifyListeners();
-
-    // Auto-hide after 5 seconds
-    Future.delayed(const Duration(seconds: 5), () {
-      hideUploadBar();
-    });
-  }
-
-  // Cancel upload
-  void cancelUpload() {
-    _uploadStatus = EventUploadStatus.cancelled;
-    _uploadMessage = 'Upload cancelled';
-
-    if (_cancelCallback != null) {
-      _cancelCallback!();
-    }
-
-    notifyListeners();
-
-    // Hide after 2 seconds
-    Future.delayed(const Duration(seconds: 2), () {
-      hideUploadBar();
-    });
-  }
-
-  // Hide upload bar
-  void hideUploadBar() {
-    _showUploadBar = false;
-    _uploadStatus = EventUploadStatus.idle;
-    _uploadProgress = 0.0;
-    _uploadMessage = '';
-    _cancelCallback = null;
-    notifyListeners();
-  }
-
-  // Reset upload state
-  void resetUpload() {
-    _uploadStatus = EventUploadStatus.idle;
-    _uploadProgress = 0.0;
-    _uploadMessage = '';
-    _showUploadBar = false;
-    _cancelCallback = null;
-    notifyListeners();
-  }
-
-  // Create event silently
-  Future<bool> createEventSilently({
-    required String organizerId,
-    required String organizerName,
-    required String title,
-    required String description,
-    required String location,
-    required DateTime eventDate,
-    required DateTime eventTime,
-    required String category,
-    required String school,
-    required bool isFree,
-    double? ticketPrice,
-    String? ticketLink,
-    File? image,
-    bool sellOnCampcon = false,
-    int? ticketStock,
-  }) async {
-    if (title.trim().isEmpty ||
-        description.trim().isEmpty ||
-        location.trim().isEmpty) {
-      _error = 'Please fill all required fields';
-      return false;
-    }
-
-    if (!isFree && (ticketPrice == null || ticketPrice <= 0)) {
-      _error = 'Please enter a valid ticket price';
-      return false;
-    }
-
-    // Validate ticket stock if selling on CampCon
-    if (sellOnCampcon && !isFree) {
-      if (ticketStock == null || ticketStock <= 0) {
-        _error = 'Please enter valid ticket quantity';
-        return false;
-      }
-    }
-
-    startSilentUpload();
-    _error = null;
-
-    try {
-      String? imageUrl;
-
-      if (image != null) {
-        updateSilentUploadProgress(0.0, message: 'Compressing image...');
-        File compressedImage = await _backblazeService.compressImage(image);
-
-        updateSilentUploadProgress(0.3, message: 'Uploading image...');
-        imageUrl = await _backblazeService.uploadFile(compressedImage);
-
-        updateSilentUploadProgress(0.7, message: 'Image uploaded...');
-        debugPrint(' Image uploaded successfully');
-
-        if (compressedImage.path != image.path) {
-          try {
-            await compressedImage.delete();
-          } catch (e) {
-            debugPrint('Warning: Could not delete temp file: $e');
-          }
-        }
-      }
-
-      setProcessing('Creating event...');
-      updateSilentUploadProgress(0.9, message: 'Creating event...');
-
-      final eventRef = _firestore.collection('events').doc();
-      final event = EventModel(
-        id: eventRef.id,
-        title: title.trim(),
-        description: description.trim(),
-        location: location.trim(),
-        eventDate: eventDate,
-        eventTime: eventTime,
-        imageUrl: imageUrl,
-        category: category,
-        organizerId: organizerId,
-        organizerName: organizerName,
-        ticketLink: ticketLink?.trim(),
-        ticketPrice: ticketPrice,
-        isFree: isFree,
-        createdAt: DateTime.now(),
-        school: school,
-        sellOnCampcon: sellOnCampcon,
-        ticketStock: ticketStock,
-        soldTickets: 0,
-      );
-
-      await eventRef.set(event.toJson());
-
-      // Add to local list
-      addEvent(event);
-
-      setUploadSuccess();
-      debugPrint(' Event created successfully for $school');
-      return true;
-    } catch (e) {
-      debugPrint('❌ Error creating event: $e');
-      setUploadFailed('Failed to create event. Please try again.');
-      return false;
-    }
+  // Keep provider-specific default message while matching mixin signature.
+  @override
+  void setUploadSuccess({String message = 'Event created successfully!'}) {
+    super.setUploadSuccess(message: message);
   }
 
   // Load events for specific school
@@ -532,7 +401,11 @@ class EventProvider extends ChangeNotifier {
       final snapshot = await _firestore
           .collection('events')
           .orderBy('eventDate', descending: false)
+          .limit(_initialPageSize)
           .get();
+
+      _lastEventDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
+      _hasMore = snapshot.docs.length >= _initialPageSize;
 
       _allEvents = snapshot.docs
           .map((doc) {
@@ -596,6 +469,52 @@ class EventProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint('Error loading user interactions: $e');
     }
+  }
+
+  Future<void> loadMoreEvents(String school) async {
+    if (_isLoading || _isLoadingMore || !_hasMore) return;
+
+    _isLoadingMore = true;
+    notifyListeners();
+
+    try {
+      Query query = _firestore
+          .collection('events')
+          .orderBy('eventDate', descending: false)
+          .limit(_pageSize);
+
+      if (_lastEventDoc != null) {
+        query = query.startAfterDocument(_lastEventDoc!);
+      }
+
+      final snapshot = await query.get();
+
+      if (snapshot.docs.isEmpty) {
+        _hasMore = false;
+      } else {
+        _lastEventDoc = snapshot.docs.last;
+        final newEvents = snapshot.docs
+            .map((doc) {
+              try {
+                return EventModel.fromJson(doc.data() as Map<String, dynamic>);
+              } catch (e) {
+                debugPrint('Error parsing event: $e');
+                return null;
+              }
+            })
+            .whereType<EventModel>()
+            .where((event) => !_allEvents.any((e) => e.id == event.id))
+            .toList();
+
+        _allEvents.addAll(newEvents);
+        _hasMore = snapshot.docs.length >= _pageSize;
+      }
+    } catch (e) {
+      debugPrint('Error loading more events: $e');
+    }
+
+    _isLoadingMore = false;
+    notifyListeners();
   }
 
   // Toggle attending status and save to event subcollection
@@ -705,8 +624,8 @@ class EventProvider extends ChangeNotifier {
     }
   }
 
-  // Process ticket purchase
-  Future<bool> processPurchase({
+  /// Process ticket purchase. Returns ticket ID on success, null on failure.
+  Future<String?> processPurchase({
     required String eventId,
     required String userId,
     required String userName,
@@ -740,15 +659,17 @@ class EventProvider extends ChangeNotifier {
       // Also add to attending
       await toggleAttending(eventId, userId, userName);
 
+      final ticketId = ticketRef.id;
+
       // Reset purchase state
       resetTicketPurchase();
 
-      return true;
+      return ticketId;
     } catch (e) {
       debugPrint('Error processing purchase: $e');
       _isProcessingPurchase = false;
       notifyListeners();
-      return false;
+      return null;
     }
   }
 
@@ -773,8 +694,93 @@ class EventProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Update an existing event
+  Future<bool> updateEvent(String eventId, Map<String, dynamic> data) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _firestore.collection('events').doc(eventId).update(data);
+
+      // Update local cache
+      final index = _allEvents.indexWhere((e) => e.id == eventId);
+      if (index != -1) {
+        final doc = await _firestore.collection('events').doc(eventId).get();
+        if (doc.exists) {
+          _allEvents[index] = EventModel.fromJson(doc.data()!);
+        }
+      }
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _error = 'Failed to update event';
+      notifyListeners();
+      debugPrint('Error updating event: $e');
+      return false;
+    }
+  }
+
+  // Delete an event
+  Future<bool> deleteEvent(String eventId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _firestore.collection('events').doc(eventId).delete();
+      removeEvent(eventId);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _error = 'Failed to delete event';
+      notifyListeners();
+      debugPrint('Error deleting event: $e');
+      return false;
+    }
+  }
+
+  // Cancel an event (sets cancelled status, prevents new purchases)
+  Future<bool> cancelEvent(String eventId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _firestore.collection('events').doc(eventId).update({
+        'cancelled': true,
+      });
+
+      // Update local cache
+      final index = _allEvents.indexWhere((e) => e.id == eventId);
+      if (index != -1) {
+        final doc = await _firestore.collection('events').doc(eventId).get();
+        if (doc.exists) {
+          _allEvents[index] = EventModel.fromJson(doc.data()!);
+        }
+      }
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _error = 'Failed to cancel event';
+      notifyListeners();
+      debugPrint('Error cancelling event: $e');
+      return false;
+    }
+  }
+
   Future<void> refreshEvents(String school) async {
     _hasLoaded = false;
+    _hasMore = true;
+    _lastEventDoc = null;
     _allEvents.clear();
     await loadEvents(school);
   }
@@ -783,7 +789,131 @@ class EventProvider extends ChangeNotifier {
     _allEvents.clear();
     _attendingEvents.clear();
     _hasLoaded = false;
+    _hasMore = true;
+    _lastEventDoc = null;
     notifyListeners();
+  }
+
+  // --- Manage Event Dashboard Methods ---
+
+  /// Fetch all attendees for an event
+  Future<List<Map<String, dynamic>>> getAttendees(String eventId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('events')
+          .doc(eventId)
+          .collection('attendees')
+          .orderBy('timestamp', descending: true)
+          .get();
+
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        return data;
+      }).toList();
+    } catch (e) {
+      debugPrint('Error fetching attendees: $e');
+      return [];
+    }
+  }
+
+  /// Toggle check-in status for an attendee
+  Future<bool> toggleCheckIn(String eventId, String attendeeId) async {
+    try {
+      final ref = _firestore
+          .collection('events')
+          .doc(eventId)
+          .collection('attendees')
+          .doc(attendeeId);
+
+      final doc = await ref.get();
+      if (!doc.exists) return false;
+
+      final currentStatus = doc.data()?['checkedIn'] ?? false;
+      await ref.update({
+        'checkedIn': !currentStatus,
+        'checkedInAt': !currentStatus ? FieldValue.serverTimestamp() : null,
+      });
+      return true;
+    } catch (e) {
+      debugPrint('Error toggling check-in: $e');
+      return false;
+    }
+  }
+
+  /// Mark an attendee as checked in by ticket ID
+  Future<Map<String, dynamic>?> checkInByTicketId(
+      String eventId, String ticketId) async {
+    try {
+      // Find the ticket
+      final ticketSnap = await _firestore
+          .collection('events')
+          .doc(eventId)
+          .collection('tickets')
+          .doc(ticketId)
+          .get();
+
+      if (!ticketSnap.exists) return {'status': 'invalid'};
+
+      final ticketData = ticketSnap.data()!;
+      final userId = ticketData['userId'] as String?;
+      if (userId == null) return {'status': 'invalid'};
+
+      // Find the attendee
+      final attendeeQuery = await _firestore
+          .collection('events')
+          .doc(eventId)
+          .collection('attendees')
+          .where('userId', isEqualTo: userId)
+          .limit(1)
+          .get();
+
+      if (attendeeQuery.docs.isEmpty) return {'status': 'invalid'};
+
+      final attendeeDoc = attendeeQuery.docs.first;
+      final attendeeData = attendeeDoc.data();
+
+      if (attendeeData['checkedIn'] == true) {
+        return {
+          'status': 'already',
+          'name': attendeeData['userName'] ?? 'Unknown',
+        };
+      }
+
+      await attendeeDoc.reference.update({
+        'checkedIn': true,
+        'checkedInAt': FieldValue.serverTimestamp(),
+      });
+
+      return {
+        'status': 'success',
+        'name': attendeeData['userName'] ?? 'Unknown',
+      };
+    } catch (e) {
+      debugPrint('Error checking in by ticket: $e');
+      return {'status': 'error'};
+    }
+  }
+
+  /// Fetch all ticket purchases for an event
+  Future<List<Map<String, dynamic>>> getTicketPurchases(String eventId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('events')
+          .doc(eventId)
+          .collection('tickets')
+          .orderBy('purchasedAt', descending: true)
+          .get();
+
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        return data;
+      }).toList();
+    } catch (e) {
+      debugPrint('Error fetching ticket purchases: $e');
+      return [];
+    }
   }
 
   @override

@@ -52,7 +52,9 @@ class TaskListSection extends StatelessWidget {
                 color: AppTheme.primary,
               ),
               SizedBox(height: 12.h),
-              ...publicTasks.map((task) => _buildTaskItem(context, task)),
+              _buildTaskGrid(publicTasks
+                  .map((task) => _buildTaskItem(context, task, isPublic: true))
+                  .toList()),
               SizedBox(height: 24.h),
             ],
 
@@ -65,7 +67,9 @@ class TaskListSection extends StatelessWidget {
                 color: AppTheme.textSecondary,
               ),
               SizedBox(height: 12.h),
-              ...personalTasks.map((task) => _buildTaskItem(context, task)),
+              _buildTaskGrid(personalTasks
+                  .map((task) => _buildTaskItem(context, task))
+                  .toList()),
             ],
           ],
         );
@@ -81,12 +85,12 @@ class TaskListSection extends StatelessWidget {
   }) {
     return Row(
       children: [
-        Iconify(
-          icon,
-          size: 18.sp,
-          color: color,
-        ),
-        SizedBox(width: 8.w),
+        // Iconify(
+        //   icon,
+        //   size: 18.sp,
+        //   color: color,
+        // ),
+        // SizedBox(width: 8.w),
         Text(
           title,
           style: TextConstants.mediumText.copyWith(
@@ -99,7 +103,7 @@ class TaskListSection extends StatelessWidget {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10.r),
           ),
           child: Text(
@@ -115,30 +119,51 @@ class TaskListSection extends StatelessWidget {
     );
   }
 
-  Widget _buildTaskItem(BuildContext context, TaskModel task) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 8.h),
-      child: TaskTile(
-        task: task,
-        currentUserId: currentUserId,
-        onTap: () {
-          Navigator.push(
-            context,
-            PageTransition(
-              type: PageTransitionType.rightToLeft,
-              child: TaskDetailScreen(
-                task: task,
-                currentUserId: currentUserId,
-              ),
+  Widget _buildTaskGrid(List<Widget> items) {
+    final List<Widget> rows = [];
+    for (int i = 0; i < items.length; i += 2) {
+      rows.add(
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: items[i]),
+            SizedBox(width: 10.w),
+            if (i + 1 < items.length)
+              Expanded(child: items[i + 1])
+            else
+              const Expanded(child: SizedBox.shrink()),
+          ],
+        ),
+      );
+    }
+    return Column(children: rows);
+  }
+
+  Widget _buildTaskItem(BuildContext context, TaskModel task,
+      {bool isPublic = false}) {
+    return TaskTile(
+      task: task,
+      currentUserId: currentUserId,
+      onTap: () {
+        Navigator.push(
+          context,
+          PageTransition(
+            type: PageTransitionType.rightToLeft,
+            child: TaskDetailScreen(
+              task: task,
+              currentUserId: currentUserId,
             ),
-          );
-        },
-        onToggleComplete: () {
-          final provider =
-              Provider.of<ResourceProvider>(context, listen: false);
-          provider.toggleTaskCompletion(task.id, !task.isCompleted);
-        },
-      ),
+          ),
+        );
+      },
+      // Public tasks are informational only — no completion toggle
+      onToggleComplete: isPublic
+          ? null
+          : () {
+              final provider =
+                  Provider.of<ResourceProvider>(context, listen: false);
+              provider.toggleTaskCompletion(task.id, !task.isCompleted);
+            },
     );
   }
 
@@ -250,7 +275,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: Column(
           children: [

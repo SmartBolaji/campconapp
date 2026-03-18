@@ -265,7 +265,7 @@ class MessageState extends State<Message> {
           name: currentUser.name ?? 'Someone',
           message: message,
           profileImg: currentUser.profileImage ?? '',
-          uid: currentUser.uid ?? '',
+          uid: currentUser.uid,
           type: 'message',
         );
       }
@@ -322,7 +322,7 @@ class MessageState extends State<Message> {
 
     await MessageUploadService.pickAndUploadImage(
       context: context,
-      currentUserId: currentUser.uid ?? '',
+      currentUserId: currentUser.uid,
       receiverId: widget.uid,
       chatId: getChatId(widget.uid),
       scrollToBottom: _scrollToBottom,
@@ -359,7 +359,6 @@ class MessageState extends State<Message> {
     final authProvider = Provider.of<AuthProvider>(context);
     final currentUser = authProvider.currentUser;
     final currentUserId = currentUser?.uid ?? '';
-    final chatId = getChatId(widget.uid);
 
     // Escrow - commented out for now
     // final escrowProvider = Provider.of<EscrowProvider>(context);
@@ -368,7 +367,7 @@ class MessageState extends State<Message> {
     //     (escrow['status'] == 'in-escrow' || escrow['status'] == 'approved'));
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(65),
         child: AppBar(

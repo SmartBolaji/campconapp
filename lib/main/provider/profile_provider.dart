@@ -2,11 +2,12 @@ import 'package:campcon/main/models/post_model.dart';
 import 'package:campcon/main/models/user_model.dart';
 import 'package:campcon/main/provider/follow_provider.dart';
 import 'package:campcon/main/provider/notify_provider.dart'; //  Add this import
-import 'package:campcon/main/services/notification_helper.dart'; //  Add this import
+import 'package:campcon/main/provider/post_interaction_mixin.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-class ProfileProvider extends ChangeNotifier {
+class ProfileProvider extends ChangeNotifier
+    with PostInteractionMixin<ProfilePostState> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Profile state
@@ -104,6 +105,15 @@ class ProfileProvider extends ChangeNotifier {
     }
     return _postStates[postId]!;
   }
+
+  @override
+  FirebaseFirestore get firestore => _firestore;
+
+  @override
+  Map<String, ProfilePostState> get postStates => _postStates;
+
+  @override
+  ProfilePostState createPostState() => ProfilePostState();
 
   /// Initialize profile with optional initial data
   void initProfile({
@@ -500,28 +510,15 @@ class ProfileProvider extends ChangeNotifier {
           .doc(postId)
           .get();
 
-      // Get counts
-      final likesSnapshot = await _firestore
-          .collection('posts')
-          .doc(postId)
-          .collection('likes')
-          .count()
-          .get();
-
-      final commentsSnapshot = await _firestore
-          .collection('posts')
-          .doc(postId)
-          .collection('comments')
-          .count()
-          .get();
-
       // Get post for shares/reposts count
       final postDoc = await _firestore.collection('posts').doc(postId).get();
       final repostsCount = postDoc.data()?['shares'] ?? 0;
+      final bookmarksCount = postDoc.data()?['bookmarksCount'] ?? 0;
 
       _postStates[postId] = ProfilePostState(
-        likesCount: likesSnapshot.count ?? 0,
-        repliesCount: commentsSnapshot.count ?? 0,
+        likesCount: postDoc.data()?['likesCount'] ?? 0,
+        bookmarksCount: bookmarksCount,
+        repliesCount: postDoc.data()?['commentsCount'] ?? 0,
         repostsCount: repostsCount,
         isLiked: likeDoc.exists,
         isBookmarked: bookmarkDoc.exists,
@@ -542,157 +539,28 @@ class ProfileProvider extends ChangeNotifier {
     String? postImageUrl, //  Add parameter
   ) async {
     if (_currentUserId == null) return;
-
-    final state = getPostState(postId);
-    final wasLiked = state.isLiked;
-
-    // Optimistic update
-    state.isLiked = !wasLiked;
-    state.likesCount =
-        (state.likesCount + (wasLiked ? -1 : 1)).clamp(0, 999999999);
-    notifyListeners();
-
-    try {
-      final likeDoc = _firestore
-          .collection('posts')
-          .doc(postId)
-          .collection('likes')
-          .doc(_currentUserId);
-
-      if (wasLiked) {
-        await likeDoc.delete();
-      } else {
-        final userRef = _firestore.collection('users').doc(_currentUserId);
-        await likeDoc.set({
-          'likedby': userRef,
-          'timestamp': FieldValue.serverTimestamp(),
-        });
-
-        //  Create notification if not liking own post
-        if (postOwnerId != _currentUserId && currentUser != null) {
-          await NotificationHelper.createLikeNotification(
-            notifyProvider: notifyProvider,
-            recipientId: postOwnerId,
-            actorId: _currentUserId!,
-            actorName: currentUser.username,
-            actorProfileImage: currentUser.profileImageUrl,
-            postId: postId,
-            postImageUrl: postImageUrl,
-          );
-        }
-      }
-    } catch (e) {
-      // Revert on error
-      state.isLiked = wasLiked;
-      state.likesCount =
-          (state.likesCount + (wasLiked ? 1 : -1)).clamp(0, 999999999);
-      notifyListeners();
-      debugPrint('Error toggling like: $e');
-    }
+    await super.toggleLikeInteraction(
+      postId: postId,
+      userId: _currentUserId!,
+      postAuthorId: postOwnerId,
+      notifyProvider: notifyProvider,
+      currentUser: currentUser,
+      postImageUrl: postImageUrl,
+    );
   }
 
   /// Toggle bookmark
   Future<void> toggleBookmark(String postId) async {
     if (_currentUserId == null) return;
-
-    final state = getPostState(postId);
-    final wasBookmarked = state.isBookmarked;
-
-    // Optimistic update
-    state.isBookmarked = !wasBookmarked;
-    notifyListeners();
-
-    try {
-      final bookmarkDoc = _firestore
-          .collection('posts')
-          .doc(postId)
-          .collection('bookmarks')
-          .doc(_currentUserId);
-
-      final userBookmarkDoc = _firestore
-          .collection('users')
-          .doc(_currentUserId)
-          .collection('bookmarks')
-          .doc(postId);
-
-      if (wasBookmarked) {
-        await bookmarkDoc.delete();
-        await userBookmarkDoc.delete();
-      } else {
-        await bookmarkDoc.set({
-          'bookmarkedby': _firestore.collection('users').doc(_currentUserId),
-          'timestamp': FieldValue.serverTimestamp(),
-        });
-        await userBookmarkDoc.set({
-          'postRef': _firestore.collection('posts').doc(postId),
-          'type': 'media',
-          'timestamp': FieldValue.serverTimestamp(),
-        });
-      }
-    } catch (e) {
-      // Revert on error
-      state.isBookmarked = wasBookmarked;
-      notifyListeners();
-      debugPrint('Error toggling bookmark: $e');
-    }
+    await super
+        .toggleBookmarkInteraction(postId: postId, userId: _currentUserId!);
   }
 
   /// Toggle repost
   Future<void> toggleRepost(String postId) async {
     if (_currentUserId == null) return;
-
-    final state = getPostState(postId);
-    final wasReposted = state.isReposted;
-
-    // Optimistic update
-    state.isReposted = !wasReposted;
-    state.repostsCount =
-        (state.repostsCount + (wasReposted ? -1 : 1)).clamp(0, 999999999);
-    notifyListeners();
-
-    try {
-      final userRepostDoc = _firestore
-          .collection('users')
-          .doc(_currentUserId)
-          .collection('reposts')
-          .doc(postId);
-
-      final postRef = _firestore.collection('posts').doc(postId);
-
-      await _firestore.runTransaction((transaction) async {
-        final repostSnapshot = await transaction.get(userRepostDoc);
-
-        if (!repostSnapshot.exists && !wasReposted) {
-          // Add repost
-          transaction.set(userRepostDoc, {
-            'postRef': postRef,
-            'timestamp': FieldValue.serverTimestamp(),
-          });
-
-          // Update shares count on the post
-          transaction.update(postRef, {
-            'shares': FieldValue.increment(1),
-          });
-        } else if (repostSnapshot.exists && wasReposted) {
-          // Remove repost
-          transaction.delete(userRepostDoc);
-
-          // Update shares count on the post
-          transaction.update(postRef, {
-            'shares': FieldValue.increment(-1),
-          });
-        }
-      });
-
-      debugPrint(' Repost synced successfully: $postId');
-    } catch (e) {
-      // Revert on error
-      state.isReposted = wasReposted;
-      state.repostsCount =
-          (state.repostsCount + (wasReposted ? 1 : -1)).clamp(0, 999999999);
-      notifyListeners();
-      debugPrint('Error toggling repost: $e');
-    }
+    await super
+        .toggleRepostInteraction(postId: postId, userId: _currentUserId!);
   }
 
   /// Refresh profile (for pull-to-refresh or after edit)
@@ -812,8 +680,9 @@ class PostWithAuthorProfile {
   });
 }
 
-class ProfilePostState {
+class ProfilePostState implements PostInteractionState {
   int likesCount;
+  int bookmarksCount;
   int repliesCount;
   int repostsCount; //  NEW
   bool isLiked;
@@ -822,6 +691,7 @@ class ProfilePostState {
 
   ProfilePostState({
     this.likesCount = 0,
+    this.bookmarksCount = 0,
     this.repliesCount = 0,
     this.repostsCount = 0, //  NEW
     this.isLiked = false,

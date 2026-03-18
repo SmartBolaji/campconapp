@@ -29,11 +29,6 @@ class _OnboardingState extends State<Onboarding> with TickerProviderStateMixin {
   void initState() {
     super.initState();
 
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Color(0xFFE1AF4B),
-      statusBarIconBrightness: Brightness.dark,
-    ));
-
     // BOUNCE animation for the logo
     _bounceController = AnimationController(
       duration: const Duration(seconds: 2),
@@ -81,85 +76,96 @@ class _OnboardingState extends State<Onboarding> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: AppTheme.gradient,
-        ),
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20.sp, vertical: 40.sp),
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const SizedBox(height: 50),
+    final brightness = Theme.of(context).brightness;
+    final isDark = brightness == Brightness.dark;
+    final appColors = context.appColors;
 
-                  // Centered logo + text
-                  Expanded(
-                    child: Center(
-                      child: AnimatedBuilder(
-                        animation: _bounceAnimation,
-                        builder: (context, child) {
-                          return Transform.translate(
-                            offset: Offset(0, _bounceAnimation.value),
-                            child: child,
-                          );
-                        },
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Image.asset(
-                              "assets/images/small_logo.png",
-                              height: 60,
-                              width: 60,
-                            ),
-                            Text("CAMPCON",
-                                style: TextConstants.boldText.copyWith(
-                                  fontSize: 32.sp,
-                                  color: AppTheme.textPrimary,
-                                )),
-                            SizedBox(height: 10.h),
-                            Text('The Campus Social App',
-                                style: TextConstants.mediumText.copyWith(
-                                  fontSize: 15.sp,
-                                  color: AppTheme.textSecondary,
-                                )),
-                          ],
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: AppTheme.gradient.colors.last,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+      ),
+      child: Scaffold(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: AppTheme.gradient,
+          ),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.sp, vertical: 40.sp),
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: SlideTransition(
+                position: _slideAnimation,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const SizedBox(height: 50),
+
+                    // Centered logo + text
+                    Expanded(
+                      child: Center(
+                        child: AnimatedBuilder(
+                          animation: _bounceAnimation,
+                          builder: (context, child) {
+                            return Transform.translate(
+                              offset: Offset(0, _bounceAnimation.value),
+                              child: child,
+                            );
+                          },
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Image.asset(
+                                "assets/images/small_logo.png",
+                                height: 60,
+                                width: 60,
+                              ),
+                              Text("CAMPCON",
+                                  style: TextConstants.boldText.copyWith(
+                                    fontSize: 32.sp,
+                                    color: AppTheme.textPrimary,
+                                  )),
+                              SizedBox(height: 10.h),
+                              Text('The Campus Social App',
+                                  style: TextConstants.mediumText.copyWith(
+                                    fontSize: 15.sp,
+                                    color: AppTheme.textSecondary,
+                                  )),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
 
-                  // Buttons at bottom
-                  Column(
-                    children: [
-                      CustomButton(
-                        text: "Sign In",
-                        onPressed: () => CustomBottomSheet.show(
-                          context: context,
-                          barrierColor: const Color(0xFFE1AF4B),
-                          child: const SignIn(),
+                    // Buttons at bottom
+                    Column(
+                      children: [
+                        CustomButton(
+                          text: "Sign In",
+                          onPressed: () => CustomBottomSheet.show(
+                            context: context,
+                            barrierColor: const Color(0xFFE1AF4B),
+                            child: const SignIn(),
+                          ),
+                          backgroundColor: AppTheme.primaryDark,
+                          textColor: AppTheme.textPrimary,
                         ),
-                        backgroundColor: AppTheme.primaryDark,
-                        textColor: AppTheme.textPrimary,
-                      ),
-                      SizedBox(height: 15.h),
-                      CustomButton(
-                        text: "Create Account",
-                        onPressed: () => CustomBottomSheet.show(
-                          context: context,
-                          barrierColor: const Color(0xFFE1AF4B),
-                          child: const SignUpScreen(),
+                        SizedBox(height: 15.h),
+                        CustomButton(
+                          text: "Create Account",
+                          onPressed: () => CustomBottomSheet.show(
+                            context: context,
+                            barrierColor: const Color(0xFFE1AF4B),
+                            child: const SignUpScreen(),
+                          ),
+                          textColor: AppTheme.primaryDark,
+                          backgroundColor: AppTheme.textPrimary,
                         ),
-                        textColor: AppTheme.primaryDark,
-                        backgroundColor: AppTheme.textPrimary,
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

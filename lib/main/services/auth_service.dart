@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -31,7 +32,7 @@ class AuthService {
 
       return result;
     } catch (e) {
-      print('Error creating account: $e');
+      debugPrint('Error creating account: $e');
       rethrow;
     }
   }
@@ -42,7 +43,7 @@ class AuthService {
       await _auth.currentUser?.reload();
       return _auth.currentUser?.emailVerified ?? false;
     } catch (e) {
-      print('Error checking email verification: $e');
+      debugPrint('Error checking email verification: $e');
       return false;
     }
   }
@@ -52,7 +53,7 @@ class AuthService {
     try {
       await _auth.currentUser?.sendEmailVerification();
     } catch (e) {
-      print('Error resending verification email: $e');
+      debugPrint('Error resending verification email: $e');
       rethrow;
     }
   }
@@ -69,7 +70,7 @@ class AuthService {
       );
       return result;
     } catch (e) {
-      print('Error signing in: $e');
+      debugPrint('Error signing in: $e');
       rethrow;
     }
   }
@@ -99,7 +100,7 @@ class AuthService {
 
       return result;
     } catch (e) {
-      print('Error signing in with Google: $e');
+      debugPrint('Error signing in with Google: $e');
       rethrow;
     }
   }
@@ -111,7 +112,7 @@ class AuthService {
           await _firestore.collection('users').doc(uid).get();
       return doc.exists;
     } catch (e) {
-      print('Error checking user existence: $e');
+      debugPrint('Error checking user existence: $e');
       return false;
     }
   }
@@ -132,7 +133,7 @@ class AuthService {
 
       await saveUserData(newUser);
     } catch (e) {
-      print('Error creating default profile: $e');
+      debugPrint('Error creating default profile: $e');
       rethrow;
     }
   }
@@ -150,7 +151,7 @@ class AuthService {
           data['name'] == null ||
           data['name'].toString().isEmpty;
     } catch (e) {
-      print('Error checking profile setup: $e');
+      debugPrint('Error checking profile setup: $e');
       return true;
     }
   }
@@ -160,7 +161,7 @@ class AuthService {
     try {
       await _firestore.collection('users').doc(user.uid).set(user.toMap());
     } catch (e) {
-      print('Error saving user data: $e');
+      debugPrint('Error saving user data: $e');
       rethrow;
     }
   }
@@ -175,7 +176,7 @@ class AuthService {
       }
       return null;
     } catch (e) {
-      print('Error getting user data: $e');
+      debugPrint('Error getting user data: $e');
       rethrow;
     }
   }
@@ -190,7 +191,7 @@ class AuthService {
           .get();
       return result.docs.isEmpty;
     } catch (e) {
-      print('Error checking username: $e');
+      debugPrint('Error checking username: $e');
       return false;
     }
   }
@@ -210,7 +211,7 @@ class AuthService {
       }
       return null;
     } catch (e) {
-      print('Error getting email from username: $e');
+      debugPrint('Error getting email from username: $e');
       return null;
     }
   }
@@ -224,7 +225,7 @@ class AuthService {
       String downloadUrl = await snapshot.ref.getDownloadURL();
       return downloadUrl;
     } catch (e) {
-      print('Error uploading profile image: $e');
+      debugPrint('Error uploading profile image: $e');
       rethrow;
     }
   }
@@ -234,7 +235,7 @@ class AuthService {
     try {
       await _auth.sendPasswordResetEmail(email: email);
     } catch (e) {
-      print('Error sending password reset email: $e');
+      debugPrint('Error sending password reset email: $e');
       rethrow;
     }
   }
@@ -247,7 +248,7 @@ class AuthService {
         _googleSignIn.signOut(),
       ]);
     } catch (e) {
-      print('Error signing out: $e');
+      debugPrint('Error signing out: $e');
       rethrow;
     }
   }
@@ -279,7 +280,7 @@ class AuthService {
 
       await _firestore.collection('users').doc(uid).update(updateData);
     } catch (e) {
-      print('Error updating user type: $e');
+      debugPrint('Error updating user type: $e');
       rethrow;
     }
   }
@@ -298,7 +299,7 @@ class AuthService {
       await user.reauthenticateWithCredential(credential);
       return true;
     } catch (e) {
-      print('Error re-authenticating user: $e');
+      debugPrint('Error re-authenticating user: $e');
       return false;
     }
   }
@@ -312,7 +313,7 @@ class AuthService {
       // Delete user from Firebase Auth
       await _auth.currentUser?.delete();
     } catch (e) {
-      print('Error deleting user account: $e');
+      debugPrint('Error deleting user account: $e');
       rethrow;
     }
   }

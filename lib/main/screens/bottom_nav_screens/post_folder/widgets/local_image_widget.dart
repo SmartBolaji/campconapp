@@ -130,7 +130,7 @@ class _LocalImageWidgetState extends State<LocalImageWidget> {
                             return Container(
                               width: imageWidth,
                               height: imageHeight,
-                              color: AppTheme.border.withOpacity(0.1),
+                              color: AppTheme.border.withValues(alpha: 0.1),
                               child: Center(
                                 child: Icon(
                                   Icons.broken_image_outlined,
@@ -151,7 +151,7 @@ class _LocalImageWidgetState extends State<LocalImageWidget> {
                               child: Container(
                                 padding: EdgeInsets.all(6.w),
                                 decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.6),
+                                  color: Colors.black.withValues(alpha: 0.6),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
@@ -169,7 +169,7 @@ class _LocalImageWidgetState extends State<LocalImageWidget> {
                         //   child: Container(
                         //     decoration: BoxDecoration(
                         //       shape: BoxShape.circle,
-                        //       color: Colors.black.withOpacity(0.6),
+                        //       color: Colors.black.withValues(alpha: 0.6),
                         //     ),
                         //     padding: EdgeInsets.all(6.w),
                         //     child: Icon(
@@ -225,8 +225,9 @@ class _LocalImageWidgetState extends State<LocalImageWidget> {
       height: 4.h,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(3.r),
-        color:
-            isActive ? AppTheme.primary : AppTheme.textLight.withOpacity(0.4),
+        color: isActive
+            ? AppTheme.primary
+            : AppTheme.textLight.withValues(alpha: 0.4),
       ),
     );
   }

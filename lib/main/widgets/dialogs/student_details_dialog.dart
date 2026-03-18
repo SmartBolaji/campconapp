@@ -85,6 +85,7 @@ class _StudentDetailsDialogState extends State<StudentDetailsDialog>
 
   @override
   Widget build(BuildContext context) {
+    final appColors = context.appColors;
     return ScaleTransition(
       scale: _scaleAnimation,
       child: FadeTransition(
@@ -93,7 +94,7 @@ class _StudentDetailsDialogState extends State<StudentDetailsDialog>
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20.r),
           ),
-          backgroundColor: AppTheme.surface,
+          backgroundColor: appColors.surface,
           child: Consumer<AnimatedProvider>(
             builder: (context, provider, child) {
               return AnimatedOpacity(
@@ -118,7 +119,7 @@ class _StudentDetailsDialogState extends State<StudentDetailsDialog>
                               borderRadius: BorderRadius.circular(20.r),
                               child: Icon(
                                 Icons.close,
-                                color: AppTheme.textPrimary,
+                                color: appColors.textPrimary,
                                 size: 20.sp,
                               ),
                             ),
@@ -129,9 +130,9 @@ class _StudentDetailsDialogState extends State<StudentDetailsDialog>
 
                         _buildAnimatedText(
                           'Help us curate your feed',
-                          TextConstants.smallText.copyWith(
+                          TextConstants.small(context).copyWith(
                             fontSize: 13.sp,
-                            color: AppTheme.textSecondary,
+                            color: appColors.textSecondary,
                           ),
                           delay: 0,
                         ),
@@ -140,9 +141,9 @@ class _StudentDetailsDialogState extends State<StudentDetailsDialog>
 
                         _buildAnimatedText(
                           'Just a few details...',
-                          TextConstants.boldText.copyWith(
+                          TextConstants.bold(context).copyWith(
                             fontSize: 22.sp,
-                            color: AppTheme.textPrimary,
+                            color: appColors.textPrimary,
                             fontWeight: FontWeight.bold,
                           ),
                           delay: 100,
@@ -249,6 +250,8 @@ class _StudentDetailsDialogState extends State<StudentDetailsDialog>
   }
 
   Widget _buildAnimatedButton({required int delay}) {
+    final appColors = context.appColors;
+    final colorScheme = Theme.of(context).colorScheme;
     return TweenAnimationBuilder<double>(
       duration: Duration(milliseconds: 400 + delay),
       tween: Tween(begin: 0.0, end: 1.0),
@@ -302,13 +305,13 @@ class _StudentDetailsDialogState extends State<StudentDetailsDialog>
                     padding: EdgeInsets.symmetric(vertical: 16.h),
                     decoration: BoxDecoration(
                       color: _isFormValid
-                          ? AppTheme.primary
-                          : AppTheme.buttonBorder,
+                          ? colorScheme.primary
+                          : appColors.buttonBorder,
                       borderRadius: BorderRadius.circular(40.r),
                       // boxShadow: _isFormValid && !provider.isButtonPressed
                       //     ? [
                       //         BoxShadow(
-                      //           color: AppTheme.primary.withOpacity(0.4),
+                      //           color: AppTheme.primary.withValues(alpha: 0.4),
                       //           blurRadius: 16,
                       //           offset: const Offset(0, 8),
                       //         ),
@@ -322,12 +325,12 @@ class _StudentDetailsDialogState extends State<StudentDetailsDialog>
                     child: Center(
                       child: Text(
                         'Continue',
-                        style: TextConstants.mediumText.copyWith(
+                        style: TextConstants.medium(context).copyWith(
                           fontSize: 16.sp,
                           fontWeight: FontWeight.w600,
                           color: _isFormValid
-                              ? AppTheme.textPrimary
-                              : AppTheme.textLight,
+                              ? colorScheme.onPrimary
+                              : appColors.textLight,
                         ),
                       ),
                     ),
@@ -347,14 +350,15 @@ class _StudentDetailsDialogState extends State<StudentDetailsDialog>
     required List<String> items,
     required ValueChanged<String?> onChanged,
   }) {
+    final appColors = context.appColors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: TextConstants.smallText.copyWith(
+          style: TextConstants.small(context).copyWith(
             fontSize: 14.sp,
-            color: AppTheme.textPrimary,
+            color: appColors.textPrimary,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -362,10 +366,10 @@ class _StudentDetailsDialogState extends State<StudentDetailsDialog>
         Container(
           padding: EdgeInsets.symmetric(horizontal: 16.w),
           decoration: BoxDecoration(
-            color: AppTheme.buttonBorder,
+            color: appColors.buttonBorder,
             borderRadius: BorderRadius.circular(12.r),
             border: Border.all(
-              color: AppTheme.border,
+              color: appColors.border,
               width: 1,
             ),
           ),
@@ -375,30 +379,30 @@ class _StudentDetailsDialogState extends State<StudentDetailsDialog>
               value: value,
               hint: Text(
                 'Select',
-                style: TextConstants.smallText.copyWith(
-                  color: AppTheme.textLight,
+                style: TextConstants.small(context).copyWith(
+                  color: appColors.textLight,
                   fontSize: 14.sp,
                 ),
               ),
               isExpanded: true,
               icon: Icon(
                 Icons.keyboard_arrow_down,
-                color: AppTheme.textPrimary,
+                color: appColors.textPrimary,
                 size: 24.sp,
               ),
-              dropdownColor: AppTheme.surface,
-              style: TextConstants.mediumText.copyWith(
+              dropdownColor: appColors.surface,
+              style: TextConstants.medium(context).copyWith(
                 fontSize: 14.sp,
-                color: AppTheme.textPrimary,
+                color: appColors.textPrimary,
               ),
               items: items.map((String item) {
                 return DropdownMenuItem<String>(
                   value: item,
                   child: Text(
                     item,
-                    style: TextConstants.mediumText.copyWith(
+                    style: TextConstants.medium(context).copyWith(
                       fontSize: 14.sp,
-                      color: AppTheme.textPrimary,
+                      color: appColors.textPrimary,
                     ),
                   ),
                 );

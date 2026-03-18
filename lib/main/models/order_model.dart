@@ -23,9 +23,15 @@ class OrderModel {
   final double unitPrice;
   final double totalPrice;
   final String pickupLocation;
+  final String? pickupLocationId;
+  final String? pickupAddress;
+  final String? pickupPhone;
+  final String? pickupCenterOwnerId;
   final String paymentMethod;
   final String? orderNotes;
   final OrderStatus status;
+  final bool hasReview;
+  final String? reviewId;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? confirmedAt;
@@ -47,9 +53,15 @@ class OrderModel {
     required this.unitPrice,
     required this.totalPrice,
     required this.pickupLocation,
+    this.pickupLocationId,
+    this.pickupAddress,
+    this.pickupPhone,
+    this.pickupCenterOwnerId,
     required this.paymentMethod,
     this.orderNotes,
     required this.status,
+    this.hasReview = false,
+    this.reviewId,
     required this.createdAt,
     required this.updatedAt,
     this.confirmedAt,
@@ -73,9 +85,15 @@ class OrderModel {
       unitPrice: (map['unitPrice'] ?? 0).toDouble(),
       totalPrice: (map['totalPrice'] ?? 0).toDouble(),
       pickupLocation: map['pickupLocation'] ?? '',
+      pickupLocationId: map['pickupLocationId'],
+      pickupAddress: map['pickupAddress'],
+      pickupPhone: map['pickupPhone'],
+      pickupCenterOwnerId: map['pickupCenterOwnerId'],
       paymentMethod: map['paymentMethod'] ?? '',
       orderNotes: map['orderNotes'],
       status: _parseStatus(map['status']),
+      hasReview: map['hasReview'] ?? false,
+      reviewId: map['reviewId'],
       createdAt: _parseDateTime(map['createdAt']),
       updatedAt: _parseDateTime(map['updatedAt']),
       confirmedAt: map['confirmedAt'] != null
@@ -106,9 +124,15 @@ class OrderModel {
       'unitPrice': unitPrice,
       'totalPrice': totalPrice,
       'pickupLocation': pickupLocation,
+      'pickupLocationId': pickupLocationId,
+      'pickupAddress': pickupAddress,
+      'pickupPhone': pickupPhone,
+      'pickupCenterOwnerId': pickupCenterOwnerId,
       'paymentMethod': paymentMethod,
       'orderNotes': orderNotes,
       'status': status.name,
+      'hasReview': hasReview,
+      'reviewId': reviewId,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
       'confirmedAt': confirmedAt?.toIso8601String(),
@@ -156,9 +180,15 @@ class OrderModel {
     double? unitPrice,
     double? totalPrice,
     String? pickupLocation,
+    String? pickupLocationId,
+    String? pickupAddress,
+    String? pickupPhone,
+    String? pickupCenterOwnerId,
     String? paymentMethod,
     String? orderNotes,
     OrderStatus? status,
+    bool? hasReview,
+    String? reviewId,
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? confirmedAt,
@@ -180,9 +210,15 @@ class OrderModel {
       unitPrice: unitPrice ?? this.unitPrice,
       totalPrice: totalPrice ?? this.totalPrice,
       pickupLocation: pickupLocation ?? this.pickupLocation,
+      pickupLocationId: pickupLocationId ?? this.pickupLocationId,
+      pickupAddress: pickupAddress ?? this.pickupAddress,
+      pickupPhone: pickupPhone ?? this.pickupPhone,
+      pickupCenterOwnerId: pickupCenterOwnerId ?? this.pickupCenterOwnerId,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       orderNotes: orderNotes ?? this.orderNotes,
       status: status ?? this.status,
+      hasReview: hasReview ?? this.hasReview,
+      reviewId: reviewId ?? this.reviewId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       confirmedAt: confirmedAt ?? this.confirmedAt,

@@ -23,7 +23,7 @@ class FacultyCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding:
-            EdgeInsets.only(top: 12.h, bottom: 12.h, left: 10.w, right: 10.w),
+            EdgeInsets.only(top: 14.h, bottom: 14.h, left: 10.w, right: 10.w),
         decoration: BoxDecoration(
           color: AppTheme.surface,
           border: Border(bottom: BorderSide(color: AppTheme.border)),
@@ -46,20 +46,33 @@ class FacultyCard extends StatelessWidget {
               SizedBox(width: 16.w),
             ],
             Expanded(
-              child: Text(
-                faculty,
-                style: TextConstants.smallText.copyWith(
-                  color: AppTheme.textPrimary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15.sp,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Faculty of',
+                    style: TextConstants.smallText.copyWith(
+                      color: AppTheme.textSecondary,
+                      fontSize: 11.sp,
+                    ),
+                  ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    faculty,
+                    style: TextConstants.smallText.copyWith(
+                      color: AppTheme.textPrimary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15.sp,
+                    ),
+                  ),
+                ],
               ),
             ),
-            Icon(
-              Icons.arrow_forward_ios,
-              size: 18.sp,
-              color: AppTheme.textLight,
-            ),
+            // Icon(
+            //   Icons.arrow_forward_ios,
+            //   size: 16.sp,
+            //   color: AppTheme.textLight,
+            // ),
           ],
         ),
       ),

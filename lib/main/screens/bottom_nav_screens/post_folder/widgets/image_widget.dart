@@ -110,7 +110,7 @@ class ImagePageViewWidgetState extends State<ImagePageViewWidget> {
       return Container(
         height: imageHeight,
         decoration: BoxDecoration(
-          color: AppTheme.border.withOpacity(0.1),
+          color: AppTheme.border.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12.r),
         ),
         child: Center(
@@ -185,7 +185,7 @@ class ImagePageViewWidgetState extends State<ImagePageViewWidget> {
                             child: Container(
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.black.withOpacity(0.6),
+                                color: Colors.black.withValues(alpha: 0.6),
                               ),
                               padding: EdgeInsets.all(8.w),
                               child: Icon(
@@ -222,7 +222,7 @@ class ImagePageViewWidgetState extends State<ImagePageViewWidget> {
   Widget _buildImageWidget(int index) {
     if (index >= widget.imageUrls.length) {
       return Container(
-        color: AppTheme.border.withOpacity(0.1),
+        color: AppTheme.border.withValues(alpha: 0.1),
       );
     }
 
@@ -233,7 +233,7 @@ class ImagePageViewWidgetState extends State<ImagePageViewWidget> {
             cacheManager: CustomCacheManager(),
             fit: BoxFit.cover,
             placeholder: (context, url) => Container(
-              color: AppTheme.border.withOpacity(0.1),
+              color: AppTheme.border.withValues(alpha: 0.1),
               child: Center(
                 child: CircularProgressIndicator(
                   color: AppTheme.primary,
@@ -258,7 +258,7 @@ class ImagePageViewWidgetState extends State<ImagePageViewWidget> {
 
   Widget _buildErrorWidget(int index) {
     return Container(
-      color: AppTheme.border.withOpacity(0.1),
+      color: AppTheme.border.withValues(alpha: 0.1),
       child: Center(
         child: GestureDetector(
           onTap: () {
@@ -272,7 +272,7 @@ class ImagePageViewWidgetState extends State<ImagePageViewWidget> {
               Icon(
                 Icons.replay_outlined,
                 size: 35.sp,
-                color: AppTheme.primary.withOpacity(0.5),
+                color: AppTheme.primary.withValues(alpha: 0.5),
               ),
               SizedBox(height: 10.h),
               Text(
@@ -301,8 +301,9 @@ class ImagePageViewWidgetState extends State<ImagePageViewWidget> {
       height: 4.h,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(3.r),
-        color:
-            isActive ? AppTheme.primary : AppTheme.textLight.withOpacity(0.4),
+        color: isActive
+            ? AppTheme.primary
+            : AppTheme.textLight.withValues(alpha: 0.4),
       ),
     );
   }

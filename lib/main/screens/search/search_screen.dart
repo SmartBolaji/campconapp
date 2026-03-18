@@ -57,10 +57,11 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Consumer<SearchProvider>(
       builder: (context, provider, child) {
         return Scaffold(
-          backgroundColor: AppTheme.surface,
+          backgroundColor: colorScheme.surface,
           body: SafeArea(
             child: Column(
               children: [
@@ -189,7 +190,7 @@ class _SearchScreenState extends State<SearchScreen> {
   void _showFilterSheet(BuildContext context, SearchProvider provider) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
       ),

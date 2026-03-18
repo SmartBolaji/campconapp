@@ -40,7 +40,7 @@ class _PickupScreenState extends State<PickupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: Consumer<PickupProvider>(
           builder: (context, provider, child) {
@@ -177,9 +177,9 @@ class _PickupScreenState extends State<PickupScreen> {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: statusColor.withOpacity(0.1),
+        color: statusColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: statusColor.withOpacity(0.3)),
+        border: Border.all(color: statusColor.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -187,7 +187,7 @@ class _PickupScreenState extends State<PickupScreen> {
             width: 48.w,
             height: 48.h,
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.2),
+              color: statusColor.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -240,7 +240,7 @@ class _PickupScreenState extends State<PickupScreen> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.1),
+                  color: AppTheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20.r),
                 ),
                 child: Text(
@@ -333,7 +333,7 @@ class _PickupScreenState extends State<PickupScreen> {
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppTheme.primary, AppTheme.primary.withOpacity(0.8)],
+          colors: [AppTheme.primary, AppTheme.primary.withValues(alpha: 0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -351,7 +351,7 @@ class _PickupScreenState extends State<PickupScreen> {
           Container(
             width: 1,
             height: 40.h,
-            color: AppTheme.white.withOpacity(0.3),
+            color: AppTheme.white.withValues(alpha: 0.3),
           ),
           Expanded(
             child: _buildStatItem(
@@ -372,7 +372,8 @@ class _PickupScreenState extends State<PickupScreen> {
   }) {
     return Column(
       children: [
-        Iconify(icon, size: 24.sp, color: AppTheme.white.withOpacity(0.8)),
+        Iconify(icon,
+            size: 24.sp, color: AppTheme.white.withValues(alpha: 0.8)),
         SizedBox(height: 8.h),
         Text(
           value,
@@ -385,7 +386,7 @@ class _PickupScreenState extends State<PickupScreen> {
           label,
           style: TextConstants.smallText.copyWith(
             fontSize: 12.sp,
-            color: AppTheme.white.withOpacity(0.8),
+            color: AppTheme.white.withValues(alpha: 0.8),
           ),
         ),
       ],
@@ -550,9 +551,9 @@ class _PickupScreenState extends State<PickupScreen> {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: AppTheme.primary.withOpacity(0.1),
+        color: AppTheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppTheme.primary.withOpacity(0.3)),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -562,7 +563,7 @@ class _PickupScreenState extends State<PickupScreen> {
               Container(
                 padding: EdgeInsets.all(8.w),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.15),
+                  color: AppTheme.primary.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Iconify(Ph.storefront,
@@ -786,7 +787,7 @@ class _PickupScreenState extends State<PickupScreen> {
               padding: EdgeInsets.symmetric(vertical: 12.h),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? AppTheme.primary.withOpacity(0.1)
+                    ? AppTheme.primary.withValues(alpha: 0.1)
                     : AppTheme.surface,
                 borderRadius: BorderRadius.circular(10.r),
                 border: Border.all(
@@ -915,7 +916,7 @@ class _PickupScreenState extends State<PickupScreen> {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
         decoration: BoxDecoration(
-          color: AppTheme.primary.withOpacity(0.1),
+          color: AppTheme.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(6.r),
         ),
         child: Text(
@@ -1039,7 +1040,7 @@ class _PickupScreenState extends State<PickupScreen> {
             : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppTheme.primary,
-          disabledBackgroundColor: AppTheme.primary.withOpacity(0.5),
+          disabledBackgroundColor: AppTheme.primary.withValues(alpha: 0.5),
           padding: EdgeInsets.symmetric(vertical: 16.h),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.r),

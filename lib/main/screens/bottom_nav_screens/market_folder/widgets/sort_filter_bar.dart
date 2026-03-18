@@ -14,28 +14,123 @@ class SortFilterBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<MarketplaceProvider>(
       builder: (context, provider, child) {
-        return Container(
-          padding: EdgeInsets.symmetric(vertical: 12.h),
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: 0.w, vertical: 17.h),
           child: Row(
             children: [
-              // Sort Button
               Expanded(
-                child: _FilterButton(
-                  icon: Ph.sort_ascending_bold,
-                  label: 'Sort',
-                  value: provider.sortBy,
-                  onTap: () => _showSortOptions(context, provider),
+                child: GestureDetector(
+                  onTap: () => _showSortFilterSheet(context, provider),
+                  child: Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                    decoration: BoxDecoration(
+                      color: provider.sortBy != 'Recent'
+                          ? AppTheme.primary.withValues(alpha: 0.1)
+                          : Theme.of(context).colorScheme.surface,
+                      borderRadius: BorderRadius.circular(10.r),
+                      border: Border.all(
+                        color: provider.sortBy != 'Recent'
+                            ? AppTheme.primary
+                            : AppTheme.border,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Iconify(
+                          Ph.funnel,
+                          size: 14.sp,
+                          color: provider.sortBy != 'Recent'
+                              ? AppTheme.primary
+                              : AppTheme.textSecondary,
+                        ),
+                        SizedBox(width: 6.w),
+                        Expanded(
+                          child: Text(
+                            provider.sortBy == 'Recent'
+                                ? 'All Sorts'
+                                : provider.sortBy,
+                            style: TextConstants.smallText.copyWith(
+                              fontSize: 13.sp,
+                              fontWeight: FontWeight.w600,
+                              color: provider.sortBy != 'Recent'
+                                  ? AppTheme.primary
+                                  : AppTheme.textSecondary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        SizedBox(width: 4.w),
+                        Icon(
+                          Icons.keyboard_arrow_down,
+                          size: 18.sp,
+                          color: provider.sortBy != 'Recent'
+                              ? AppTheme.primary
+                              : AppTheme.textSecondary,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
               SizedBox(width: 12.w),
-
-              // Filter Button
               Expanded(
-                child: _FilterButton(
-                  icon: Ph.funnel_bold,
-                  label: 'Filter',
-                  value: provider.selectedCategory,
-                  onTap: () => _showFilterOptions(context, provider),
+                child: GestureDetector(
+                  onTap: () => _showCategoryFilterSheet(context, provider),
+                  child: Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                    decoration: BoxDecoration(
+                      color: provider.selectedCategory != 'All'
+                          ? AppTheme.primary.withValues(alpha: 0.1)
+                          : Theme.of(context).colorScheme.surface,
+                      borderRadius: BorderRadius.circular(10.r),
+                      border: Border.all(
+                        color: provider.selectedCategory != 'All'
+                            ? AppTheme.primary
+                            : AppTheme.border,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Iconify(
+                          Ph.funnel,
+                          size: 14.sp,
+                          color: provider.selectedCategory != 'All'
+                              ? AppTheme.primary
+                              : AppTheme.textSecondary,
+                        ),
+                        SizedBox(width: 6.w),
+                        Expanded(
+                          child: Text(
+                            provider.selectedCategory == 'All'
+                                ? 'All Categories'
+                                : provider.selectedCategory,
+                            style: TextConstants.smallText.copyWith(
+                              fontSize: 13.sp,
+                              fontWeight: FontWeight.w600,
+                              color: provider.selectedCategory != 'All'
+                                  ? AppTheme.primary
+                                  : AppTheme.textSecondary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        SizedBox(width: 4.w),
+                        Icon(
+                          Icons.keyboard_arrow_down,
+                          size: 18.sp,
+                          color: provider.selectedCategory != 'All'
+                              ? AppTheme.primary
+                              : AppTheme.textSecondary,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -45,7 +140,8 @@ class SortFilterBar extends StatelessWidget {
     );
   }
 
-  void _showSortOptions(BuildContext context, MarketplaceProvider provider) {
+  void _showSortFilterSheet(
+      BuildContext context, MarketplaceProvider provider) {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppTheme.surface,
@@ -62,7 +158,6 @@ class SortFilterBar extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Drag indicator
               Center(
                 child: Container(
                   width: 40.w,
@@ -74,9 +169,8 @@ class SortFilterBar extends StatelessWidget {
                   ),
                 ),
               ),
-
               Text(
-                'Sort by',
+                'Sort By',
                 style: TextConstants.mediumText.copyWith(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.bold,
@@ -84,27 +178,62 @@ class SortFilterBar extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 16.h),
-
-              // Wrap options in Flexible + ListView for scrollability
               Flexible(
                 child: ListView(
                   shrinkWrap: true,
-                  children: [
-                    ...provider.sortOptions.map((option) {
-                      final isSelected = provider.sortBy == option;
-                      return _OptionTile(
-                        title: option,
-                        isSelected: isSelected,
-                        onTap: () {
-                          provider.changeSortBy(option);
-                          Navigator.pop(context);
-                        },
-                      );
-                    }).toList(),
-                  ],
+                  children: provider.sortOptions.map((option) {
+                    final isSelected = provider.sortBy == option;
+
+                    return InkWell(
+                      onTap: () {
+                        provider.changeSortBy(option);
+                        Navigator.pop(context);
+                      },
+                      borderRadius: BorderRadius.circular(12.r),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 16.w, vertical: 14.h),
+                        margin: EdgeInsets.only(bottom: 8.h),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppTheme.primary.withValues(alpha: 0.1)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12.r),
+                          border: Border.all(
+                            color: isSelected
+                                ? AppTheme.primary
+                                : Colors.transparent,
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              option,
+                              style: TextConstants.mediumText.copyWith(
+                                fontSize: 15.sp,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                                color: isSelected
+                                    ? AppTheme.primary
+                                    : AppTheme.textPrimary,
+                              ),
+                            ),
+                            if (isSelected)
+                              Icon(
+                                Icons.check_circle,
+                                color: AppTheme.primary,
+                                size: 20.sp,
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 ),
               ),
-
               SizedBox(height: 20.h),
             ],
           ),
@@ -113,7 +242,8 @@ class SortFilterBar extends StatelessWidget {
     );
   }
 
-  void _showFilterOptions(BuildContext context, MarketplaceProvider provider) {
+  void _showCategoryFilterSheet(
+      BuildContext context, MarketplaceProvider provider) {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppTheme.surface,
@@ -124,14 +254,12 @@ class SortFilterBar extends StatelessWidget {
         return Container(
           padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 20.w),
           constraints: BoxConstraints(
-            maxHeight:
-                MediaQuery.of(context).size.height * 0.7, // ✅ Add max height
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Drag indicator
               Center(
                 child: Container(
                   width: 40.w,
@@ -143,7 +271,6 @@ class SortFilterBar extends StatelessWidget {
                   ),
                 ),
               ),
-
               Text(
                 'Filter by Category',
                 style: TextConstants.mediumText.copyWith(
@@ -153,158 +280,67 @@ class SortFilterBar extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 16.h),
-
-              // ✅ Wrap options in Flexible + ListView for scrollability
               Flexible(
                 child: ListView(
                   shrinkWrap: true,
-                  children: [
-                    ...provider.currentCategories.map((category) {
-                      final isSelected = provider.selectedCategory == category;
-                      return _OptionTile(
-                        title: category,
-                        isSelected: isSelected,
-                        onTap: () {
-                          provider.changeCategory(category);
-                          Navigator.pop(context);
-                        },
-                      );
-                    }).toList(),
-                  ],
+                  children: provider.currentCategories.map((category) {
+                    final isSelected = provider.selectedCategory == category;
+
+                    return InkWell(
+                      onTap: () {
+                        provider.changeCategory(category);
+                        Navigator.pop(context);
+                      },
+                      borderRadius: BorderRadius.circular(12.r),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 16.w, vertical: 14.h),
+                        margin: EdgeInsets.only(bottom: 8.h),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppTheme.primary.withValues(alpha: 0.1)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12.r),
+                          border: Border.all(
+                            color: isSelected
+                                ? AppTheme.primary
+                                : Colors.transparent,
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              category,
+                              style: TextConstants.mediumText.copyWith(
+                                fontSize: 15.sp,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                                color: isSelected
+                                    ? AppTheme.primary
+                                    : AppTheme.textPrimary,
+                              ),
+                            ),
+                            if (isSelected)
+                              Icon(
+                                Icons.check_circle,
+                                color: AppTheme.primary,
+                                size: 20.sp,
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 ),
               ),
-
               SizedBox(height: 20.h),
             ],
           ),
         );
       },
-    );
-  }
-}
-
-class _FilterButton extends StatelessWidget {
-  final String icon;
-  final String label;
-  final String value;
-  final VoidCallback onTap;
-
-  const _FilterButton({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-        decoration: BoxDecoration(
-          color: AppTheme.background,
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(
-            color: AppTheme.border,
-            width: 1,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Iconify(
-              icon,
-              size: 18.sp,
-              color: AppTheme.textPrimary,
-            ),
-            SizedBox(width: 8.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    label,
-                    style: TextConstants.smallText.copyWith(
-                      fontSize: 11.sp,
-                      color: AppTheme.textLight,
-                    ),
-                  ),
-                  Text(
-                    value,
-                    style: TextConstants.smallText.copyWith(
-                      fontSize: 13.sp,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.textPrimary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.keyboard_arrow_down,
-              size: 18.sp,
-              color: AppTheme.textLight,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _OptionTile extends StatelessWidget {
-  final String title;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _OptionTile({
-    required this.title,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12.r),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-        margin: EdgeInsets.only(bottom: 8.h),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppTheme.primary.withOpacity(0.1)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(
-            color: isSelected ? AppTheme.primary : Colors.transparent,
-            width: 1.5,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              title,
-              style: TextConstants.mediumText.copyWith(
-                fontSize: 15.sp,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? AppTheme.primary : AppTheme.textPrimary,
-              ),
-            ),
-            if (isSelected)
-              Icon(
-                Icons.check_circle,
-                color: AppTheme.primary,
-                size: 20.sp,
-              ),
-          ],
-        ),
-      ),
     );
   }
 }

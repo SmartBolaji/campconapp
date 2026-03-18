@@ -1,5 +1,3 @@
-import 'package:campcon/main/constants/app_colors.dart';
-import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/widgets/custom_textfield.dart';
 import 'package:flutter/material.dart';
@@ -67,76 +65,53 @@ class _PasswordSettingsState extends State<PasswordSettings> {
                 SizedBox(height: 20.h),
 
                 // Password requirements
-                Container(
-                  padding: EdgeInsets.all(15.sp),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryBackground.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(12.r),
-                    border: Border.all(
-                      color: AppTheme.border,
-                      width: 1,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Password Requirements:',
-                        style: TextConstants.smallText.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.textPrimary,
-                        ),
-                      ),
-                      SizedBox(height: 8.h),
-                      _buildRequirement(
-                        'At least 8 characters',
-                        authProvider.passwordController.text.length >= 8,
-                      ),
-                      _buildRequirement(
-                        'One uppercase letter (A-Z)',
-                        RegExp(r'[A-Z]')
-                            .hasMatch(authProvider.passwordController.text),
-                      ),
-                      _buildRequirement(
-                        'One lowercase letter (a-z)',
-                        RegExp(r'[a-z]')
-                            .hasMatch(authProvider.passwordController.text),
-                      ),
-                      _buildRequirement(
-                        'One number (0-9)',
-                        RegExp(r'[0-9]')
-                            .hasMatch(authProvider.passwordController.text),
-                      ),
-                    ],
-                  ),
-                ),
+                // Container(
+                //   padding: EdgeInsets.all(15.sp),
+                //   decoration: BoxDecoration(
+                //     color: AppTheme.buttonBorder.withValues(alpha: 0.3),
+                //     borderRadius: BorderRadius.circular(12.r),
+                //     border: Border.all(
+                //       color: AppTheme.textLight,
+                //       width: 1,
+                //     ),
+                //   ),
+                //   child: Column(
+                //     crossAxisAlignment: CrossAxisAlignment.start,
+                //     children: [
+                //       Text(
+                //         'Password Requirements:',
+                //         style: TextConstants.smallText.copyWith(
+                //           fontWeight: FontWeight.bold,
+                //           color: AppTheme.textPrimary,
+                //         ),
+                //       ),
+                //       SizedBox(height: 8.h),
+                //       _buildRequirement(
+                //         'At least 8 characters',
+                //         authProvider.passwordController.text.length >= 8,
+                //       ),
+                //       _buildRequirement(
+                //         'One uppercase letter (A-Z)',
+                //         RegExp(r'[A-Z]')
+                //             .hasMatch(authProvider.passwordController.text),
+                //       ),
+                //       _buildRequirement(
+                //         'One lowercase letter (a-z)',
+                //         RegExp(r'[a-z]')
+                //             .hasMatch(authProvider.passwordController.text),
+                //       ),
+                //       _buildRequirement(
+                //         'One number (0-9)',
+                //         RegExp(r'[0-9]')
+                //             .hasMatch(authProvider.passwordController.text),
+                //       ),
+                //     ],
+                //   ),
+                // ),
               ],
             ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildRequirement(String text, bool isMet) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4.h),
-      child: Row(
-        children: [
-          Icon(
-            isMet ? Icons.check_circle : Icons.circle_outlined,
-            size: 16.sp,
-            color: isMet ? AppTheme.success : AppTheme.textLight,
-          ),
-          SizedBox(width: 8.w),
-          Text(
-            text,
-            style: TextConstants.smallText.copyWith(
-              color: isMet ? AppTheme.success : AppTheme.textLight,
-              fontSize: 12.sp,
-            ),
-          ),
-        ],
       ),
     );
   }

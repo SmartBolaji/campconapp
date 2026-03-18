@@ -57,7 +57,7 @@
 //       </p>
 //       <p style="margin-top:32px; color:#888;">
 //         Need help or have feedback? 
-//         We're here for you—just contact <a href="mailto:support@dressfli.com" style="color:#a62c71;">support@dressfli.com</a>.
+//         We're here for you—just contact <a href="mailto:support@campcon.app" style="color:#a62c71;">support@campcon.app</a>.
 //       </p>
 //       <p style="margin-top:24px;">
 //         Happy styling,<br>
@@ -74,7 +74,7 @@
 //         "Content-Type": "application/json",
 //       },
 //       body: JSON.stringify({
-//         from: "DressFli <no-reply@dressfli.com>",
+//         from: "DressFli <no-reply@campcon.app>",
 //         to: toEmail,
 //         subject: "Welcome to DressFli!",
 //         html: htmlContent,

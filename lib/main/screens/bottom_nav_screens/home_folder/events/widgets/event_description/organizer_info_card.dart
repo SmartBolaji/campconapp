@@ -28,14 +28,14 @@ class OrganizerInfoCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Text(
-        //   'Organizer',
-        //   style: TextConstants.boldText.copyWith(
-        //     fontSize: 18.sp,
-        //     color: AppTheme.textPrimary,
-        //   ),
-        // ),
-        // SizedBox(height: 12.h),
+        Text(
+          'Organizer',
+          style: TextConstants.boldText.copyWith(
+            fontSize: 18.sp,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+        SizedBox(height: 12.h),
         isLoading ? _buildLoadingState() : _buildContent(),
       ],
     );
@@ -55,7 +55,7 @@ class OrganizerInfoCard extends StatelessWidget {
             onTap: onProfileTap,
             child: CircleAvatar(
               radius: 28.r,
-              backgroundColor: AppTheme.primary.withOpacity(0.1),
+              backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
               backgroundImage:
                   organizerImageUrl != null && organizerImageUrl!.isNotEmpty
                       ? NetworkImage(organizerImageUrl!)

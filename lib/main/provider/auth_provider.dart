@@ -17,12 +17,7 @@ class AuthProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Backblaze service instance
-  final BackblazeService _backblazeService = BackblazeService(
-    keyId: '0050fae555030410000000003',
-    applicationKey: 'K005wG+vROJBYZFRpo0HVDn+Q4V3+zw',
-    bucketId: 'f0ef2ace6525c59093a00411',
-    bucketName: 'Campcon-Media',
-  );
+  final BackblazeService _backblazeService = BackblazeService.instance;
 
   // Form controllers
   final TextEditingController emailController = TextEditingController();
@@ -164,7 +159,7 @@ class AuthProvider extends ChangeNotifier {
     clearError();
 
     try {
-      bool isValid = EmailOTPService.verifyOTP(_pendingEmail!, otp);
+      bool isValid = await EmailOTPService.verifyOTP(_pendingEmail!, otp);
 
       if (isValid) {
         _isEmailVerified = true;
@@ -350,7 +345,7 @@ class AuthProvider extends ChangeNotifier {
 
       // Check if input is username (no @ symbol) and get email
       if (!input.contains('@')) {
-        debugPrint('🔍 Input appears to be username, looking up email...');
+        debugPrint('ðŸ” Input appears to be username, looking up email...');
         String? email = await _authService.getEmailFromUsername(input);
 
         if (email == null) {
@@ -360,7 +355,7 @@ class AuthProvider extends ChangeNotifier {
         }
 
         emailToUse = email;
-        debugPrint('✅ Found email for username: $email');
+        debugPrint('âœ… Found email for username: $email');
       }
 
       UserCredential? result = await _authService.signInWithEmailAndPassword(
@@ -516,8 +511,12 @@ class AuthProvider extends ChangeNotifier {
       // Upload profile image if selected
       if (_profileImage != null) {
         try {
-          profileImageUrl = await _backblazeService.uploadFile(
-            _profileImage!,
+          // Compress image first
+          final compressedImage =
+              await _backblazeService.compressImage(_profileImage!);
+          // Upload via Cloud Function
+          profileImageUrl = await _backblazeService.uploadImageToCloud(
+            compressedImage,
           );
         } catch (e) {
           debugPrint('Error uploading profile image: $e');
@@ -624,6 +623,12 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // Update current user model in memory and notify listeners
+  void updateCurrentUser(UserModel updatedUser) {
+    _currentUser = updatedUser;
+    notifyListeners();
+  }
+
   // Sign out
   Future<void> signOut() async {
     try {
@@ -678,8 +683,12 @@ class AuthProvider extends ChangeNotifier {
       String? newProfileImageUrl;
 
       if (newProfileImage != null) {
-        newProfileImageUrl = await _backblazeService.uploadFile(
-          newProfileImage,
+        // Compress image first
+        final compressedImage =
+            await _backblazeService.compressImage(newProfileImage);
+        // Upload via Cloud Function
+        newProfileImageUrl = await _backblazeService.uploadImageToCloud(
+          compressedImage,
         );
       }
 
@@ -770,7 +779,7 @@ class AuthProvider extends ChangeNotifier {
     } catch (e) {
       setLoading(false);
       setError('Failed to update user type');
-      print('Error updating user type: $e');
+      debugPrint('Error updating user type: $e');
       return false;
     }
   }
@@ -789,7 +798,7 @@ class AuthProvider extends ChangeNotifier {
 
       debugPrint(' Campus updated: $campus');
     } catch (e) {
-      debugPrint('❌ Error updating campus: $e');
+      debugPrint('âŒ Error updating campus: $e');
       rethrow;
     }
   }
@@ -808,6 +817,10 @@ class AuthProvider extends ChangeNotifier {
           return 'Incorrect password. Please try again.';
         case 'invalid-email':
           return 'Invalid email format.';
+        case 'email-already-in-use':
+          return 'An account with this email already exists.';
+        case 'weak-password':
+          return 'Password is too weak. Use at least 6 characters.';
         case 'user-disabled':
           return 'This account has been disabled.';
         case 'too-many-requests':

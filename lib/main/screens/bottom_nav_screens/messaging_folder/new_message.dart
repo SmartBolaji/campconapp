@@ -121,7 +121,7 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
     final currentUserId = authProvider.currentUser?.uid ?? '';
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70),
         child: SafeArea(

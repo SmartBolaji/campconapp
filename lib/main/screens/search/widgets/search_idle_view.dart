@@ -158,7 +158,7 @@ class _RecentSearchTile extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: 12.h),
         decoration: BoxDecoration(
           border: Border(
-            bottom: BorderSide(color: AppTheme.border.withOpacity(0.5)),
+            bottom: BorderSide(color: AppTheme.border.withValues(alpha: 0.5)),
           ),
         ),
         child: Row(

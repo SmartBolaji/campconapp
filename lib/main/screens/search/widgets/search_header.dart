@@ -57,9 +57,9 @@ class SearchHeader extends StatelessWidget {
           // Search field
           Expanded(
             child: Container(
-              height: 44.h,
+              padding: EdgeInsets.symmetric(horizontal: 0, vertical: 10.h),
               decoration: BoxDecoration(
-                color: AppTheme.background,
+                color: AppTheme.buttonBorder,
                 borderRadius: BorderRadius.circular(22.r),
                 border: Border.all(color: AppTheme.border),
               ),
@@ -100,7 +100,7 @@ class SearchHeader extends StatelessWidget {
                         padding: EdgeInsets.all(6.w),
                         margin: EdgeInsets.only(right: 8.w),
                         decoration: BoxDecoration(
-                          color: AppTheme.textLight.withOpacity(0.2),
+                          color: AppTheme.textLight.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -125,7 +125,7 @@ class SearchHeader extends StatelessWidget {
               child: Container(
                 padding: EdgeInsets.all(10.w),
                 decoration: BoxDecoration(
-                  color: AppTheme.background,
+                  color: AppTheme.buttonBorder,
                   borderRadius: BorderRadius.circular(12.r),
                   border: Border.all(color: AppTheme.border),
                 ),

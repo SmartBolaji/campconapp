@@ -10,13 +10,13 @@ import 'package:iconify_flutter/icons/ph.dart';
 class ProductResultTile extends StatelessWidget {
   final Product product;
   final VoidCallback onTap;
-  
+
   const ProductResultTile({
     super.key,
     required this.product,
     required this.onTap,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -31,7 +31,7 @@ class ProductResultTile extends StatelessWidget {
           border: Border.all(color: AppTheme.border),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -77,7 +77,7 @@ class ProductResultTile extends StatelessWidget {
                       ),
               ),
             ),
-            
+
             // Info
             Expanded(
               flex: 2,
@@ -98,7 +98,7 @@ class ProductResultTile extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    
+
                     // Price & type
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -119,7 +119,7 @@ class ProductResultTile extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: product.isItem
                                 ? AppTheme.primaryBackground
-                                : Colors.orange.withOpacity(0.1),
+                                : Colors.orange.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4.r),
                           ),
                           child: Text(

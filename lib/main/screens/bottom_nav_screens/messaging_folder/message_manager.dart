@@ -130,21 +130,6 @@ class ChatManager {
     }
   }
 
-  // Helper to check if two message lists are equal
-  bool _areListsEqual(List<ChatMessage> list1, List<ChatMessage> list2) {
-    if (list1.length != list2.length) return false;
-
-    for (int i = 0; i < list1.length; i++) {
-      if (list1[i].messageId != list2[i].messageId ||
-          list1[i].isRead != list2[i].isRead ||
-          list1[i].edited != list2[i].edited) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
   Future<void> loadMoreMessages() async {
     if (_isLoadingMore || !_hasMoreMessages) return;
 

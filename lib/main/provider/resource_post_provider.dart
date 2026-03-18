@@ -1,25 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:campcon/main/provider/upload_status_mixin.dart';
 import 'package:campcon/main/services/backblaze.dart';
 
-enum ResourceUploadStatus {
-  idle,
-  uploading,
-  processing,
-  success,
-  cancelled,
-  failed,
-}
-
-class ResourcePostProvider extends ChangeNotifier {
+class ResourcePostProvider extends ChangeNotifier with UploadStatusMixin {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final BackblazeService _backblazeService = BackblazeService(
-    keyId: '0050fae555030410000000003',
-    applicationKey: 'K005wG+vROJBYZFRpo0HVDn+Q4V3+zw',
-    bucketId: 'f0ef2ace6525c59093a00411',
-    bucketName: 'Campcon-Media',
-  );
+  final BackblazeService _backblazeService = BackblazeService.instance;
 
   // Upload Resource Form State
   final TextEditingController _titleController = TextEditingController();
@@ -48,13 +35,6 @@ class ResourcePostProvider extends ChangeNotifier {
   TimeOfDay? _taskDueTime;
   bool _hasReminder = false;
   bool _isPersonalTask = true; // true = personal (private), false = public
-
-  // Upload status
-  ResourceUploadStatus _uploadStatus = ResourceUploadStatus.idle;
-  double _uploadProgress = 0.0;
-  String _uploadMessage = '';
-  bool _showUploadBar = false;
-  Function? _cancelCallback;
 
   // Resource Types
   final List<String> _resourceTypes = [
@@ -106,12 +86,6 @@ class ResourcePostProvider extends ChangeNotifier {
   bool get hasReminder => _hasReminder;
   bool get isPersonalTask => _isPersonalTask;
   List<String> get priorities => _priorities;
-
-  // Upload Status Getters
-  ResourceUploadStatus get uploadStatus => _uploadStatus;
-  double get uploadProgress => _uploadProgress;
-  String get uploadMessage => _uploadMessage;
-  bool get showUploadBar => _showUploadBar;
 
   // Setters - Upload Resource
   void setSelectedFaculty(String? faculty) {
@@ -216,73 +190,9 @@ class ResourcePostProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Upload Status Methods
-  void startSilentUpload({Function? onCancel}) {
-    _uploadStatus = ResourceUploadStatus.uploading;
-    _uploadProgress = 0.0;
-    _uploadMessage = 'Uploading file...';
-    _showUploadBar = true;
-    _cancelCallback = onCancel;
-    notifyListeners();
-  }
-
-  void updateSilentUploadProgress(double progress, {String? message}) {
-    _uploadProgress = progress;
-    if (message != null) {
-      _uploadMessage = message;
-    }
-    notifyListeners();
-  }
-
-  void setProcessing(String message) {
-    _uploadStatus = ResourceUploadStatus.processing;
-    _uploadMessage = message;
-    notifyListeners();
-  }
-
-  void setUploadSuccess(String type) {
-    _uploadStatus = ResourceUploadStatus.success;
-    _uploadMessage = '$type uploaded successfully!';
-    _uploadProgress = 1.0;
-    notifyListeners();
-
-    Future.delayed(const Duration(seconds: 3), () {
-      hideUploadBar();
-    });
-  }
-
-  void setUploadFailed(String error) {
-    _uploadStatus = ResourceUploadStatus.failed;
-    _uploadMessage = 'Upload failed: $error';
-    notifyListeners();
-
-    Future.delayed(const Duration(seconds: 5), () {
-      hideUploadBar();
-    });
-  }
-
-  void cancelUpload() {
-    _uploadStatus = ResourceUploadStatus.cancelled;
-    _uploadMessage = 'Upload cancelled';
-
-    if (_cancelCallback != null) {
-      _cancelCallback!();
-    }
-
-    notifyListeners();
-
-    Future.delayed(const Duration(seconds: 2), () {
-      hideUploadBar();
-    });
-  }
-
-  void hideUploadBar() {
-    _showUploadBar = false;
-    _uploadStatus = ResourceUploadStatus.idle;
-    _uploadProgress = 0.0;
-    _uploadMessage = '';
-    _cancelCallback = null;
-    notifyListeners();
+  // Provider-specific wrapper to preserve old call sites.
+  void setUploadSuccessForType(String type) {
+    super.setUploadSuccess(message: '$type uploaded successfully!');
   }
 
   // Reset Resource Form
@@ -375,7 +285,11 @@ class ResourcePostProvider extends ChangeNotifier {
         updateSilentUploadProgress(0.1, message: 'Preparing file...');
 
         updateSilentUploadProgress(0.3, message: 'Uploading file...');
-        fileUrl = await _backblazeService.uploadFile(_selectedFile!);
+        // Compress file before upload
+        final compressedFile =
+            await _backblazeService.compressImage(_selectedFile!);
+        // Upload via Cloud Function
+        fileUrl = await _backblazeService.uploadImageToCloud(compressedFile);
         finalFileName = _fileName;
 
         updateSilentUploadProgress(0.7, message: 'File uploaded...');
@@ -416,7 +330,7 @@ class ResourcePostProvider extends ChangeNotifier {
 
       await resourceRef.set(resource);
 
-      setUploadSuccess('Resource');
+      setUploadSuccessForType('Resource');
       debugPrint('✓ Resource uploaded successfully');
       return true;
     } catch (e) {
@@ -481,7 +395,7 @@ class ResourcePostProvider extends ChangeNotifier {
       await taskRef.set(task);
 
       updateSilentUploadProgress(1.0, message: 'Task created!');
-      setUploadSuccess('Task');
+      // setUploadSuccess('Task');
       debugPrint('✓ Task created successfully');
       return true;
     } catch (e) {

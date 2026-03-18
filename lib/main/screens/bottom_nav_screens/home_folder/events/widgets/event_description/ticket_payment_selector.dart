@@ -99,8 +99,9 @@ class TicketPaymentSelector extends StatelessWidget {
         margin: EdgeInsets.only(bottom: 12.h),
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
-          color:
-              isSelected ? AppTheme.primary.withOpacity(0.1) : AppTheme.surface,
+          color: isSelected
+              ? AppTheme.primary.withValues(alpha: 0.1)
+              : AppTheme.surface,
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
             color: isSelected ? AppTheme.primary : AppTheme.border,
@@ -113,7 +114,7 @@ class TicketPaymentSelector extends StatelessWidget {
               padding: EdgeInsets.all(10.w),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? AppTheme.primary.withOpacity(0.2)
+                    ? AppTheme.primary.withValues(alpha: 0.2)
                     : AppTheme.buttonBorder,
                 borderRadius: BorderRadius.circular(10.r),
               ),

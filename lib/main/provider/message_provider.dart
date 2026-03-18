@@ -102,13 +102,11 @@ class MessageProvider extends ChangeNotifier {
         .snapshots()
         .listen((snapshot) {
       if (snapshot.exists) {
-        final data = snapshot.data() as Map<String, dynamic>?;
-        if (data != null) {
-          final typing = data['typing'] as Map<String, dynamic>?;
-          if (typing != null) {
-            _isOtherUserTyping = typing[_otherUserId] == true;
-            notifyListeners();
-          }
+        final data = snapshot.data() as Map<String, dynamic>;
+        final typing = data['typing'] as Map<String, dynamic>?;
+        if (typing != null) {
+          _isOtherUserTyping = typing[_otherUserId] == true;
+          notifyListeners();
         }
       }
     });

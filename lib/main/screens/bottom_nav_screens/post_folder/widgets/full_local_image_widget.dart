@@ -74,7 +74,7 @@ class _FullScreenLocalImageViewState extends State<FullScreenLocalImageView> {
       height: 4,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.grey.withOpacity(0.6),
+        color: Colors.grey.withValues(alpha: 0.6),
       ),
     );
   }
@@ -100,7 +100,7 @@ class _FullScreenLocalImageViewState extends State<FullScreenLocalImageView> {
       extendBodyBehindAppBar: true,
       appBar: _showControls
           ? AppBar(
-              backgroundColor: Colors.black.withOpacity(0.4),
+              backgroundColor: Colors.black.withValues(alpha: 0.4),
               elevation: 0,
               leading: IconButton(
                 icon: const Icon(Icons.close, color: Colors.white),
@@ -141,14 +141,14 @@ class _FullScreenLocalImageViewState extends State<FullScreenLocalImageView> {
                           Icon(
                             Icons.broken_image_rounded,
                             size: 48,
-                            color: Colors.white.withOpacity(0.6),
+                            color: Colors.white.withValues(alpha: 0.6),
                           ),
                           const SizedBox(height: 16),
                           Text(
                             'Image failed to load',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               fontSize: 14,
                             ),
                           ),

@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/product_model.dart';
-import 'package:campcon/main/screens/bottom_nav_screens/market_folder/product/product_decription.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/market_folder/product/product_description.dart';
 import 'package:campcon/main/services/cache.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -59,22 +59,6 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    //  Determine border color based on stock and discount
-    Color? borderColor;
-    double borderWidth = 0;
-
-    if (product.discount != null && product.discount! > 0) {
-      // Discounted items get green border
-      borderColor = AppTheme.success;
-      borderWidth = 2;
-    } else if (product.stock != null &&
-        product.stock! > 0 &&
-        product.stock! <= 3) {
-      // Low stock items get warning border
-      borderColor = AppTheme.error.withOpacity(0.9);
-      borderWidth = 2;
-    }
-
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -90,12 +74,12 @@ class ProductCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppTheme.background,
           borderRadius: BorderRadius.circular(12.r),
-          border: borderWidth > 0
-              ? Border.all(
-                  color: borderColor!,
-                  width: borderWidth,
-                )
-              : null,
+          // border: borderWidth > 0
+          //     ? Border.all(
+          //         color: borderColor!,
+          //         width: borderWidth,
+          //       )
+          //     : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -155,7 +139,7 @@ class ProductCard extends StatelessWidget {
                           begin: Alignment.topCenter,
                           end: Alignment.center,
                           colors: [
-                            Colors.black.withOpacity(0.3),
+                            Colors.black.withValues(alpha: 0.3),
                             Colors.transparent,
                           ],
                         ),
@@ -180,7 +164,7 @@ class ProductCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(6.r),
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.success.withOpacity(0.3),
+                              color: AppTheme.success.withValues(alpha: 0.3),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -212,7 +196,8 @@ class ProductCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(6.r),
                           boxShadow: [
                             BoxShadow(
-                              color: _getStockBadgeColor().withOpacity(0.3),
+                              color:
+                                  _getStockBadgeColor().withValues(alpha: 0.3),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -254,11 +239,11 @@ class ProductCard extends StatelessWidget {
                           vertical: 4.h,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.primary.withOpacity(0.9),
+                          color: AppTheme.primary.withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(6.r),
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.primary.withOpacity(0.3),
+                              color: AppTheme.primary.withValues(alpha: 0.3),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -397,7 +382,7 @@ class ProductCard extends StatelessWidget {
       child: Iconify(
         product.isItem ? Ph.shopping_bag : Ph.briefcase,
         size: 50.sp,
-        color: AppTheme.textLight.withOpacity(0.5),
+        color: AppTheme.textLight.withValues(alpha: 0.5),
       ),
     );
   }
@@ -405,11 +390,11 @@ class ProductCard extends StatelessWidget {
   //  Get stock badge color based on stock level
   Color _getStockBadgeColor() {
     if (product.stock == null || product.stock! == 0) {
-      return AppTheme.error.withOpacity(0.9);
+      return AppTheme.error.withValues(alpha: 0.9);
     } else if (product.stock! <= 3) {
-      return AppTheme.error.withOpacity(0.9);
+      return AppTheme.error.withValues(alpha: 0.9);
     } else {
-      return AppTheme.primary.withOpacity(0.9);
+      return AppTheme.primary.withValues(alpha: 0.9);
     }
   }
 

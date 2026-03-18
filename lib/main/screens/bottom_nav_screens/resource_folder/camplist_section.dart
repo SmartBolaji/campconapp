@@ -1,6 +1,4 @@
 // lib/main/screens/bottonnavbarscreens/resource_folder/camplist_section.dart
-import 'package:campcon/main/constants/app_colors.dart';
-import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/provider/resource_provider.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/resource_folder/widgets/camplist_item_widget.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/resource_folder/widgets/category_tasks_screen.dart';

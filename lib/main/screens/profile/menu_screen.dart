@@ -2,9 +2,18 @@ import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/market_folder/market_cart.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/home_folder/events/my_tickets_screen.dart';
 import 'package:campcon/main/screens/onboarding/onboarding.dart';
+import 'package:campcon/main/screens/profile/account_information_screen.dart';
+import 'package:campcon/main/screens/profile/my_sales/payment_screen.dart';
 import 'package:campcon/main/screens/profile/my_sales/sales_screen.dart';
 import 'package:campcon/main/screens/profile/logistics/pickup_screen.dart';
+import 'package:campcon/main/screens/profile/notification_preferences_screen.dart';
+import 'package:campcon/main/screens/profile/password_security_screen.dart';
+import 'package:campcon/main/screens/profile/professional_account_screen.dart';
+import 'package:campcon/main/widgets/floating_widget.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
@@ -17,8 +26,9 @@ class MenuScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: Column(
           children: [
@@ -73,11 +83,18 @@ class MenuScreen extends StatelessWidget {
                     context: context,
                     icon: Ph.user,
                     iconColor: AppTheme.primary,
-                    iconBgColor: AppTheme.primary.withOpacity(0.1),
+                    iconBgColor: AppTheme.primary.withValues(alpha: 0.1),
                     title: 'Account Information',
                     subtitle: 'View and edit your profile',
                     onTap: () {
-                      // Navigate to account information screen
+                      Navigator.push(
+                        context,
+                        PageTransition(
+                          type: PageTransitionType.rightToLeft,
+                          child: const AccountInformationScreen(),
+                          duration: const Duration(milliseconds: 300),
+                        ),
+                      );
                     },
                   ),
 
@@ -87,11 +104,39 @@ class MenuScreen extends StatelessWidget {
                     context: context,
                     icon: Ph.lock,
                     iconColor: AppTheme.primary,
-                    iconBgColor: AppTheme.primary.withOpacity(0.1),
+                    iconBgColor: AppTheme.primary.withValues(alpha: 0.1),
                     title: 'Password & Security',
                     subtitle: 'Manage your password',
                     onTap: () {
-                      // Navigate to password screen
+                      Navigator.push(
+                        context,
+                        PageTransition(
+                          type: PageTransitionType.rightToLeft,
+                          child: const PasswordSecurityScreen(),
+                          duration: const Duration(milliseconds: 300),
+                        ),
+                      );
+                    },
+                  ),
+
+                  SizedBox(height: 8.h),
+
+                  _buildSettingsItem(
+                    context: context,
+                    icon: Ph.bell,
+                    iconColor: AppTheme.primary,
+                    iconBgColor: AppTheme.primary.withValues(alpha: 0.1),
+                    title: 'Notification Preferences',
+                    subtitle: 'Choose which push alerts you receive',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        PageTransition(
+                          type: PageTransitionType.rightToLeft,
+                          child: const NotificationPreferencesScreen(),
+                          duration: const Duration(milliseconds: 300),
+                        ),
+                      );
                     },
                   ),
 
@@ -105,7 +150,7 @@ class MenuScreen extends StatelessWidget {
                     context: context,
                     icon: Ph.storefront,
                     iconColor: AppTheme.success,
-                    iconBgColor: AppTheme.success.withOpacity(0.1),
+                    iconBgColor: AppTheme.success.withValues(alpha: 0.1),
                     title: 'My Sales',
                     subtitle: 'Track orders and manage sales',
                     onTap: () {
@@ -126,7 +171,7 @@ class MenuScreen extends StatelessWidget {
                     context: context,
                     icon: Ph.shopping_bag,
                     iconColor: Colors.orange,
-                    iconBgColor: Colors.orange.withOpacity(0.1),
+                    iconBgColor: Colors.orange.withValues(alpha: 0.1),
                     title: 'My Orders',
                     subtitle: 'View your purchase history',
                     onTap: () {
@@ -135,6 +180,52 @@ class MenuScreen extends StatelessWidget {
                         PageTransition(
                           type: PageTransitionType.rightToLeft,
                           child: const MarketCartScreen(),
+                          duration: const Duration(milliseconds: 300),
+                        ),
+                      );
+                    },
+                  ),
+
+                  SizedBox(height: 8.h),
+
+                  _buildSettingsItem(
+                    context: context,
+                    icon: Ph.bank,
+                    iconColor: Colors.teal,
+                    iconBgColor: Colors.teal.withValues(alpha: 0.1),
+                    title: 'Payments',
+                    subtitle: 'Manage payouts and earnings',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        PageTransition(
+                          type: PageTransitionType.rightToLeft,
+                          child: const PaymentScreen(),
+                          duration: const Duration(milliseconds: 300),
+                        ),
+                      );
+                    },
+                  ),
+
+                  SizedBox(height: 24.h),
+
+                  // Events Section
+                  _buildSectionHeader('Events'),
+                  SizedBox(height: 8.h),
+
+                  _buildSettingsItem(
+                    context: context,
+                    icon: Ph.ticket,
+                    iconColor: AppTheme.primary,
+                    iconBgColor: AppTheme.primary.withValues(alpha: 0.1),
+                    title: 'My Tickets',
+                    subtitle: 'View your event tickets',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        PageTransition(
+                          type: PageTransitionType.rightToLeft,
+                          child: const MyTicketsScreen(),
                           duration: const Duration(milliseconds: 300),
                         ),
                       );
@@ -151,7 +242,7 @@ class MenuScreen extends StatelessWidget {
                     context: context,
                     icon: Ph.map_pin,
                     iconColor: Colors.purple,
-                    iconBgColor: Colors.purple.withOpacity(0.1),
+                    iconBgColor: Colors.purple.withValues(alpha: 0.1),
                     title: 'Pickup Center',
                     subtitle: 'Apply to become a pickup location',
                     onTap: () {
@@ -180,7 +271,14 @@ class MenuScreen extends StatelessWidget {
                     title: 'Professional Account',
                     subtitle: 'Unlock business features',
                     onTap: () {
-                      // Navigate to professional account screen
+                      Navigator.push(
+                        context,
+                        PageTransition(
+                          type: PageTransitionType.rightToLeft,
+                          child: const ProfessionalAccountScreen(),
+                          duration: const Duration(milliseconds: 300),
+                        ),
+                      );
                     },
                   ),
 
@@ -353,7 +451,7 @@ class MenuScreen extends StatelessWidget {
                   width: 64.w,
                   height: 64.h,
                   decoration: BoxDecoration(
-                    color: AppTheme.error.withOpacity(0.1),
+                    color: AppTheme.error.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Center(
@@ -423,26 +521,20 @@ class MenuScreen extends StatelessWidget {
                                     // Close the dialog first
                                     Navigator.pop(dialogContext);
 
-                                    // Perform logout
+                                    // Perform logout - this will sign out from Firebase and clear user data
                                     await authProvider.signOut();
 
                                     // Navigate to onboarding after dialog is closed
                                     if (context.mounted) {
-                                      // Use a slight delay to ensure dialog is fully dismissed
-                                      await Future.delayed(
-                                          const Duration(milliseconds: 100));
-
-                                      if (context.mounted) {
-                                        Navigator.of(context,
-                                                rootNavigator: true)
-                                            .pushAndRemoveUntil(
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const Onboarding(),
-                                          ),
-                                          (route) => false,
-                                        );
-                                      }
+                                      // Use pushAndRemoveUntil to clear entire navigation stack
+                                      Navigator.of(context, rootNavigator: true)
+                                          .pushAndRemoveUntil(
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const Onboarding(),
+                                        ),
+                                        (route) => false,
+                                      );
                                     }
                                   },
                             style: ElevatedButton.styleFrom(
@@ -523,7 +615,7 @@ class MenuScreen extends StatelessWidget {
                   width: 64.w,
                   height: 64.h,
                   decoration: BoxDecoration(
-                    color: AppTheme.error.withOpacity(0.1),
+                    color: AppTheme.error.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Center(
@@ -661,7 +753,7 @@ class MenuScreen extends StatelessWidget {
                       width: 64.w,
                       height: 64.h,
                       decoration: BoxDecoration(
-                        color: AppTheme.primary.withOpacity(0.1),
+                        color: AppTheme.primary.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Center(
@@ -755,20 +847,115 @@ class MenuScreen extends StatelessWidget {
                                       return;
                                     }
 
-                                    // TODO: Implement account deletion
-                                    // 1. Re-authenticate user with password
-                                    // 2. Delete user data from Firestore
-                                    // 3. Delete user from Firebase Auth
-                                    // 4. Sign out and navigate to onboarding
+                                    authProvider.setLoading(true);
+                                    try {
+                                      final firebaseUser =
+                                          FirebaseAuth.instance.currentUser;
+                                      if (firebaseUser == null ||
+                                          firebaseUser.email == null) {
+                                        throw Exception(
+                                            'No authenticated user');
+                                      }
 
-                                    Navigator.pop(dialogContext);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                            'Account deletion feature coming soon'),
-                                        backgroundColor: AppTheme.warning,
-                                      ),
-                                    );
+                                      // 1. Re-authenticate
+                                      final credential =
+                                          EmailAuthProvider.credential(
+                                        email: firebaseUser.email!,
+                                        password:
+                                            passwordController.text.trim(),
+                                      );
+                                      await firebaseUser
+                                          .reauthenticateWithCredential(
+                                              credential);
+
+                                      final uid = firebaseUser.uid;
+                                      final firestore =
+                                          FirebaseFirestore.instance;
+
+                                      // 2. Delete user Firestore data (batch)
+                                      final batch = firestore.batch();
+
+                                      // Delete user document
+                                      batch.delete(firestore
+                                          .collection('users')
+                                          .doc(uid));
+
+                                      // Delete posts
+                                      final posts = await firestore
+                                          .collection('posts')
+                                          .where('userId', isEqualTo: uid)
+                                          .get();
+                                      for (final doc in posts.docs) {
+                                        batch.delete(doc.reference);
+                                      }
+
+                                      // Delete marketplace listings
+                                      final products = await firestore
+                                          .collection('marketplace')
+                                          .where('userId', isEqualTo: uid)
+                                          .get();
+                                      for (final doc in products.docs) {
+                                        batch.delete(doc.reference);
+                                      }
+
+                                      // Delete events
+                                      final events = await firestore
+                                          .collection('events')
+                                          .where('organizerId', isEqualTo: uid)
+                                          .get();
+                                      for (final doc in events.docs) {
+                                        batch.delete(doc.reference);
+                                      }
+
+                                      await batch.commit();
+
+                                      // 3. Delete Firebase Auth account
+                                      await firebaseUser.delete();
+
+                                      // 4. Sign out locally
+                                      await authProvider.signOut();
+
+                                      if (context.mounted) {
+                                        Navigator.pop(dialogContext);
+                                        Navigator.of(context,
+                                                rootNavigator: true)
+                                            .pushAndRemoveUntil(
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const Onboarding(),
+                                          ),
+                                          (route) => false,
+                                        );
+                                      }
+                                    } on FirebaseAuthException catch (e) {
+                                      authProvider.setLoading(false);
+                                      String msg;
+                                      switch (e.code) {
+                                        case 'wrong-password':
+                                          msg =
+                                              'Incorrect password. Please try again.';
+                                          break;
+                                        case 'requires-recent-login':
+                                          msg =
+                                              'Please log out and log back in before deleting.';
+                                          break;
+                                        default:
+                                          msg = e.message ??
+                                              'Authentication failed.';
+                                      }
+                                      if (context.mounted) {
+                                        showFloatingSnackBar(context, msg,
+                                            backgroundColor: AppTheme.error);
+                                      }
+                                    } catch (e) {
+                                      authProvider.setLoading(false);
+                                      debugPrint('Delete account error: $e');
+                                      if (context.mounted) {
+                                        showFloatingSnackBar(
+                                            context, 'Failed to delete account',
+                                            backgroundColor: AppTheme.error);
+                                      }
+                                    }
                                   },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppTheme.error,

@@ -255,7 +255,7 @@
 //         margin: EdgeInsets.only(bottom: 8.h),
 //         decoration: BoxDecoration(
 //           color: isSelected
-//               ? AppTheme.primary.withOpacity(0.1)
+//               ? AppTheme.primary.withValues(alpha: 0.1)
 //               : Colors.transparent,
 //           borderRadius: BorderRadius.circular(12.r),
 //           border: Border.all(

@@ -1,9 +1,9 @@
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
-import 'package:campcon/main/constants/vars_constants.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/resource_post_provider.dart';
 import 'package:campcon/main/provider/resource_provider.dart';
+import 'package:campcon/main/widgets/themed_pickers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
@@ -19,7 +19,7 @@ class AddTaskScreen extends StatelessWidget {
     return Consumer<ResourcePostProvider>(
       builder: (context, provider, child) {
         return Scaffold(
-          backgroundColor: AppTheme.surface,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           body: SafeArea(
             child: Column(
               children: [
@@ -212,7 +212,7 @@ class AddTaskScreen extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? color.withOpacity(0.15)
+                      ? color.withValues(alpha: 0.15)
                       : AppTheme.background,
                   borderRadius: BorderRadius.circular(20.r),
                   border: Border.all(
@@ -274,7 +274,7 @@ class AddTaskScreen extends StatelessWidget {
                   padding: EdgeInsets.symmetric(vertical: 12.h),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? _getPriorityColor(priority).withOpacity(0.15)
+                        ? _getPriorityColor(priority).withValues(alpha: 0.15)
                         : AppTheme.background,
                     borderRadius: BorderRadius.circular(10.r),
                     border: Border.all(
@@ -346,12 +346,12 @@ class AddTaskScreen extends StatelessWidget {
                       EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
                   decoration: BoxDecoration(
                     color: provider.taskDueDate != null
-                        ? AppTheme.primary.withOpacity(0.05)
+                        ? AppTheme.primary.withValues(alpha: 0.05)
                         : AppTheme.background,
                     borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(
                       color: provider.taskDueDate != null
-                          ? AppTheme.primary.withOpacity(0.3)
+                          ? AppTheme.primary.withValues(alpha: 0.3)
                           : AppTheme.border,
                     ),
                   ),
@@ -392,12 +392,12 @@ class AddTaskScreen extends StatelessWidget {
                       EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
                   decoration: BoxDecoration(
                     color: provider.taskDueTime != null
-                        ? AppTheme.primary.withOpacity(0.05)
+                        ? AppTheme.primary.withValues(alpha: 0.05)
                         : AppTheme.background,
                     borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(
                       color: provider.taskDueTime != null
-                          ? AppTheme.primary.withOpacity(0.3)
+                          ? AppTheme.primary.withValues(alpha: 0.3)
                           : AppTheme.border,
                     ),
                   ),
@@ -435,24 +435,11 @@ class AddTaskScreen extends StatelessWidget {
 
   Future<void> _selectDate(
       BuildContext context, ResourcePostProvider provider) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
+    final DateTime? picked = await ThemedPickers.showDate(
+      context,
       initialDate: provider.taskDueDate ?? DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: AppTheme.primary,
-              onPrimary: Colors.white,
-              surface: AppTheme.surface,
-              onSurface: AppTheme.textPrimary,
-            ),
-          ),
-          child: child!,
-        );
-      },
     );
     if (picked != null) {
       provider.setTaskDueDate(picked);
@@ -461,22 +448,9 @@ class AddTaskScreen extends StatelessWidget {
 
   Future<void> _selectTime(
       BuildContext context, ResourcePostProvider provider) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
+    final TimeOfDay? picked = await ThemedPickers.showTime(
+      context,
       initialTime: provider.taskDueTime ?? TimeOfDay.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: AppTheme.primary,
-              onPrimary: Colors.white,
-              surface: AppTheme.surface,
-              onSurface: AppTheme.textPrimary,
-            ),
-          ),
-          child: child!,
-        );
-      },
     );
     if (picked != null) {
       provider.setTaskDueTime(picked);
@@ -488,12 +462,12 @@ class AddTaskScreen extends StatelessWidget {
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: provider.hasReminder
-            ? AppTheme.primary.withOpacity(0.05)
+            ? AppTheme.primary.withValues(alpha: 0.05)
             : AppTheme.background,
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
           color: provider.hasReminder
-              ? AppTheme.primary.withOpacity(0.3)
+              ? AppTheme.primary.withValues(alpha: 0.3)
               : AppTheme.border,
         ),
       ),
@@ -563,7 +537,7 @@ class AddTaskScreen extends StatelessWidget {
                   padding: EdgeInsets.all(14.w),
                   decoration: BoxDecoration(
                     color: provider.isPersonalTask
-                        ? AppTheme.primary.withOpacity(0.1)
+                        ? AppTheme.primary.withValues(alpha: 0.1)
                         : AppTheme.background,
                     borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(
@@ -621,7 +595,7 @@ class AddTaskScreen extends StatelessWidget {
                   padding: EdgeInsets.all(14.w),
                   decoration: BoxDecoration(
                     color: !provider.isPersonalTask
-                        ? AppTheme.primary.withOpacity(0.1)
+                        ? AppTheme.primary.withValues(alpha: 0.1)
                         : AppTheme.background,
                     borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(
@@ -673,123 +647,6 @@ class AddTaskScreen extends StatelessWidget {
           ],
         ),
       ],
-    );
-  }
-
-  Widget _buildDropdown({
-    required BuildContext context,
-    required String label,
-    required String? value,
-    required List<String> items,
-    required String hint,
-    required void Function(String?) onChanged,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextConstants.mediumText.copyWith(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        SizedBox(height: 8.h),
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 16.w),
-          decoration: BoxDecoration(
-            color: AppTheme.background,
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: AppTheme.border),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: value,
-              isExpanded: true,
-              hint: Text(
-                hint,
-                style: TextConstants.mediumText.copyWith(
-                  fontSize: 15.sp,
-                  color: AppTheme.textLight,
-                ),
-              ),
-              icon: Iconify(
-                Ph.caret_down,
-                size: 20.sp,
-                color: AppTheme.textSecondary,
-              ),
-              dropdownColor: AppTheme.surface,
-              items: items.map((item) {
-                return DropdownMenuItem<String>(
-                  value: item,
-                  child: Text(
-                    item,
-                    style: TextConstants.mediumText.copyWith(
-                      fontSize: 15.sp,
-                      color: AppTheme.textPrimary,
-                    ),
-                  ),
-                );
-              }).toList(),
-              onChanged: onChanged,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFacultyDropdown(
-      BuildContext context, ResourcePostProvider provider) {
-    final usableData = UsableData();
-    final faculties = usableData.departments
-        .map((d) => d['faculty']!)
-        .toSet()
-        .toList()
-      ..sort();
-
-    return _buildDropdown(
-      context: context,
-      label: 'Faculty (Optional)',
-      value: provider.taskFaculty,
-      items: faculties,
-      hint: 'Select faculty',
-      onChanged: (value) => provider.setTaskFaculty(value),
-    );
-  }
-
-  Widget _buildDepartmentDropdown(
-      BuildContext context, ResourcePostProvider provider) {
-    final usableData = UsableData();
-    final departments = usableData.departments
-        .where((d) => d['faculty'] == provider.taskFaculty)
-        .map((d) => d['department']!)
-        .toList()
-      ..sort();
-
-    return _buildDropdown(
-      context: context,
-      label: 'Department (Optional)',
-      value: provider.taskDepartment,
-      items: departments,
-      hint: 'Select department',
-      onChanged: (value) => provider.setTaskDepartment(value),
-    );
-  }
-
-  Widget _buildLevelDropdown(
-      BuildContext context, ResourcePostProvider provider) {
-    final usableData = UsableData();
-    final levels = usableData.levelList;
-
-    return _buildDropdown(
-      context: context,
-      label: 'Level (Optional)',
-      value: provider.taskLevel,
-      items: levels,
-      hint: 'Select level',
-      onChanged: (value) => provider.setTaskLevel(value),
     );
   }
 

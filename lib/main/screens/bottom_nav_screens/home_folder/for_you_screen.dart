@@ -2,12 +2,18 @@ import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/feed_provider.dart';
 import 'package:campcon/main/provider/notify_provider.dart';
+import 'package:campcon/main/provider/post_provider.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/post_folder/post_comments_screen.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/post_options.dart';
+import 'package:campcon/main/widgets/empty_state_view.dart';
 import 'package:campcon/main/widgets/floating_widget.dart';
+import 'package:campcon/main/widgets/shimmer_card.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/post_widget.dart';
 import 'package:campcon/main/widgets/navigate_profile_widget.dart';
+import 'package:campcon/main/widgets/new_posts_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:iconify_flutter/icons/ph.dart';
 import 'package:provider/provider.dart';
 
 class MyForYouScreen extends StatefulWidget {
@@ -38,10 +44,10 @@ class _MyForYouScreenState extends State<MyForYouScreen> {
     return Consumer<FeedProvider>(
       builder: (context, feedProvider, child) {
         if (feedProvider.isLoadingForYou) {
-          return Center(
-            child: CircularProgressIndicator(
-              color: AppTheme.primary,
-            ),
+          return ShimmerList(
+            itemCount: 4,
+            type: ShimmerCardType.post,
+            padding: EdgeInsets.only(top: 12.h, bottom: 80.h),
           );
         }
 
@@ -77,189 +83,138 @@ class _MyForYouScreenState extends State<MyForYouScreen> {
         }
 
         if (feedProvider.forYouPosts.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.post_add,
-                  size: 64.sp,
-                  color: AppTheme.textLight,
-                ),
-                SizedBox(height: 16.h),
-                Text(
-                  'No posts yet',
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textSecondary,
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  'Be the first to create a post!',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: AppTheme.textLight,
-                  ),
-                ),
-              ],
-            ),
+          return EmptyStateView(
+            icon: Ph.article,
+            title: 'No posts yet',
+            subtitle:
+                'Be the first to share something with your campus community.',
+            buttonText: 'Retry',
+            onPressed: () => feedProvider.retryForYouFeed(currentUserId),
           );
         }
 
-        return RefreshIndicator(
-          onRefresh: () => feedProvider.loadForYouFeed(currentUserId),
-          color: AppTheme.primary,
-          child: ListView.builder(
-            itemCount: feedProvider.forYouPosts.length,
-            padding: EdgeInsets.only(bottom: 80.sp),
-            physics: const AlwaysScrollableScrollPhysics(),
-            itemBuilder: (context, index) {
-              final postWithAuthor = feedProvider.forYouPosts[index];
-              final post = postWithAuthor.post;
-              final author = postWithAuthor.author;
-              final postState = feedProvider.getPostState(post.postId);
-              final isMyPost = post.userId == currentUserId;
-
-              return PostWidget(
-                key: ValueKey(post.postId),
-                post: post,
-                author: author,
-                postState: postState,
-                currentUserId: currentUserId,
-                onTap: () {
-                  // Navigate to post view when post is tapped
-                  navigateToPostView(
-                    context: context,
-                    post: post,
-                    author: author,
-                    postState: postState,
-                    currentUserId: currentUserId,
-                    feedProvider: feedProvider,
-                    isMyPost: isMyPost,
-                    focusComment: false,
-                  );
-                },
-                onLike: () async {
-                  try {
-                    // Get current user from auth provider
-                    final currentUser = authProvider.currentUser;
-
-                    // Get post image URL (first image if available)
-                    String? postImageUrl;
-                    if (post.imageUrls.isNotEmpty) {
-                      postImageUrl = post.imageUrls.first;
-                    }
-
-                    await feedProvider.toggleLike(
-                      post.postId,
-                      currentUserId,
-                      post.userId,
-                      Provider.of<NotifyProvider>(
-                        context,
-                        listen: false,
+        // ✅ FLOATING BUTTON: Stack with floating button OUTSIDE the scroll area
+        return Stack(
+          children: [
+            RefreshIndicator(
+              onRefresh: () => feedProvider.loadForYouFeed(currentUserId),
+              color: AppTheme.primary,
+              child: ListView.builder(
+                itemCount: feedProvider.forYouPosts.length +
+                    (feedProvider.isLoadingMoreForYou ? 1 : 0),
+                padding: EdgeInsets.only(
+                  top: feedProvider.forYouNewPostsCount > 0 ? 65.h : 0,
+                  bottom: 80.sp,
+                ),
+                physics: const AlwaysScrollableScrollPhysics(),
+                itemBuilder: (context, index) {
+                  if (index >= feedProvider.forYouPosts.length) {
+                    return Padding(
+                      padding: EdgeInsets.symmetric(vertical: 14.h),
+                      child: Center(
+                        child: SizedBox(
+                          width: 22.w,
+                          height: 22.w,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.2,
+                            color: AppTheme.primary,
+                          ),
+                        ),
                       ),
-                      currentUser,
-                      postImageUrl,
                     );
-                  } catch (e) {
-                    if (mounted) {
-                      showFloatingSnackBar(context, 'Failed to like post');
-                    }
                   }
-                },
-                onComment: () {
-                  // Navigate to post view with comment focus
-                  navigateToPostView(
-                    context: context,
+
+                  if (index >= feedProvider.forYouPosts.length - 3 &&
+                      feedProvider.forYouHasMore &&
+                      !feedProvider.isLoadingMoreForYou) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) {
+                        context
+                            .read<FeedProvider>()
+                            .loadMoreForYouFeed(currentUserId);
+                      }
+                    });
+                  }
+
+                  final postWithAuthor = feedProvider.forYouPosts[index];
+                  final post = postWithAuthor.post;
+                  final author = postWithAuthor.author;
+                  final postState = feedProvider.getPostState(post.postId);
+                  final isMyPost = post.userId == currentUserId;
+
+                  return PostWidget(
+                    key: ValueKey(post.postId),
                     post: post,
                     author: author,
                     postState: postState,
                     currentUserId: currentUserId,
-                    feedProvider: feedProvider,
-                    isMyPost: isMyPost,
-                    focusComment: true, // Focus the comment input
-                  );
-                },
-                onRepost: () async {
-                  try {
-                    await feedProvider.toggleRepost(post.postId, currentUserId);
-                    if (mounted) {
-                      final state = feedProvider.getPostState(post.postId);
-                      showFloatingSnackBar(
-                        context,
-                        state.isReposted ? 'Reposted!' : 'Repost removed',
-                      );
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      showFloatingSnackBar(context, 'Failed to repost');
-                    }
-                  }
-                },
-                onShare: () {
-                  PostOptionsWidget.showShareOptions(
-                    context: context,
-                    postId: post.postId,
-                    postContent: post.content,
-                  );
-                },
-                onBookmark: () async {
-                  try {
-                    await feedProvider.toggleBookmark(
-                      post.postId,
-                      currentUserId,
-                    );
-                  } catch (e) {
-                    if (mounted) {
-                      showFloatingSnackBar(context, 'Failed to bookmark post');
-                    }
-                  }
-                },
-                onMoreOptions: () {
-                  PostOptionsWidget.showPostOptions(
-                    context: context,
-                    isMyPost: isMyPost,
-                    postId: post.postId,
-                    onDelete: () async {
-                      bool? confirm = await showDialog<bool>(
+                    onTap: () {
+                      // Navigate to post view when post is tapped
+                      navigateToPostView(
                         context: context,
-                        builder: (context) => AlertDialog(
-                          backgroundColor: AppTheme.surface,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15.r),
+                        post: post,
+                        author: author,
+                        postState: postState,
+                        currentUserId: currentUserId,
+                        feedProvider: feedProvider,
+                        isMyPost: isMyPost,
+                        focusComment: false,
+                      );
+                    },
+                    onLike: () async {
+                      try {
+                        // Get current user from auth provider
+                        final currentUser = authProvider.currentUser;
+
+                        // Get post image URL (first image if available)
+                        String? postImageUrl;
+                        if (post.imageUrls.isNotEmpty) {
+                          postImageUrl = post.imageUrls.first;
+                        }
+
+                        await feedProvider.toggleLike(
+                          post.postId,
+                          currentUserId,
+                          post.userId,
+                          Provider.of<NotifyProvider>(
+                            context,
+                            listen: false,
                           ),
-                          title: Text(
-                            'Delete Post',
-                            style: TextStyle(color: AppTheme.textPrimary),
+                          currentUser,
+                          postImageUrl,
+                        );
+                      } catch (e) {
+                        if (mounted) {
+                          showFloatingSnackBar(context, 'Failed to like post');
+                        }
+                      }
+                    },
+                    onComment: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PostCommentsScreen(
+                            postId: post.postId,
+                            post: post,
                           ),
-                          content: Text(
-                            'Are you sure you want to delete this post? This action cannot be undone.',
-                            style: TextStyle(color: AppTheme.textSecondary),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: Text(
-                                'Cancel',
-                                style: TextStyle(color: AppTheme.textSecondary),
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              style: TextButton.styleFrom(
-                                foregroundColor: AppTheme.error,
-                              ),
-                              child: const Text('Delete'),
-                            ),
-                          ],
                         ),
                       );
-
-                      if (confirm == true && mounted) {
-                        feedProvider.deletePostLocally(post.postId);
-                        showFloatingSnackBar(context, 'Post deleted');
+                    },
+                    onRepost: () async {
+                      try {
+                        await feedProvider.toggleRepost(
+                            post.postId, currentUserId);
+                        if (mounted) {
+                          final state = feedProvider.getPostState(post.postId);
+                          showFloatingSnackBar(
+                            context,
+                            state.isReposted ? 'Reposted!' : 'Repost removed',
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          showFloatingSnackBar(context, 'Failed to repost');
+                        }
                       }
                     },
                     onShare: () {
@@ -269,12 +224,145 @@ class _MyForYouScreenState extends State<MyForYouScreen> {
                         postContent: post.content,
                       );
                     },
+                    onBookmark: () async {
+                      try {
+                        await feedProvider.toggleBookmark(
+                          post.postId,
+                          currentUserId,
+                        );
+                      } catch (e) {
+                        if (mounted) {
+                          showFloatingSnackBar(
+                              context, 'Failed to bookmark post');
+                        }
+                      }
+                    },
+                    onMoreOptions: () {
+                      PostOptionsWidget.showPostOptions(
+                        context: context,
+                        isMyPost: isMyPost,
+                        postId: post.postId,
+                        onDelete: () async {
+                          bool? confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              backgroundColor: AppTheme.surface,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15.r),
+                              ),
+                              title: Text(
+                                'Delete Post',
+                                style: TextStyle(color: AppTheme.textPrimary),
+                              ),
+                              content: Text(
+                                'Are you sure you want to delete this post? This action cannot be undone.',
+                                style: TextStyle(color: AppTheme.textSecondary),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
+                                  child: Text(
+                                    'Cancel',
+                                    style: TextStyle(
+                                        color: AppTheme.textSecondary),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: AppTheme.error,
+                                  ),
+                                  child: const Text('Delete'),
+                                ),
+                              ],
+                            ),
+                          );
+
+                          if (confirm == true && mounted) {
+                            debugPrint(
+                                '🗑️ DELETE INITIATED: postId=${post.postId}');
+                            debugPrint(
+                                '📍 Post state before deletion - Total posts in feed: ${feedProvider.forYouPosts.length}');
+                            debugPrint(
+                                '📍 Post in feed: ${feedProvider.forYouPosts.any((p) => p.post.postId == post.postId)}');
+
+                            try {
+                              // Delete from Firestore first
+                              debugPrint(
+                                  '🔥 Starting Firestore deletion for postId=${post.postId}');
+                              await Provider.of<PostProvider>(context,
+                                      listen: false)
+                                  .deletePost(post.postId, post.imageUrls);
+                              debugPrint(
+                                  '✅ Firestore deletion completed for postId=${post.postId}');
+
+                              // Then remove from local feed
+                              debugPrint('🗑️ Removing from local feed list');
+                              feedProvider.deletePostLocally(post.postId);
+                              debugPrint(
+                                  '✅ Removed from local feed. Remaining posts: ${feedProvider.forYouPosts.length}');
+                              debugPrint(
+                                  '📍 Post still in feed?: ${feedProvider.forYouPosts.any((p) => p.post.postId == post.postId)}');
+
+                              showFloatingSnackBar(context, 'Post deleted');
+                            } catch (e) {
+                              debugPrint('❌ DELETE FAILED: $e');
+                              showFloatingSnackBar(
+                                  context, 'Failed to delete post');
+                            }
+                          }
+                        },
+                        onShare: () {
+                          PostOptionsWidget.showShareOptions(
+                            context: context,
+                            postId: post.postId,
+                            postContent: post.content,
+                          );
+                        },
+                      );
+                    },
+                    index: index,
                   );
                 },
-                index: index,
-              );
-            },
-          ),
+              ),
+            ),
+
+            // ✅ FLOATING BUTTON: Positioned above scroll area with background
+            if (feedProvider.forYouNewPostsCount > 0)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.surface,
+                    border: Border(
+                      bottom: BorderSide(
+                        color: AppTheme.border,
+                        width: 0.5,
+                      ),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.03),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                  child: Center(
+                    child: NewPostsButton(
+                      newPostsCount: feedProvider.forYouNewPostsCount,
+                      isLoading: feedProvider.isLoadingNewForYou,
+                      onPressed: () =>
+                          feedProvider.loadNewForYouPosts(currentUserId),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         );
       },
     );

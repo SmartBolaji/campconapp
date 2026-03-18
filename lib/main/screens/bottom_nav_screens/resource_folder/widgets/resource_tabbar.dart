@@ -27,13 +27,13 @@ class ResourceTabBar extends StatelessWidget {
             isSelected: selectedTab == 0,
             onTap: onTabChanged,
           ),
-          SizedBox(width: 30.w),
-          CustomTab(
-            title: 'Camplist',
-            index: 1,
-            isSelected: selectedTab == 1,
-            onTap: onTabChanged,
-          ),
+          // SizedBox(width: 30.w),
+          // CustomTab(
+          //   title: 'Camplist',
+          //   index: 1,
+          //   isSelected: selectedTab == 1,
+          //   onTap: onTabChanged,
+          // ),
         ],
       ),
     );

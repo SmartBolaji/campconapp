@@ -1,0 +1,122 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read access to all documents in the "waitlist" collection
+    match /waitlist/{document=**} {
+      allow read: if true;
+      allow write: if true;
+    }  
+    
+    // Allow read access to all documents in the "users" collection
+    match /users/{document=**} {
+      allow read: if true;
+      allow write: if true;
+    } 
+    
+        // Allow read access to all documents in the "posts" collection
+    match /posts/{document=**} {
+      allow read: if true;
+      allow write: if true;
+    } 
+    
+    //  Allow creating contact messages 
+    match /contactMessages/{docId} {
+      allow create: if request.resource.data.keys().hasAll(['name', 'email', 'subject', 'message']);
+    }
+    
+    //  Allow creating on the marketplace
+    match /marketplace/{docId} {
+     allow read: if true;
+      allow write: if true;
+      // allow create: if request.resource.data.keys().hasAll(['name', 'email', 'subject', 'message']);
+    }
+    
+    //  Allow creating on the events
+    match /events/{document=**} {
+     allow read: if true;
+      allow write: if true;
+      // allow create: if request.resource.data.keys().hasAll(['name', 'email', 'subject', 'message']);
+    }
+    
+    // Allow users to read their own tickets across all events
+    match /{path=**}/tickets/{ticketId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+    
+    //  Allow creating a notification
+    match /notifications/{docId} {
+     allow read: if true;
+      allow write: if true;
+      // allow create: if request.resource.data.keys().hasAll(['name', 'email', 'subject', 'message']);
+    }
+    
+    //  Allow creating a chat
+    match /chats/{document=**} {
+     allow read: if true;
+      allow write: if true;
+      // allow create: if request.resource.data.keys().hasAll(['name', 'email', 'subject', 'message']);
+    }
+    
+    //  Allow creating an order
+    match /orders/{docId} {
+     allow read: if true;
+      allow write: if true;
+      // allow create: if request.resource.data.keys().hasAll(['name', 'email', 'subject', 'message']);
+    }
+    
+    //  Allow creating a review
+    match /reviews/{docId} {
+     allow read: if true;
+      allow write: if true;
+      // allow create: if request.resource.data.keys().hasAll(['name', 'email', 'subject', 'message']);
+    }
+    
+    //  Allow creating a pickup_centers
+    match /pickup_centers/{docId} {
+     allow read: if true;
+      allow write: if true;
+      // allow create: if request.resource.data.keys().hasAll(['name', 'email', 'subject', 'message']);
+    }
+        
+    //  Allow creating a notification
+    match /notifications/{docId} {
+     allow read: if true;
+      allow write: if true;
+      // allow create: if request.resource.data.keys().hasAll(['name', 'email', 'subject', 'message']);
+    }
+    
+    //  Allow creating a task
+    match /tasks/{docId} {
+     allow read: if true;
+      allow write: if true;
+      // allow create: if request.resource.data.keys().hasAll(['name', 'email', 'subject', 'message']);
+    }
+    
+    //  Allow creating a resources
+    match /resources/{docId} {
+     allow read: if true;
+      allow write: if true;
+      // allow create: if request.resource.data.keys().hasAll(['name', 'email', 'subject', 'message']);
+    }
+    
+    
+     // Allow read access to all reoport
+     match /reports/{document=**} {
+      allow read, write: if true;
+     
+    }
+    
+    //  // Allow read access to all documents in the "events" collection
+    // match /events/{document=**} {
+    //   allow read: if true;
+    //   allow write: if true;
+    // } 
+    
+    // // Allow read access to all documents in the "categories" collection
+    // match /categories/{document=**} {
+    //   allow read: if true;
+    //   allow write: if true;
+    // }
+  }
+}

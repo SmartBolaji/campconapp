@@ -46,17 +46,25 @@ class PaymentMethodSelector extends StatelessWidget {
   }
 
   Widget _buildPaymentMethodCard(PaymentMethod method, bool isSelected) {
+    final isComingSoon = method.id == 'online';
+    final isEnabled = !isComingSoon;
+
     return GestureDetector(
-      onTap: () => provider.setPaymentMethod(method.id),
+      onTap: isEnabled ? () => provider.setPaymentMethod(method.id) : null,
       child: Container(
         margin: EdgeInsets.only(bottom: 12.h),
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
-          color:
-              isSelected ? AppTheme.primary.withOpacity(0.1) : AppTheme.surface,
+          color: isComingSoon
+              ? AppTheme.buttonBorder.withValues(alpha: 0.5)
+              : (isSelected
+                  ? AppTheme.primary.withValues(alpha: 0.1)
+                  : AppTheme.surface),
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
-            color: isSelected ? AppTheme.primary : AppTheme.border,
+            color: isComingSoon
+                ? AppTheme.textLight
+                : (isSelected ? AppTheme.primary : AppTheme.border),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -65,15 +73,19 @@ class PaymentMethodSelector extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(10.w),
               decoration: BoxDecoration(
-                color: isSelected
-                    ? AppTheme.primary.withOpacity(0.2)
-                    : AppTheme.buttonBorder,
+                color: isComingSoon
+                    ? AppTheme.buttonBorder
+                    : (isSelected
+                        ? AppTheme.primary.withValues(alpha: 0.2)
+                        : AppTheme.buttonBorder),
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Iconify(
                 method.id == 'online' ? Ph.credit_card : Ph.money,
                 size: 20.sp,
-                color: isSelected ? AppTheme.primary : AppTheme.textLight,
+                color: isComingSoon
+                    ? AppTheme.textLight
+                    : (isSelected ? AppTheme.primary : AppTheme.textLight),
               ),
             ),
             SizedBox(width: 12.w),
@@ -81,33 +93,76 @@ class PaymentMethodSelector extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    method.title,
-                    style: TextConstants.mediumText.copyWith(
-                      fontSize: 15.sp,
-                      fontWeight:
-                          isSelected ? FontWeight.w600 : FontWeight.w500,
-                      color:
-                          isSelected ? AppTheme.primary : AppTheme.textPrimary,
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          method.title,
+                          style: TextConstants.mediumText.copyWith(
+                            fontSize: 15.sp,
+                            fontWeight:
+                                isSelected ? FontWeight.w600 : FontWeight.w500,
+                            color: isComingSoon
+                                ? AppTheme.textLight
+                                : (isSelected
+                                    ? AppTheme.primary
+                                    : AppTheme.textPrimary),
+                          ),
+                        ),
+                      ),
+                      if (isComingSoon)
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.w,
+                            vertical: 2.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.textLight.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(4.r),
+                          ),
+                          child: Text(
+                            'Coming Soon',
+                            style: TextConstants.smallText.copyWith(
+                              fontSize: 10.sp,
+                              color: AppTheme.textLight,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                   SizedBox(height: 2.h),
                   Text(
                     method.subtitle,
                     style: TextConstants.smallText.copyWith(
                       fontSize: 12.sp,
-                      color: AppTheme.textSecondary,
+                      color: isComingSoon
+                          ? AppTheme.textLight
+                          : AppTheme.textSecondary,
                     ),
                   ),
                 ],
               ),
             ),
-            if (isSelected)
-              Iconify(
-                Ph.check_circle_fill,
-                color: AppTheme.primary,
-                size: 22.sp,
-              ),
+            if (!isComingSoon)
+              if (isSelected)
+                Iconify(
+                  Ph.check_circle_fill,
+                  color: AppTheme.primary,
+                  size: 22.sp,
+                )
+              else
+                Container(
+                  width: 22.w,
+                  height: 22.h,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppTheme.border,
+                      width: 2,
+                    ),
+                  ),
+                ),
           ],
         ),
       ),

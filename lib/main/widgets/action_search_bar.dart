@@ -86,20 +86,22 @@ class ActionSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appColors = context.appColors;
+
     return GestureDetector(
       onTap: type != ActionBarType.search ? onTap : null,
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
         decoration: BoxDecoration(
-          color: AppTheme.buttonBorder,
+          color: appColors.buttonBorder,
           borderRadius: BorderRadius.circular(30.r),
           border: Border.all(
-            color: AppTheme.border,
+            color: appColors.border,
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -110,14 +112,14 @@ class ActionSearchBar extends StatelessWidget {
             // Leading Icon
             Icon(
               leadingIcon ?? IconlyLight.search,
-              color: AppTheme.textLight,
+              color: appColors.textLight,
               size: type == ActionBarType.post ? 25.sp : 22.sp,
             ),
             SizedBox(width: 12.w),
 
             // Content (Text or TextField)
             Expanded(
-              child: _buildContent(),
+              child: _buildContent(context),
             ),
 
             // Suffix Icon (optional)
@@ -127,7 +129,7 @@ class ActionSearchBar extends StatelessWidget {
                 onTap: onSuffixTap,
                 child: Icon(
                   suffixIcon,
-                  color: AppTheme.textLight,
+                  color: appColors.textLight,
                   size: 20.sp,
                 ),
               ),
@@ -138,14 +140,16 @@ class ActionSearchBar extends StatelessWidget {
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildContent(BuildContext context) {
+    final appColors = context.appColors;
+
     if (type == ActionBarType.search) {
       return TextField(
         controller: controller,
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: TextConstants.smallText.copyWith(
-            color: AppTheme.textLight,
+            color: appColors.textLight,
             fontSize: 14.sp,
           ),
           filled: true,
@@ -155,7 +159,7 @@ class ActionSearchBar extends StatelessWidget {
           contentPadding: EdgeInsets.zero,
         ),
         style: TextConstants.smallText.copyWith(
-          color: AppTheme.textPrimary,
+          color: appColors.textPrimary,
           fontSize: 14.sp,
         ),
         onChanged: onChanged,
@@ -167,7 +171,7 @@ class ActionSearchBar extends StatelessWidget {
       hintText,
       style: TextConstants.smallText.copyWith(
         fontSize: 14.sp,
-        color: AppTheme.textLight,
+        color: appColors.textLight,
       ),
     );
   }

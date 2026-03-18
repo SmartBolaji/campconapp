@@ -2,6 +2,8 @@ import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/event_model.dart';
 import 'package:campcon/main/provider/event_provider.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/home_folder/events/edit_event_screen.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/home_folder/events/manage_event_screen.dart';
 import 'package:campcon/main/widgets/custom_btn.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -41,7 +43,7 @@ class EventBottomAction extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, -2),
               ),
@@ -89,30 +91,44 @@ class EventBottomAction extends StatelessWidget {
   }
 
   Widget _buildOrganizerActions() {
-    return Row(
-      children: [
-        Expanded(
-          child: CustomButton(
-            text: 'Edit Event',
-            onPressed: () {
-              // TODO: Implement edit
-            },
-            backgroundColor: AppTheme.buttonBorder,
-            textColor: AppTheme.textPrimary,
-          ),
-        ),
-        SizedBox(width: 12.w),
-        Expanded(
-          child: CustomButton(
-            text: 'View Stats',
-            onPressed: () {
-              // TODO: Implement stats
-            },
-            backgroundColor: AppTheme.primary,
-            textColor: AppTheme.white,
-          ),
-        ),
-      ],
+    return Builder(
+      builder: (context) {
+        return Row(
+          children: [
+            Expanded(
+              child: CustomButton(
+                text: 'Edit Event',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => EditEventScreen(event: event),
+                    ),
+                  );
+                },
+                backgroundColor: AppTheme.buttonBorder,
+                textColor: AppTheme.textPrimary,
+              ),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: CustomButton(
+                text: 'Manage Event',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ManageEventScreen(event: event),
+                    ),
+                  );
+                },
+                backgroundColor: AppTheme.primary,
+                textColor: AppTheme.white,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -129,8 +145,9 @@ class EventBottomAction extends StatelessWidget {
   Widget _buildTicketPurchaseActions(EventProvider eventProvider) {
     final canPurchase = eventProvider.canPurchase;
     final quantity = eventProvider.ticketQuantity;
-    final totalPrice =
-        eventProvider.calculateTotalPrice(event.ticketPrice ?? 0);
+    final selectedTier = eventProvider.getSelectedTier(event);
+    final unitPrice = selectedTier?.price ?? event.ticketPrice ?? 0;
+    final totalPrice = unitPrice * quantity;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -141,13 +158,13 @@ class EventBottomAction extends StatelessWidget {
           margin: EdgeInsets.only(bottom: 12.h),
           decoration: BoxDecoration(
             color: event.availableTickets < 10
-                ? AppTheme.warning.withOpacity(0.1)
-                : AppTheme.success.withOpacity(0.1),
+                ? AppTheme.warning.withValues(alpha: 0.1)
+                : AppTheme.success.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8.r),
             border: Border.all(
               color: event.availableTickets < 10
-                  ? AppTheme.warning.withOpacity(0.3)
-                  : AppTheme.success.withOpacity(0.3),
+                  ? AppTheme.warning.withValues(alpha: 0.3)
+                  : AppTheme.success.withValues(alpha: 0.3),
             ),
           ),
           child: Row(
@@ -179,7 +196,7 @@ class EventBottomAction extends StatelessWidget {
         if (canPurchase)
           CustomButton(
             text: canPurchase
-                ? 'Buy $quantity Ticket${quantity > 1 ? 's' : ''} - ${_formatPrice(totalPrice)}'
+                ? 'Get $quantity Ticket${quantity > 1 ? 's' : ''} — ${_formatPrice(totalPrice)}'
                 : 'Select Payment Method',
             onPressed: canPurchase ? onPurchase : () {},
             backgroundColor:

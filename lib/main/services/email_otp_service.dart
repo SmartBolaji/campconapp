@@ -1,119 +1,57 @@
-import 'dart:convert';
-import 'dart:math';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
 class EmailOTPService {
-  // ⚠️ WARNING: Storing API keys in client code is not secure!
-  // Consider using Cloud Functions instead
-  static const String _resendApiKey = 're_RfhfpD3o_KZBANSSfVW7pBpqKyfwcMyjR';
-
-  static String? _currentOTP;
+  static DateTime? _otpSentAt;
   static String? _currentEmail;
-  static DateTime? _otpExpiry;
+  static final FirebaseFunctions _functions = FirebaseFunctions.instance;
 
-  /// Generate a 6-digit OTP code
-  static String _generateOTP() {
-    final random = Random.secure();
-    return List.generate(6, (_) => random.nextInt(10)).join();
-  }
-
-  /// Send OTP to the user's email via Resend API
+  /// Send OTP via Cloud Function (server-side generation + email)
   static Future<bool> sendOTP(String email) async {
     try {
-      // Generate OTP
-      _currentOTP = _generateOTP();
+      final callable = _functions.httpsCallable('sendOTP');
+      await callable.call({'email': email.trim().toLowerCase()});
+
       _currentEmail = email.trim().toLowerCase();
-      _otpExpiry = DateTime.now().add(const Duration(minutes: 10));
+      _otpSentAt = DateTime.now();
 
-      final htmlContent = '''
-        <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; padding: 20px 0;">
-            <h1 style="color: #EFA101; margin: 0;">Campcon</h1>
-            <p style="color: #666; margin-top: 5px;">Connect with students</p>
-          </div>
-          
-          <div style="background: #f9f9f9; border-radius: 12px; padding: 30px; text-align: center;">
-            <h2 style="color: #333; margin-bottom: 10px;">Verify Your Email</h2>
-            <p style="color: #666; margin-bottom: 25px;">
-              Use the code below to verify your email address and complete your registration.
-            </p>
-            
-            <div style="background: #fff; border: 2px dashed #EFA101; border-radius: 8px; padding: 20px; margin: 20px 0;">
-              <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #EFA101;">
-                $_currentOTP
-              </span>
-            </div>
-            
-            <p style="color: #999; font-size: 13px; margin-top: 20px;">
-              This code expires in <strong>10 minutes</strong>.
-            </p>
-          </div>
-          
-          <div style="text-align: center; padding: 20px 0; color: #999; font-size: 12px;">
-            <p>If you didn't request this code, you can safely ignore this email.</p>
-            <p>© ${DateTime.now().year} Campcon. All rights reserved.</p>
-          </div>
-        </div>
-      ''';
-
-      final response = await http.post(
-        Uri.parse('https://api.resend.com/emails'),
-        headers: {
-          'Authorization': 'Bearer $_resendApiKey',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'from': 'Campcon <no-reply@dressfli.com>',
-          'to': email,
-          'subject': 'Your Campcon Verification Code',
-          'html': htmlContent,
-        }),
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint('OTP sent to $email: $_currentOTP');
-        return true;
-      } else {
-        debugPrint(
-            'Resend API error: ${response.statusCode} - ${response.body}');
-        return false;
-      }
+      debugPrint('OTP request sent for $email');
+      return true;
+    } on FirebaseFunctionsException catch (e) {
+      debugPrint('Cloud Function error: ${e.code} — ${e.message}');
+      return false;
     } catch (e) {
       debugPrint('Error sending OTP: $e');
       return false;
     }
   }
 
-  /// Verify the OTP entered by the user
-  static bool verifyOTP(String email, String otp) {
+  /// Verify OTP via Cloud Function (server-side validation)
+  static Future<bool> verifyOTP(String email, String otp) async {
     try {
-      if (_currentOTP == null || _currentEmail == null || _otpExpiry == null) {
-        debugPrint('OTP verification failed: No OTP generated');
-        return false;
-      }
-
       if (_currentEmail != email.trim().toLowerCase()) {
         debugPrint('OTP verification failed: Email mismatch');
         return false;
       }
 
-      if (DateTime.now().isAfter(_otpExpiry!)) {
-        debugPrint('OTP verification failed: OTP expired');
-        _clearOTP();
-        return false;
-      }
+      final callable = _functions.httpsCallable('verifyOTP');
+      final result = await callable.call({
+        'email': email.trim().toLowerCase(),
+        'otp': otp,
+      });
 
-      bool isValid = _currentOTP == otp;
+      final data = result.data as Map<String, dynamic>;
+      final verified = data['verified'] == true;
 
-      if (isValid) {
+      if (verified) {
         debugPrint('OTP verified successfully');
         _clearOTP();
-      } else {
-        debugPrint('OTP verification failed: Invalid OTP');
       }
 
-      return isValid;
+      return verified;
+    } on FirebaseFunctionsException catch (e) {
+      debugPrint('OTP verification error: ${e.code} — ${e.message}');
+      return false;
     } catch (e) {
       debugPrint('Error verifying OTP: $e');
       return false;
@@ -121,23 +59,25 @@ class EmailOTPService {
   }
 
   static void _clearOTP() {
-    _currentOTP = null;
+    _otpSentAt = null;
     _currentEmail = null;
-    _otpExpiry = null;
   }
 
+  /// Client-side expiry estimate (10-minute window from send time)
   static bool isOTPExpired() {
-    if (_otpExpiry == null) return true;
-    return DateTime.now().isAfter(_otpExpiry!);
+    if (_otpSentAt == null) return true;
+    return DateTime.now().difference(_otpSentAt!).inMinutes >= 10;
   }
 
+  /// Remaining seconds until estimated client-side expiry
   static int getRemainingSeconds() {
-    if (_otpExpiry == null) return 0;
-    final remaining = _otpExpiry!.difference(DateTime.now()).inSeconds;
+    if (_otpSentAt == null) return 0;
+    final elapsed = DateTime.now().difference(_otpSentAt!).inSeconds;
+    final remaining = (10 * 60) - elapsed;
     return remaining > 0 ? remaining : 0;
   }
 
   static void configure() {
-    // No configuration needed
+    // No client-side configuration needed — all handled server-side
   }
 }

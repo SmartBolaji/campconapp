@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ph.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 class ProductHeader extends StatelessWidget {
   final bool isItem;
@@ -59,7 +60,33 @@ class ProductHeader extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(width: 40.w),
+          GestureDetector(
+            onTap: () {
+              final productProvider =
+                  Provider.of<ProductProvider>(context, listen: false);
+              final product = productProvider.currentProduct;
+              if (product != null) {
+                SharePlus.instance.share(
+                  ShareParams(
+                    text:
+                        'Check out ${product.name} on CampCon!\nhttps://campcon.app/product/${product.id}',
+                  ),
+                );
+              }
+            },
+            child: Container(
+              padding: EdgeInsets.all(8.w),
+              decoration: BoxDecoration(
+                color: AppTheme.background,
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Iconify(
+                Ph.share_network,
+                size: 18.sp,
+                color: AppTheme.textSecondary,
+              ),
+            ),
+          ),
         ],
       ),
     );

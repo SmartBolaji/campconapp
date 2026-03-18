@@ -91,9 +91,9 @@ class PickupLocationSelector extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: AppTheme.error.withOpacity(0.05),
+        color: AppTheme.error.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppTheme.error.withOpacity(0.2)),
+        border: Border.all(color: AppTheme.error.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -147,7 +147,7 @@ class PickupLocationSelector extends StatelessWidget {
         padding: EdgeInsets.all(12.w),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppTheme.primary.withOpacity(0.05)
+              ? AppTheme.primary.withValues(alpha: 0.05)
               : AppTheme.surface,
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
@@ -157,11 +157,18 @@ class PickupLocationSelector extends StatelessWidget {
         ),
         child: Row(
           children: [
-            _buildRadioIndicator(isSelected),
-            SizedBox(width: 12.w),
             _buildTypeIcon(center.type),
             SizedBox(width: 12.w),
             Expanded(child: _buildCenterDetails(center)),
+            SizedBox(width: 12.w),
+            if (isSelected)
+              Iconify(
+                Ph.check_circle_fill,
+                color: AppTheme.primary,
+                size: 22.sp,
+              )
+            else
+              _buildRadioIndicator(isSelected),
           ],
         ),
       ),
@@ -199,7 +206,7 @@ class PickupLocationSelector extends StatelessWidget {
       width: 40.w,
       height: 40.h,
       decoration: BoxDecoration(
-        color: _getTypeColor(type).withOpacity(0.1),
+        color: _getTypeColor(type).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8.r),
       ),
       child: Center(

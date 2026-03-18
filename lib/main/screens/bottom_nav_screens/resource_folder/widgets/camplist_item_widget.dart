@@ -39,7 +39,7 @@ class CamplistItemWidget extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(14.w),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10.r),
                 ),
                 child: Icon(
@@ -70,7 +70,7 @@ class CamplistItemWidget extends StatelessWidget {
                           padding: EdgeInsets.symmetric(
                               horizontal: 8.w, vertical: 2.h),
                           decoration: BoxDecoration(
-                            color: color.withOpacity(0.15),
+                            color: color.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(10.r),
                           ),
                           child: Text(

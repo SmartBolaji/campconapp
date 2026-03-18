@@ -1,8 +1,11 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/event_model.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/event_provider.dart';
+import 'package:campcon/main/services/navigation_helper.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/home_folder/events/ticket_confirmation_screen.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/home_folder/events/widgets/event_description/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -29,7 +32,9 @@ class _EventDescriptionState extends State<EventDescription> {
     super.initState();
     // Reset ticket purchase state when entering the screen
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<EventProvider>(context, listen: false).resetTicketPurchase();
+      final eventProvider = Provider.of<EventProvider>(context, listen: false);
+      eventProvider.resetTicketPurchase();
+      eventProvider.fetchRelatedEvents(widget.event);
     });
   }
 
@@ -49,7 +54,16 @@ class _EventDescriptionState extends State<EventDescription> {
             !isOrganizer;
 
         return Scaffold(
-          backgroundColor: AppTheme.surface,
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          bottomNavigationBar: EventBottomAction(
+            event: widget.event,
+            isOrganizer: isOrganizer,
+            onPurchase: () => _showOrderSummary(
+              eventProvider,
+              currentUserId,
+              currentUserName,
+            ),
+          ),
           body: SafeArea(
             child: Column(
               children: [
@@ -87,10 +101,19 @@ class _EventDescriptionState extends State<EventDescription> {
                               // Organizer Info
                               OrganizerInfoCard(
                                 organizerName: widget.event.organizerName,
+                                onProfileTap: () {
+                                  NavigationHelper.openProfile(
+                                    context,
+                                    widget.event.organizerId,
+                                  );
+                                },
                                 onMessageTap: isOrganizer
                                     ? null
                                     : () {
-                                        // TODO: Navigate to chat
+                                        NavigationHelper.openChat(
+                                          context,
+                                          otherUserId: widget.event.organizerId,
+                                        );
                                       },
                               ),
                               SizedBox(height: 24.h),
@@ -119,23 +142,15 @@ class _EventDescriptionState extends State<EventDescription> {
                                 ),
                               ],
 
-                              SizedBox(height: 100.h),
+                              SizedBox(height: 24.h),
                             ],
                           ),
                         ),
+
+                        // Related Events section
+                        _buildRelatedEvents(eventProvider),
                       ],
                     ),
-                  ),
-                ),
-
-                // Bottom Action Bar
-                EventBottomAction(
-                  event: widget.event,
-                  isOrganizer: isOrganizer,
-                  onPurchase: () => _showOrderSummary(
-                    eventProvider,
-                    currentUserId,
-                    currentUserName,
                   ),
                 ),
               ],
@@ -150,10 +165,10 @@ class _EventDescriptionState extends State<EventDescription> {
     return Container(
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
-        color: AppTheme.primary.withOpacity(0.03),
+        color: AppTheme.primary.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(20.r),
         border: Border.all(
-          color: AppTheme.primary.withOpacity(0.15),
+          color: AppTheme.primary.withValues(alpha: 0.15),
           width: 1.5,
         ),
       ),
@@ -166,7 +181,7 @@ class _EventDescriptionState extends State<EventDescription> {
               Container(
                 padding: EdgeInsets.all(10.w),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.1),
+                  color: AppTheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10.r),
                 ),
                 child: Iconify(
@@ -200,8 +215,17 @@ class _EventDescriptionState extends State<EventDescription> {
 
           SizedBox(height: 20.h),
 
+          // Ticket Tier Selector (for multi-tier events)
+          if (widget.event.hasMultipleTiers) ...[
+            TicketTierSelector(event: widget.event),
+            SizedBox(height: 20.h),
+          ],
+
           // Ticket Quantity Selector (uses Consumer internally)
-          TicketQuantitySelector(event: widget.event),
+          if (!widget.event.hasMultipleTiers)
+            TicketQuantitySelector(event: widget.event),
+          if (widget.event.hasMultipleTiers)
+            TicketQuantitySelector(event: widget.event),
 
           SizedBox(height: 20.h),
 
@@ -218,8 +242,12 @@ class _EventDescriptionState extends State<EventDescription> {
   }
 
   Widget _buildOrderPreview(EventProvider eventProvider) {
-    final unitPrice = widget.event.ticketPrice ?? 0;
+    final selectedTier = eventProvider.getSelectedTier(widget.event);
+    final unitPrice = selectedTier?.price ?? widget.event.ticketPrice ?? 0;
     final totalPrice = unitPrice * eventProvider.ticketQuantity;
+    final tierName = selectedTier?.name ?? 'General Admission';
+    final formattedUnit =
+        selectedTier?.formattedPrice ?? widget.event.formattedPrice;
 
     return Container(
       padding: EdgeInsets.all(16.w),
@@ -230,6 +258,28 @@ class _EventDescriptionState extends State<EventDescription> {
       ),
       child: Column(
         children: [
+          if (widget.event.hasMultipleTiers) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Ticket Type',
+                  style: TextConstants.smallText.copyWith(
+                    fontSize: 14.sp,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+                Text(
+                  tierName,
+                  style: TextConstants.mediumText.copyWith(
+                    fontSize: 14.sp,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8.h),
+          ],
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -241,7 +291,7 @@ class _EventDescriptionState extends State<EventDescription> {
                 ),
               ),
               Text(
-                '${widget.event.formattedPrice} × ${eventProvider.ticketQuantity}',
+                '$formattedUnit × ${eventProvider.ticketQuantity}',
                 style: TextConstants.mediumText.copyWith(
                   fontSize: 14.sp,
                   color: AppTheme.textPrimary,
@@ -281,14 +331,17 @@ class _EventDescriptionState extends State<EventDescription> {
     String currentUserId,
     String currentUserName,
   ) {
-    final totalPrice =
-        (widget.event.ticketPrice ?? 0) * eventProvider.ticketQuantity;
+    final selectedTier = eventProvider.getSelectedTier(widget.event);
+    final unitPrice = selectedTier?.price ?? widget.event.ticketPrice ?? 0;
+    final totalPrice = unitPrice * eventProvider.ticketQuantity;
     TicketOrderSummary.show(
       context,
       event: widget.event,
       quantity: eventProvider.ticketQuantity,
       paymentMethod: eventProvider.selectedPaymentMethod!,
       totalPrice: totalPrice,
+      tierName: selectedTier?.name,
+      tierPrice: selectedTier?.price,
       onConfirm: () {
         Navigator.pop(context);
         _processPurchase(
@@ -303,7 +356,11 @@ class _EventDescriptionState extends State<EventDescription> {
     String currentUserId,
     String currentUserName,
   ) async {
-    final success = await eventProvider.processPurchase(
+    final quantity = eventProvider.ticketQuantity;
+    final paymentMethod = eventProvider.selectedPaymentMethod ?? 'N/A';
+    final selectedTier = eventProvider.getSelectedTier(widget.event);
+
+    final ticketId = await eventProvider.processPurchase(
       eventId: widget.event.id,
       userId: currentUserId,
       userName: currentUserName,
@@ -312,26 +369,20 @@ class _EventDescriptionState extends State<EventDescription> {
 
     if (!mounted) return;
 
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Iconify(Ph.check_circle, color: AppTheme.white),
-              SizedBox(width: 8.w),
-              Text(
-                'Ticket purchase successful!',
-                style: TextConstants.mediumText.copyWith(
-                  color: AppTheme.white,
-                ),
-              ),
-            ],
+    if (ticketId != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => TicketConfirmationScreen(
+            event: widget.event,
+            ticketId: ticketId,
+            quantity: quantity,
+            totalPrice: totalPrice,
+            paymentMethod: paymentMethod,
+            tierName: selectedTier?.name,
           ),
-          backgroundColor: AppTheme.success,
-          behavior: SnackBarBehavior.floating,
         ),
       );
-      // Reset is handled by the provider after successful purchase
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -340,6 +391,196 @@ class _EventDescriptionState extends State<EventDescription> {
         ),
       );
     }
+  }
+
+  Widget _buildRelatedEvents(EventProvider provider) {
+    if (provider.isLoadingRelated) {
+      return Padding(
+        padding: EdgeInsets.all(20.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              height: 20.h,
+              width: 140.w,
+              decoration: BoxDecoration(
+                color: AppTheme.buttonBorder,
+                borderRadius: BorderRadius.circular(4.r),
+              ),
+            ),
+            SizedBox(height: 12.h),
+            SizedBox(
+              height: 200.h,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: 3,
+                separatorBuilder: (_, __) => SizedBox(width: 12.w),
+                itemBuilder: (_, __) => Container(
+                  width: 200.w,
+                  decoration: BoxDecoration(
+                    color: AppTheme.buttonBorder,
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (provider.relatedEvents.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          child: Text(
+            'Similar Events',
+            style: TextConstants.boldText.copyWith(
+              fontSize: 18.sp,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+        ),
+        SizedBox(height: 12.h),
+        SizedBox(
+          height: 230.h,
+          child: ListView.separated(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            scrollDirection: Axis.horizontal,
+            itemCount: provider.relatedEvents.length,
+            separatorBuilder: (_, __) => SizedBox(width: 12.w),
+            itemBuilder: (context, index) {
+              final event = provider.relatedEvents[index];
+              return _buildRelatedEventCard(event);
+            },
+          ),
+        ),
+        SizedBox(height: 20.h),
+      ],
+    );
+  }
+
+  Widget _buildRelatedEventCard(EventModel event) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => EventDescription(event: event),
+          ),
+        );
+      },
+      child: Container(
+        width: 200.w,
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: AppTheme.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(12.r),
+              ),
+              child: SizedBox(
+                height: 120.h,
+                width: double.infinity,
+                child: event.imageUrl != null && event.imageUrl!.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: event.imageUrl!,
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) => Container(
+                          color: AppTheme.buttonBorder,
+                          child: Center(
+                            child: Iconify(
+                              Ph.calendar_blank,
+                              size: 32.sp,
+                              color: AppTheme.textLight,
+                            ),
+                          ),
+                        ),
+                        errorWidget: (_, __, ___) => Container(
+                          color: AppTheme.buttonBorder,
+                          child: Center(
+                            child: Iconify(
+                              Ph.calendar_blank,
+                              size: 32.sp,
+                              color: AppTheme.textLight,
+                            ),
+                          ),
+                        ),
+                      )
+                    : Container(
+                        color: AppTheme.buttonBorder,
+                        child: Center(
+                          child: Iconify(
+                            Ph.calendar_blank,
+                            size: 32.sp,
+                            color: AppTheme.textLight,
+                          ),
+                        ),
+                      ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(10.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    event.title,
+                    style: TextConstants.mediumText.copyWith(
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimary,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 4.h),
+                  Row(
+                    children: [
+                      Iconify(
+                        Ph.calendar_blank,
+                        size: 12.sp,
+                        color: AppTheme.primary,
+                      ),
+                      SizedBox(width: 4.w),
+                      Expanded(
+                        child: Text(
+                          event.formattedDate,
+                          style: TextConstants.smallText.copyWith(
+                            fontSize: 11.sp,
+                            color: AppTheme.textSecondary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    event.isFree ? 'Free' : event.formattedPrice,
+                    style: TextConstants.boldText.copyWith(
+                      fontSize: 13.sp,
+                      color: event.isFree ? AppTheme.success : AppTheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _shareEvent() {

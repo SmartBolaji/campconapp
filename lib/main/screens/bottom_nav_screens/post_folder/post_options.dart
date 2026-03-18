@@ -143,7 +143,7 @@ class PostOptionsWidget {
         margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
-          color: AppTheme.border.withOpacity(0.3),
+          color: AppTheme.border.withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(15.r),
           border: Border.all(
             color: AppTheme.border,
@@ -278,7 +278,8 @@ class CommentOptionsWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 child: Text(
                   'Comment Options',
                   style: TextConstants.mediumText.copyWith(
@@ -349,7 +350,7 @@ class CommentOptionsWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(

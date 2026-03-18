@@ -2,14 +2,19 @@
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
+import 'package:campcon/main/provider/chat_provider.dart';
 import 'package:campcon/main/provider/search_provider.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/messaging_folder/random_chat_screen.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/messaging_folder/new_message.dart';
 import 'package:campcon/main/screens/search/search_screen.dart';
 import 'package:campcon/main/services/cache.dart';
 import 'package:campcon/main/widgets/action_search_bar.dart';
 import 'package:campcon/main/widgets/custom_top_bar.dart';
+import 'package:campcon/main/widgets/empty_state_view.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/messaging_folder/message.dart';
 import 'package:campcon/main/widgets/navigation_helper.dart';
+import 'package:campcon/main/widgets/profile_drawer.dart';
+import 'package:campcon/main/widgets/shimmer_card.dart';
 import 'package:campcon/main/widgets/verified_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -41,6 +46,78 @@ class _MessagingScreenState extends State<MessagingScreen> {
         _searchQuery = _searchController.text.toLowerCase();
       });
     });
+  }
+
+  Widget _buildRandomShotCard(String currentUserId) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 4.h),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14.r),
+        onTap: () async {
+          await context.read<ChatProvider>().resetChat();
+          if (!mounted) return;
+          NavigationHelper.navigateTo(context, const RandomChatScreen());
+        },
+        child: Ink(
+          padding: EdgeInsets.all(14.r),
+          decoration: BoxDecoration(
+            color: AppTheme.primary.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(14.r),
+            border: Border.all(
+              color: AppTheme.primary.withValues(alpha: 0.25),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42.w,
+                height: 42.h,
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.18),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Iconify(
+                    Ph.shuffle,
+                    size: 20.sp,
+                    color: AppTheme.primary,
+                  ),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Random Shot',
+                      style: TextConstants.mediumText.copyWith(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 2.h),
+                    Text(
+                      'Chat anonymously with a random student',
+                      style: TextConstants.smallText.copyWith(
+                        fontSize: 12.sp,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Iconify(
+                Ph.caret_right,
+                size: 18.sp,
+                color: AppTheme.textLight,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -203,8 +280,9 @@ class _MessagingScreenState extends State<MessagingScreen> {
       child: Ink(
         padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 20.w),
         decoration: BoxDecoration(
-          color:
-              isUnread ? AppTheme.primary.withOpacity(0.03) : AppTheme.surface,
+          color: isUnread
+              ? AppTheme.primary.withValues(alpha: 0.03)
+              : AppTheme.surface,
           // border: Border(
           //   bottom: BorderSide(
           //     color: AppTheme.border,
@@ -338,71 +416,66 @@ class _MessagingScreenState extends State<MessagingScreen> {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final currentUserId = authProvider.currentUser?.uid ?? '';
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      endDrawer: const ProfileDrawer(),
+      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: CustomScrollView(
           controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            // Floating App Bar with Search
-            SliverAppBar(
-              backgroundColor: AppTheme.surface,
-              elevation: 0,
-              floating: true,
-              snap: true,
-              pinned: true,
-              expandedHeight: 130.h,
-              surfaceTintColor: AppTheme.surface,
-              flexibleSpace: FlexibleSpaceBar(
-                background: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  child: Column(
-                    children: [
-                      SizedBox(height: 10.h),
-                      // Top Bar
-                      CustomTopBar(
-                        centerText: 'Messages',
-                        showEdit: true,
-                        showSearch: false,
-                        onEditTap: () {
-                          NavigationHelper.navigateTo(
-                              context, const NewMessageScreen());
-                        },
-                      ),
-                      SizedBox(height: 20.h),
+            // Top section (search bar)
+            SliverToBoxAdapter(
+              child: Container(
+                color: colorScheme.surface,
+                padding: EdgeInsets.fromLTRB(20.w, 5.h, 20.w, 20.h),
+                child: Column(
+                  children: [
+                    // Top Bar
+                    CustomTopBar(
+                      centerText: 'Messages',
+                      showEdit: true,
+                      showSearch: false,
+                      onEditTap: () {
+                        NavigationHelper.navigateTo(
+                            context, const NewMessageScreen());
+                      },
+                    ),
+                    SizedBox(height: 20.h),
 
-                      // Search Bar using ActionSearchBar - navigates to search screen
-                      ActionSearchBar.navigate(
-                        hintText: 'Search conversations',
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            PageTransition(
-                              type: PageTransitionType.fade,
-                              duration: const Duration(milliseconds: 200),
-                              child: const SearchScreen(
-                                context: SearchContext.messaging,
-                              ),
+                    // Search Bar using ActionSearchBar - navigates to search screen
+                    ActionSearchBar.navigate(
+                      hintText: 'Search conversations',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          PageTransition(
+                            type: PageTransitionType.fade,
+                            duration: const Duration(milliseconds: 200),
+                            child: const SearchScreen(
+                              context: SearchContext.messaging,
                             ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ),
-              bottom: PreferredSize(
-                preferredSize: Size.fromHeight(1.h),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppTheme.surface,
-                    border: Border(
-                      bottom: BorderSide(
-                        color: AppTheme.border,
-                        width: 1,
-                      ),
+            ),
+
+            // Divider
+            SliverToBoxAdapter(
+              child: Container(
+                height: 1.h,
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: AppTheme.border,
+                      width: 1,
                     ),
                   ),
                 ),
@@ -442,10 +515,10 @@ class _MessagingScreenState extends State<MessagingScreen> {
         // Loading state
         if (snapshot.connectionState == ConnectionState.waiting) {
           return SliverFillRemaining(
-            child: Center(
-              child: CircularProgressIndicator(
-                color: AppTheme.primary,
-              ),
+            child: ShimmerList(
+              itemCount: 6,
+              type: ShimmerCardType.message,
+              padding: EdgeInsets.only(top: 10.h, bottom: 60.h),
             ),
           );
         }
@@ -470,6 +543,15 @@ class _MessagingScreenState extends State<MessagingScreen> {
                       color: AppTheme.textSecondary,
                     ),
                   ),
+                  SizedBox(height: 12.h),
+                  ElevatedButton(
+                    onPressed: () => setState(() {}),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Retry'),
+                  ),
                 ],
               ),
             ),
@@ -478,39 +560,16 @@ class _MessagingScreenState extends State<MessagingScreen> {
 
         // Empty state
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return SliverFillRemaining(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    IconlyBold.chat,
-                    size: 64.sp,
-                    color: AppTheme.textLight,
-                  ),
-                  SizedBox(height: 16.h),
-                  Text(
-                    'No messages yet',
-                    style: TextConstants.boldText.copyWith(
-                      fontSize: 18.sp,
-                      color: AppTheme.textPrimary,
-                    ),
-                  ),
-                  SizedBox(height: 8.h),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 40.w),
-                    child: Text(
-                      'Start a conversation with someone',
-                      style: TextConstants.smallText.copyWith(
-                        fontSize: 14.sp,
-                        color: AppTheme.textSecondary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ],
+          return SliverList(
+            delegate: SliverChildListDelegate([
+              _buildRandomShotCard(currentUserId),
+              SizedBox(height: 70.h),
+              EmptyStateView(
+                icon: Ph.chats,
+                title: 'No messages yet',
+                subtitle: 'Start a conversation with someone from your campus.',
               ),
-            ),
+            ]),
           );
         }
 
@@ -522,10 +581,10 @@ class _MessagingScreenState extends State<MessagingScreen> {
           builder: (context, userDataSnapshot) {
             if (!userDataSnapshot.hasData) {
               return SliverFillRemaining(
-                child: Center(
-                  child: CircularProgressIndicator(
-                    color: AppTheme.primary,
-                  ),
+                child: ShimmerList(
+                  itemCount: 6,
+                  type: ShimmerCardType.message,
+                  padding: EdgeInsets.only(top: 10.h, bottom: 60.h),
                 ),
               );
             }
@@ -537,10 +596,10 @@ class _MessagingScreenState extends State<MessagingScreen> {
               builder: (context, filteredSnapshot) {
                 if (!filteredSnapshot.hasData) {
                   return SliverFillRemaining(
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color: AppTheme.primary,
-                      ),
+                    child: ShimmerList(
+                      itemCount: 6,
+                      type: ShimmerCardType.message,
+                      padding: EdgeInsets.only(top: 10.h, bottom: 60.h),
                     ),
                   );
                 }
@@ -561,39 +620,17 @@ class _MessagingScreenState extends State<MessagingScreen> {
                 }
 
                 if (filteredChats.isEmpty) {
-                  return SliverFillRemaining(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            IconlyBold.chat,
-                            size: 64.sp,
-                            color: AppTheme.textLight,
-                          ),
-                          SizedBox(height: 16.h),
-                          Text(
-                            'No messages yet',
-                            style: TextConstants.boldText.copyWith(
-                              fontSize: 18.sp,
-                              color: AppTheme.textPrimary,
-                            ),
-                          ),
-                          SizedBox(height: 8.h),
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 40.w),
-                            child: Text(
-                              'Start a conversation with someone',
-                              style: TextConstants.smallText.copyWith(
-                                fontSize: 14.sp,
-                                color: AppTheme.textSecondary,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ],
+                  return SliverList(
+                    delegate: SliverChildListDelegate([
+                      _buildRandomShotCard(currentUserId),
+                      SizedBox(height: 70.h),
+                      EmptyStateView(
+                        icon: Ph.chats,
+                        title: 'No messages yet',
+                        subtitle:
+                            'Start a conversation with someone from your campus.',
                       ),
-                    ),
+                    ]),
                   );
                 }
 
@@ -606,13 +643,16 @@ class _MessagingScreenState extends State<MessagingScreen> {
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
+                        if (index == 0) {
+                          return _buildRandomShotCard(currentUserId);
+                        }
                         return _buildChatItem(
-                          filteredChats[index],
+                          filteredChats[index - 1],
                           userDataMap,
                           currentUserId,
                         );
                       },
-                      childCount: filteredChats.length,
+                      childCount: filteredChats.length + 1,
                     ),
                   ),
                 );

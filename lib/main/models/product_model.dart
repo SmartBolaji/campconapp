@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
 class Product {
@@ -7,7 +8,9 @@ class Product {
   final String description;
   final double price;
   final String? imageUrl;
+  final List<String> imageUrls; // Multiple images
   final File? imageFile;
+  final List<File>? imageFiles; // Multiple image files
   final String category;
   final bool isItem;
   final String sellerId;
@@ -18,6 +21,8 @@ class Product {
   final double? discountedPrice;
   final String? wageType;
   final int? views;
+  final double? averageRating;
+  final int? reviewCount;
 
   Product({
     required this.id,
@@ -25,7 +30,9 @@ class Product {
     required this.description,
     required this.price,
     this.imageUrl,
+    this.imageUrls = const [],
     this.imageFile,
+    this.imageFiles,
     required this.category,
     required this.isItem,
     required this.sellerId,
@@ -36,9 +43,25 @@ class Product {
     this.discountedPrice,
     this.wageType,
     this.views,
+    this.averageRating,
+    this.reviewCount,
   });
 
-  //  Helper for price display
+  // Get all images (primary + additional, deduplicated)
+  List<String> get allImageUrls {
+    if (imageUrl != null && imageUrls.isEmpty) {
+      return [imageUrl!];
+    } else if (imageUrl != null && imageUrls.isNotEmpty) {
+      // Avoid duplicating imageUrl if it's already the first item in imageUrls
+      if (imageUrls.first == imageUrl) {
+        return imageUrls;
+      }
+      return [imageUrl!, ...imageUrls];
+    }
+    return imageUrls;
+  }
+
+  // Helper for price display
   String get formattedPrice {
     if (price == 0) return 'Free';
     final formatter = NumberFormat("#,##0", "en_US");
@@ -79,17 +102,23 @@ class Product {
       description: json['description'] ?? '',
       price: (json['price'] ?? 0).toDouble(),
       imageUrl: json['imageUrl'],
+      imageUrls: List<String>.from(json['imageUrls'] ?? []),
       category: json['category'] ?? '',
       isItem: json['isItem'] ?? true,
       sellerId: json['sellerId'] ?? '',
       location: json['location'] ?? '',
       createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
+          ? (json['createdAt'] is Timestamp
+              ? (json['createdAt'] as Timestamp).toDate()
+              : DateTime.parse(json['createdAt'].toString()))
           : DateTime.now(),
       stock: json['stock'],
       discount: json['discount']?.toDouble(),
       discountedPrice: json['discountedPrice']?.toDouble(),
       wageType: json['wageType'],
+      views: json['views'],
+      averageRating: json['averageRating']?.toDouble(),
+      reviewCount: json['reviewCount'],
     );
   }
 
@@ -100,6 +129,7 @@ class Product {
       'description': description,
       'price': price,
       'imageUrl': imageUrl,
+      'imageUrls': imageUrls,
       'category': category,
       'isItem': isItem,
       'sellerId': sellerId,
@@ -109,6 +139,55 @@ class Product {
       if (discount != null) 'discount': discount,
       if (discountedPrice != null) 'discountedPrice': discountedPrice,
       if (wageType != null) 'wageType': wageType,
+      if (views != null) 'views': views,
+      if (averageRating != null) 'averageRating': averageRating,
+      if (reviewCount != null) 'reviewCount': reviewCount,
     };
+  }
+
+  Product copyWith({
+    String? id,
+    String? name,
+    String? description,
+    double? price,
+    String? imageUrl,
+    List<String>? imageUrls,
+    File? imageFile,
+    List<File>? imageFiles,
+    String? category,
+    bool? isItem,
+    String? sellerId,
+    String? location,
+    DateTime? createdAt,
+    int? stock,
+    double? discount,
+    double? discountedPrice,
+    String? wageType,
+    int? views,
+    double? averageRating,
+    int? reviewCount,
+  }) {
+    return Product(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      price: price ?? this.price,
+      imageUrl: imageUrl ?? this.imageUrl,
+      imageUrls: imageUrls ?? this.imageUrls,
+      imageFile: imageFile ?? this.imageFile,
+      imageFiles: imageFiles ?? this.imageFiles,
+      category: category ?? this.category,
+      isItem: isItem ?? this.isItem,
+      sellerId: sellerId ?? this.sellerId,
+      location: location ?? this.location,
+      createdAt: createdAt ?? this.createdAt,
+      stock: stock ?? this.stock,
+      discount: discount ?? this.discount,
+      discountedPrice: discountedPrice ?? this.discountedPrice,
+      wageType: wageType ?? this.wageType,
+      views: views ?? this.views,
+      averageRating: averageRating ?? this.averageRating,
+      reviewCount: reviewCount ?? this.reviewCount,
+    );
   }
 }

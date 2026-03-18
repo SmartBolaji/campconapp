@@ -16,9 +16,18 @@ class MarketplaceProvider extends ChangeNotifier {
   // Loading states
   bool _isLoadingItems = false;
   bool _isLoadingServices = false;
+  bool _isLoadingMoreItems = false;
+  bool _isLoadingMoreServices = false;
   bool _hasLoadedItems = false;
   bool _hasLoadedServices = false;
+  bool _hasMoreItems = true;
+  bool _hasMoreServices = true;
+  DocumentSnapshot? _lastItemDoc;
+  DocumentSnapshot? _lastServiceDoc;
   String? _error;
+
+  static const int _initialPageSize = 15;
+  static const int _pageSize = 10;
 
   // Subscription
   StreamSubscription<QuerySnapshot>? _itemsSubscription;
@@ -61,7 +70,10 @@ class MarketplaceProvider extends ChangeNotifier {
 
   // Getters
   bool get isLoading => selectedTab == 0 ? _isLoadingItems : _isLoadingServices;
+  bool get isLoadingMore =>
+      selectedTab == 0 ? _isLoadingMoreItems : _isLoadingMoreServices;
   bool get hasLoaded => selectedTab == 0 ? _hasLoadedItems : _hasLoadedServices;
+  bool get hasMore => selectedTab == 0 ? _hasMoreItems : _hasMoreServices;
   String? get error => _error;
   String? get currentUserId => _currentUserId;
 
@@ -197,7 +209,11 @@ class MarketplaceProvider extends ChangeNotifier {
           .collection('marketplace')
           .where('isItem', isEqualTo: true)
           .orderBy('createdAt', descending: true)
+          .limit(_initialPageSize)
           .get();
+
+        _lastItemDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
+        _hasMoreItems = snapshot.docs.length >= _initialPageSize;
 
       _allProducts = snapshot.docs
           .map((doc) {
@@ -268,7 +284,11 @@ class MarketplaceProvider extends ChangeNotifier {
           .collection('marketplace')
           .where('isItem', isEqualTo: false)
           .orderBy('createdAt', descending: true)
+          .limit(_initialPageSize)
           .get();
+
+        _lastServiceDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
+        _hasMoreServices = snapshot.docs.length >= _initialPageSize;
 
       _allServices = snapshot.docs
           .map((doc) {
@@ -370,13 +390,121 @@ class MarketplaceProvider extends ChangeNotifier {
   Future<void> refreshCurrentTab() async {
     if (selectedTab == 0) {
       _hasLoadedItems = false;
+      _hasMoreItems = true;
+      _lastItemDoc = null;
       _allProducts.clear();
       await loadMarketplaceItems();
     } else {
       _hasLoadedServices = false;
+      _hasMoreServices = true;
+      _lastServiceDoc = null;
       _allServices.clear();
       await loadMarketplaceServices();
     }
+  }
+
+  Future<void> loadMoreCurrentTab() async {
+    if (selectedTab == 0) {
+      await loadMoreItems();
+    } else {
+      await loadMoreServices();
+    }
+  }
+
+  Future<void> loadMoreItems() async {
+    if (_isLoadingItems || _isLoadingMoreItems || !_hasMoreItems) return;
+
+    _isLoadingMoreItems = true;
+    notifyListeners();
+
+    try {
+      Query query = _firestore
+          .collection('marketplace')
+          .where('isItem', isEqualTo: true)
+          .orderBy('createdAt', descending: true)
+          .limit(_pageSize);
+
+      if (_lastItemDoc != null) {
+        query = query.startAfterDocument(_lastItemDoc!);
+      }
+
+      final snapshot = await query.get();
+
+      if (snapshot.docs.isEmpty) {
+        _hasMoreItems = false;
+      } else {
+        _lastItemDoc = snapshot.docs.last;
+        final newItems = snapshot.docs
+            .map((doc) {
+              try {
+                return Product.fromJson(doc.data() as Map<String, dynamic>);
+              } catch (e) {
+                debugPrint('Error parsing product: $e');
+                return null;
+              }
+            })
+            .whereType<Product>()
+            .where((item) => !_allProducts.any((p) => p.id == item.id))
+            .toList();
+
+        _allProducts.addAll(newItems);
+        _hasMoreItems = snapshot.docs.length >= _pageSize;
+      }
+    } catch (e) {
+      debugPrint('Error loading more items: $e');
+    }
+
+    _isLoadingMoreItems = false;
+    notifyListeners();
+  }
+
+  Future<void> loadMoreServices() async {
+    if (_isLoadingServices || _isLoadingMoreServices || !_hasMoreServices) {
+      return;
+    }
+
+    _isLoadingMoreServices = true;
+    notifyListeners();
+
+    try {
+      Query query = _firestore
+          .collection('marketplace')
+          .where('isItem', isEqualTo: false)
+          .orderBy('createdAt', descending: true)
+          .limit(_pageSize);
+
+      if (_lastServiceDoc != null) {
+        query = query.startAfterDocument(_lastServiceDoc!);
+      }
+
+      final snapshot = await query.get();
+
+      if (snapshot.docs.isEmpty) {
+        _hasMoreServices = false;
+      } else {
+        _lastServiceDoc = snapshot.docs.last;
+        final newServices = snapshot.docs
+            .map((doc) {
+              try {
+                return Product.fromJson(doc.data() as Map<String, dynamic>);
+              } catch (e) {
+                debugPrint('Error parsing service: $e');
+                return null;
+              }
+            })
+            .whereType<Product>()
+            .where((item) => !_allServices.any((s) => s.id == item.id))
+            .toList();
+
+        _allServices.addAll(newServices);
+        _hasMoreServices = snapshot.docs.length >= _pageSize;
+      }
+    } catch (e) {
+      debugPrint('Error loading more services: $e');
+    }
+
+    _isLoadingMoreServices = false;
+    notifyListeners();
   }
 
   // Clear cache

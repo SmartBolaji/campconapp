@@ -48,6 +48,17 @@ class MediaSelectionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Add multiple files directly (for native picker)
+  Future<void> addMultipleFiles(List<File> files) async {
+    for (final file in files) {
+      if (_selectedImages.length + _capturedImages.length >= 10) {
+        break;
+      }
+      _capturedImages.add(file);
+    }
+    notifyListeners();
+  }
+
   void clearSelection() {
     _selectedImages.clear();
     _imageFiles.clear();

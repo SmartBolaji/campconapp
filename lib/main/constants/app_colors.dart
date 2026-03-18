@@ -2,6 +2,97 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+@immutable
+class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
+  final Color primaryBackground;
+  final Color background;
+  final Color surface;
+  final Color textPrimary;
+  final Color textSecondary;
+  final Color textLight;
+  final Color border;
+  final Color buttonBorder;
+
+  const AppColorsExtension({
+    required this.primaryBackground,
+    required this.background,
+    required this.surface,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.textLight,
+    required this.border,
+    required this.buttonBorder,
+  });
+
+  @override
+  AppColorsExtension copyWith({
+    Color? primaryBackground,
+    Color? background,
+    Color? surface,
+    Color? textPrimary,
+    Color? textSecondary,
+    Color? textLight,
+    Color? border,
+    Color? buttonBorder,
+  }) {
+    return AppColorsExtension(
+      primaryBackground: primaryBackground ?? this.primaryBackground,
+      background: background ?? this.background,
+      surface: surface ?? this.surface,
+      textPrimary: textPrimary ?? this.textPrimary,
+      textSecondary: textSecondary ?? this.textSecondary,
+      textLight: textLight ?? this.textLight,
+      border: border ?? this.border,
+      buttonBorder: buttonBorder ?? this.buttonBorder,
+    );
+  }
+
+  @override
+  AppColorsExtension lerp(ThemeExtension<AppColorsExtension>? other, double t) {
+    if (other is! AppColorsExtension) return this;
+    return AppColorsExtension(
+      primaryBackground:
+          Color.lerp(primaryBackground, other.primaryBackground, t)!,
+      background: Color.lerp(background, other.background, t)!,
+      surface: Color.lerp(surface, other.surface, t)!,
+      textPrimary: Color.lerp(textPrimary, other.textPrimary, t)!,
+      textSecondary: Color.lerp(textSecondary, other.textSecondary, t)!,
+      textLight: Color.lerp(textLight, other.textLight, t)!,
+      border: Color.lerp(border, other.border, t)!,
+      buttonBorder: Color.lerp(buttonBorder, other.buttonBorder, t)!,
+    );
+  }
+}
+
+extension AppThemeContextX on BuildContext {
+  AppColorsExtension get appColors =>
+      Theme.of(this).extension<AppColorsExtension>()!;
+}
+
+extension AppThemeColorSchemeX on ColorScheme {
+  AppColorsExtension get appColorsExtension => brightness == Brightness.dark
+      ? const AppColorsExtension(
+          primaryBackground: AppColors.darkPrimaryBackground,
+          background: AppColors.darkBackground,
+          surface: AppColors.darkSurface,
+          textPrimary: AppColors.darkTextPrimary,
+          textSecondary: AppColors.darkTextSecondary,
+          textLight: AppColors.darkTextLight,
+          border: AppColors.darkBorder,
+          buttonBorder: AppColors.darkBorder,
+        )
+      : const AppColorsExtension(
+          primaryBackground: AppColors.lightPrimaryBackground,
+          background: AppColors.lightBackground,
+          surface: AppColors.lightSurface,
+          textPrimary: AppColors.lightTextPrimary,
+          textSecondary: AppColors.lightTextSecondary,
+          textLight: AppColors.lightTextLight,
+          border: AppColors.lightBorder,
+          buttonBorder: AppColors.lightBorder,
+        );
+}
+
 class AppColors {
   // Light Theme Colors
   static const lightPrimary = Color(0xFFEFA101);
@@ -23,7 +114,7 @@ class AppColors {
   static const darkTextPrimary = Color(0xFFE8E8E8);
   static const darkTextSecondary = Color(0xFFB8B8B8);
   static const darkTextLight = Color(0xFF888888);
-  static const darkBorder = Color(0xFF2C2C2C);
+  static const darkBorder = Color(0xFF262626);
 
   // Semantic Colors (Same for both themes but with adjusted opacity)
   static const success = Color(0xFF27AE60);
@@ -57,55 +148,52 @@ class AppColors {
 
 // This is the class you'll use throughout your app
 class AppTheme {
-  static bool _isDarkMode = false;
+  static Brightness get _platformBrightness =>
+      WidgetsBinding.instance.platformDispatcher.platformBrightness;
 
-  static void setDarkMode(bool isDark) {
-    _isDarkMode = isDark;
-  }
-
-  static bool get isDarkMode => _isDarkMode;
+  static bool get isDarkMode => _platformBrightness == Brightness.dark;
 
   // Primary Colors
   static Color get primary =>
-      _isDarkMode ? AppColors.darkPrimary : AppColors.lightPrimary;
+      isDarkMode ? AppColors.darkPrimary : AppColors.lightPrimary;
 
   static Color get primaryDark =>
-      _isDarkMode ? AppColors.darkPrimaryDark : AppColors.lightPrimaryDark;
+      isDarkMode ? AppColors.darkPrimaryDark : AppColors.lightPrimaryDark;
 
-  static Color get primaryBackground => _isDarkMode
+  static Color get primaryBackground => isDarkMode
       ? AppColors.darkPrimaryBackground
       : AppColors.lightPrimaryBackground;
 
   // Button Colors
   static Color get buttonPrimary =>
-      _isDarkMode ? AppColors.darkPrimary : AppColors.lightPrimary;
+      isDarkMode ? AppColors.darkPrimary : AppColors.lightPrimary;
 
   static Color get buttonText =>
-      _isDarkMode ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+      isDarkMode ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
 
   static Color get buttonBorder =>
-      _isDarkMode ? AppColors.darkBorder : AppColors.lightBorder;
+      isDarkMode ? AppColors.darkBorder : AppColors.lightBorder;
 
   // Background Colors
   static Color get background =>
-      _isDarkMode ? AppColors.darkBackground : AppColors.lightBackground;
+      isDarkMode ? AppColors.darkBackground : AppColors.lightBackground;
 
   static Color get surface =>
-      _isDarkMode ? AppColors.darkSurface : AppColors.lightSurface;
+      isDarkMode ? AppColors.darkSurface : AppColors.lightSurface;
 
   // Text Colors
   static Color get textPrimary =>
-      _isDarkMode ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+      isDarkMode ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
 
   static Color get textSecondary =>
-      _isDarkMode ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+      isDarkMode ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
   static Color get textLight =>
-      _isDarkMode ? AppColors.darkTextLight : AppColors.lightTextLight;
+      isDarkMode ? AppColors.darkTextLight : AppColors.lightTextLight;
 
   // Border
   static Color get border =>
-      _isDarkMode ? AppColors.darkBorder : AppColors.lightBorder;
+      isDarkMode ? AppColors.darkBorder : AppColors.lightBorder;
 
   // Semantic Colors (same for both themes)
   static const Color success = AppColors.success;
@@ -116,7 +204,7 @@ class AppTheme {
 
   // Gradient
   static LinearGradient get gradient =>
-      _isDarkMode ? AppColors.darkGradient : AppColors.lightGradient;
+      isDarkMode ? AppColors.darkGradient : AppColors.lightGradient;
 
   // Logo Widget
   static Widget get campconLogo => Container(
@@ -160,6 +248,18 @@ class AppTheme {
           bodyLarge: TextStyle(color: AppColors.lightTextPrimary),
           bodyMedium: TextStyle(color: AppColors.lightTextSecondary),
         ),
+        extensions: const [
+          AppColorsExtension(
+            primaryBackground: AppColors.lightPrimaryBackground,
+            background: AppColors.lightBackground,
+            surface: AppColors.lightSurface,
+            textPrimary: AppColors.lightTextPrimary,
+            textSecondary: AppColors.lightTextSecondary,
+            textLight: AppColors.lightTextLight,
+            border: AppColors.lightBorder,
+            buttonBorder: AppColors.lightBorder,
+          ),
+        ],
       );
 
   static ThemeData get darkTheme => ThemeData(
@@ -181,6 +281,18 @@ class AppTheme {
           bodyLarge: TextStyle(color: AppColors.darkTextPrimary),
           bodyMedium: TextStyle(color: AppColors.darkTextSecondary),
         ),
+        extensions: const [
+          AppColorsExtension(
+            primaryBackground: AppColors.darkPrimaryBackground,
+            background: AppColors.darkBackground,
+            surface: AppColors.darkSurface,
+            textPrimary: AppColors.darkTextPrimary,
+            textSecondary: AppColors.darkTextSecondary,
+            textLight: AppColors.darkTextLight,
+            border: AppColors.darkBorder,
+            buttonBorder: AppColors.darkBorder,
+          ),
+        ],
       );
 }
 

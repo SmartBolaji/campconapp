@@ -1,51 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:io';
+import 'package:campcon/main/provider/upload_status_mixin.dart';
 import 'package:campcon/main/services/backblaze.dart';
 import 'package:campcon/main/models/product_model.dart';
 
-enum MarketUploadStatus {
-  idle,
-  uploading,
-  processing,
-  success,
-  cancelled,
-  failed,
-}
-
-class MarketPostProvider extends ChangeNotifier {
+class MarketPostProvider extends ChangeNotifier with UploadStatusMixin {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final BackblazeService _backblazeService = BackblazeService(
-    keyId: '0050fae555030410000000003',
-    applicationKey: 'K005wG+vROJBYZFRpo0HVDn+Q4V3+zw',
-    bucketId: 'f0ef2ace6525c59093a00411',
-    bucketName: 'Campcon-Media',
-  );
+  final BackblazeService _backblazeService = BackblazeService.instance;
 
   bool _isLoading = false;
-  double _uploadProgress = 0.0;
   String? _errorMessage;
 
-  // Silent upload properties
-  MarketUploadStatus _uploadStatus = MarketUploadStatus.idle;
-  String _uploadMessage = '';
-  bool _showUploadBar = false;
-  Function? _cancelCallback;
-
   bool get isLoading => _isLoading;
-  double get uploadProgress => _uploadProgress;
   String? get errorMessage => _errorMessage;
-  MarketUploadStatus get uploadStatus => _uploadStatus;
-  String get uploadMessage => _uploadMessage;
-  bool get showUploadBar => _showUploadBar;
 
   void setLoading(bool loading) {
     _isLoading = loading;
-    notifyListeners();
-  }
-
-  void setUploadProgress(double progress) {
-    _uploadProgress = progress;
     notifyListeners();
   }
 
@@ -59,95 +30,52 @@ class MarketPostProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Start silent upload
-  void startSilentUpload({Function? onCancel}) {
-    _uploadStatus = MarketUploadStatus.uploading;
-    _uploadProgress = 0.0;
-    _uploadMessage = 'Uploading image...';
-    _showUploadBar = true;
-    _cancelCallback = onCancel;
-    notifyListeners();
+  // Provider-specific wrapper to preserve old call sites.
+  void setUploadSuccessForType(String type) {
+    super.setUploadSuccess(message: '$type posted successfully!');
   }
 
-  // Update silent upload progress
-  void updateSilentUploadProgress(double progress, {String? message}) {
-    _uploadProgress = progress;
-    if (message != null) {
-      _uploadMessage = message;
-    }
-    notifyListeners();
-  }
+  // Helper method to upload multiple images
+  Future<List<String>> _uploadImages(List<File> images, String userId) async {
+    List<String> imageUrls = [];
+    int totalImages = images.length;
 
-  // Set processing status
-  void setProcessing(String message) {
-    _uploadStatus = MarketUploadStatus.processing;
-    _uploadMessage = message;
-    notifyListeners();
-  }
+    for (int i = 0; i < images.length; i++) {
+      try {
+        updateSilentUploadProgress(
+          (i / totalImages) * 0.7,
+          message: 'Compressing image ${i + 1} of $totalImages...',
+        );
 
-  // Set upload success
-  void setUploadSuccess(String type) {
-    _uploadStatus = MarketUploadStatus.success;
-    _uploadMessage = '$type posted successfully!';
-    _uploadProgress = 1.0;
-    notifyListeners();
+        File compressedImage = await _backblazeService.compressImage(images[i]);
 
-    // Auto-hide after 3 seconds
-    Future.delayed(const Duration(seconds: 3), () {
-      hideUploadBar();
-    });
-  }
+        updateSilentUploadProgress(
+          ((i + 0.5) / totalImages) * 0.7,
+          message: 'Uploading image ${i + 1} of $totalImages...',
+        );
 
-  // Set upload failed
-  void setUploadFailed(String error) {
-    _uploadStatus = MarketUploadStatus.failed;
-    _uploadMessage = 'Upload failed: $error';
-    notifyListeners();
+        String url =
+            await _backblazeService.uploadImageToCloud(compressedImage);
+        imageUrls.add(url);
 
-    // Auto-hide after 5 seconds
-    Future.delayed(const Duration(seconds: 5), () {
-      hideUploadBar();
-    });
-  }
+        debugPrint('✓ Image ${i + 1} uploaded successfully');
 
-  // Cancel upload
-  void cancelUpload() {
-    _uploadStatus = MarketUploadStatus.cancelled;
-    _uploadMessage = 'Upload cancelled';
-
-    if (_cancelCallback != null) {
-      _cancelCallback!();
+        if (compressedImage.path != images[i].path) {
+          try {
+            await compressedImage.delete();
+          } catch (e) {
+            debugPrint('Warning: Could not delete temp file: $e');
+          }
+        }
+      } catch (e) {
+        debugPrint('❌ Error uploading image ${i + 1}: $e');
+      }
     }
 
-    notifyListeners();
-
-    // Hide after 2 seconds
-    Future.delayed(const Duration(seconds: 2), () {
-      hideUploadBar();
-    });
+    return imageUrls;
   }
 
-  // Hide upload bar
-  void hideUploadBar() {
-    _showUploadBar = false;
-    _uploadStatus = MarketUploadStatus.idle;
-    _uploadProgress = 0.0;
-    _uploadMessage = '';
-    _cancelCallback = null;
-    notifyListeners();
-  }
-
-  // Reset upload state
-  void resetUpload() {
-    _uploadStatus = MarketUploadStatus.idle;
-    _uploadProgress = 0.0;
-    _uploadMessage = '';
-    _showUploadBar = false;
-    _cancelCallback = null;
-    notifyListeners();
-  }
-
-// Post item silently with stock and discount
+  // Post item silently with multiple images
   Future<bool> postItemSilently({
     required String userId,
     required String name,
@@ -157,7 +85,7 @@ class MarketPostProvider extends ChangeNotifier {
     required double price,
     int? stock,
     double? discount,
-    File? image,
+    List<File>? images,
   }) async {
     if (name.trim().isEmpty ||
         location.trim().isEmpty ||
@@ -170,24 +98,14 @@ class MarketPostProvider extends ChangeNotifier {
     clearError();
 
     try {
-      String? imageUrl;
+      List<String> imageUrls = [];
 
-      if (image != null) {
-        updateSilentUploadProgress(0.0, message: 'Compressing image...');
-        File compressedImage = await _backblazeService.compressImage(image);
+      if (images != null && images.isNotEmpty) {
+        imageUrls = await _uploadImages(images, userId);
 
-        updateSilentUploadProgress(0.3, message: 'Uploading image...');
-        imageUrl = await _backblazeService.uploadFile(compressedImage);
-
-        updateSilentUploadProgress(0.7, message: 'Image uploaded...');
-        debugPrint(' Image uploaded successfully');
-
-        if (compressedImage.path != image.path) {
-          try {
-            await compressedImage.delete();
-          } catch (e) {
-            debugPrint('Warning: Could not delete temp file: $e');
-          }
+        if (imageUrls.isEmpty && images.isNotEmpty) {
+          setUploadFailed('Failed to upload images. Please try again.');
+          return false;
         }
       }
 
@@ -196,7 +114,6 @@ class MarketPostProvider extends ChangeNotifier {
 
       final productRef = _firestore.collection('marketplace').doc();
 
-      // Calculate discounted price if discount is provided
       double? discountedPrice;
       if (discount != null && discount > 0) {
         discountedPrice = price - (price * discount / 100);
@@ -207,7 +124,8 @@ class MarketPostProvider extends ChangeNotifier {
         name: name,
         description: description,
         price: price,
-        imageUrl: imageUrl,
+        imageUrl: imageUrls.isNotEmpty ? imageUrls.first : null,
+        imageUrls: imageUrls,
         category: category,
         isItem: true,
         sellerId: userId,
@@ -220,8 +138,8 @@ class MarketPostProvider extends ChangeNotifier {
 
       await productRef.set(product.toJson());
 
-      setUploadSuccess('Item');
-      debugPrint(' Item posted successfully');
+      setUploadSuccessForType('Item');
+      debugPrint('✓ Item posted with ${imageUrls.length} image(s)');
       return true;
     } catch (e) {
       debugPrint('❌ Error posting item: $e');
@@ -230,7 +148,7 @@ class MarketPostProvider extends ChangeNotifier {
     }
   }
 
-// Post service silently with wage type
+  // Post service silently with multiple images
   Future<bool> postServiceSilently({
     required String userId,
     required String location,
@@ -238,7 +156,7 @@ class MarketPostProvider extends ChangeNotifier {
     required String category,
     required double price,
     required String wageType,
-    File? image,
+    List<File>? images,
   }) async {
     if (location.trim().isEmpty || description.trim().isEmpty) {
       setError('Please fill all required fields');
@@ -249,24 +167,14 @@ class MarketPostProvider extends ChangeNotifier {
     clearError();
 
     try {
-      String? imageUrl;
+      List<String> imageUrls = [];
 
-      if (image != null) {
-        updateSilentUploadProgress(0.0, message: 'Compressing image...');
-        File compressedImage = await _backblazeService.compressImage(image);
+      if (images != null && images.isNotEmpty) {
+        imageUrls = await _uploadImages(images, userId);
 
-        updateSilentUploadProgress(0.3, message: 'Uploading image...');
-        imageUrl = await _backblazeService.uploadFile(compressedImage);
-
-        updateSilentUploadProgress(0.7, message: 'Image uploaded...');
-        debugPrint(' Image uploaded successfully');
-
-        if (compressedImage.path != image.path) {
-          try {
-            await compressedImage.delete();
-          } catch (e) {
-            debugPrint('Warning: Could not delete temp file: $e');
-          }
+        if (imageUrls.isEmpty && images.isNotEmpty) {
+          setUploadFailed('Failed to upload images. Please try again.');
+          return false;
         }
       }
 
@@ -279,7 +187,8 @@ class MarketPostProvider extends ChangeNotifier {
         name: category,
         description: description,
         price: price,
-        imageUrl: imageUrl,
+        imageUrl: imageUrls.isNotEmpty ? imageUrls.first : null,
+        imageUrls: imageUrls,
         category: category,
         isItem: false,
         sellerId: userId,
@@ -290,8 +199,8 @@ class MarketPostProvider extends ChangeNotifier {
 
       await serviceRef.set(service.toJson());
 
-      setUploadSuccess('Service');
-      debugPrint(' Service posted successfully');
+      setUploadSuccessForType('Service');
+      debugPrint('✓ Service posted with ${imageUrls.length} image(s)');
       return true;
     } catch (e) {
       debugPrint('❌ Error posting service: $e');
@@ -324,6 +233,40 @@ class MarketPostProvider extends ChangeNotifier {
       setLoading(false);
       debugPrint('Error deleting item: $e');
       setError('Failed to delete item');
+      return false;
+    }
+  }
+
+  // Update marketplace item
+  Future<bool> updateProduct(
+    String productId,
+    Map<String, dynamic> data, {
+    List<File>? newImages,
+    String? userId,
+  }) async {
+    setLoading(true);
+    clearError();
+
+    try {
+      // Upload new images if provided
+      if (newImages != null && newImages.isNotEmpty && userId != null) {
+        final imageUrls = await _uploadImages(newImages, userId);
+        if (imageUrls.isNotEmpty) {
+          // Merge with existing URLs if data already has some
+          final existing = List<String>.from(data['imageUrls'] ?? []);
+          existing.addAll(imageUrls);
+          data['imageUrls'] = existing;
+          data['imageUrl'] = existing.first;
+        }
+      }
+
+      await _firestore.collection('marketplace').doc(productId).update(data);
+      setLoading(false);
+      return true;
+    } catch (e) {
+      setLoading(false);
+      debugPrint('Error updating product: $e');
+      setError('Failed to update listing');
       return false;
     }
   }

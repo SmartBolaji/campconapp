@@ -2,6 +2,8 @@ import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/resource_model.dart';
 import 'package:campcon/main/provider/resource_provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
@@ -22,81 +24,83 @@ class TaskDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isOwner = currentUserId != null && task.userId == currentUserId;
+    final isPublic = !task.isPersonal;
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: Column(
           children: [
             _buildHeader(context, isOwner),
             Expanded(
               child: SingleChildScrollView(
-                padding: EdgeInsets.all(20.w),
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    SizedBox(height: 24.h),
+
                     // Status badges row
                     _buildStatusRow(),
-                    SizedBox(height: 20.h),
+                    SizedBox(height: 16.h),
 
                     // Title
                     Text(
                       task.title,
                       style: TextConstants.boldText.copyWith(
                         fontSize: 22.sp,
-                        color: task.isCompleted
+                        color: task.isCompleted && !isPublic
                             ? AppTheme.textLight
                             : AppTheme.textPrimary,
-                        decoration: task.isCompleted
+                        decoration: task.isCompleted && !isPublic
                             ? TextDecoration.lineThrough
                             : null,
                       ),
                     ),
-                    SizedBox(height: 24.h),
 
-                    // Due date card
-                    if (task.dueDate != null) ...[
-                      _buildDueDateCard(),
-                      SizedBox(height: 20.h),
+                    // Info metadata row
+                    if (_hasInfoItems()) ...[
+                      SizedBox(height: 12.h),
+                      _buildInfoRow(),
                     ],
 
-                    // Info cards
-                    _buildInfoCards(),
-                    SizedBox(height: 24.h),
+                    // Due date
+                    if (task.dueDate != null) ...[
+                      SizedBox(height: 16.h),
+                      _buildDueDateRow(),
+                    ],
 
                     // Description
                     if (task.description.isNotEmpty) ...[
-                      _buildSectionTitle('Description'),
-                      SizedBox(height: 8.h),
-                      Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.all(14.w),
-                        decoration: BoxDecoration(
-                          color: AppTheme.background,
-                          borderRadius: BorderRadius.circular(12.r),
-                          border: Border.all(color: AppTheme.border),
-                        ),
-                        child: Text(
-                          task.description,
-                          style: TextConstants.mediumText.copyWith(
-                            fontSize: 14.sp,
-                            color: AppTheme.textSecondary,
-                            height: 1.6,
-                          ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20.h),
+                        child: Divider(
+                            color: AppTheme.border, height: 1, thickness: 1),
+                      ),
+                      Text(
+                        task.description,
+                        style: TextConstants.mediumText.copyWith(
+                          fontSize: 14.sp,
+                          color: AppTheme.textSecondary,
+                          height: 1.6,
                         ),
                       ),
-                      SizedBox(height: 24.h),
                     ],
 
                     // Settings
-                    _buildSectionTitle('Settings'),
-                    SizedBox(height: 8.h),
-                    _buildSettingsCards(),
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20.h),
+                      child: Divider(
+                          color: AppTheme.border, height: 1, thickness: 1),
+                    ),
+                    _buildSettingsSection(context),
+                    SizedBox(height: 20.h),
                   ],
                 ),
               ),
             ),
-            if (isOwner) _buildBottomActions(context),
+            // Only show completion button for personal tasks owned by the user
+            if (isOwner && !isPublic) _buildBottomActions(context),
           ],
         ),
       ),
@@ -104,61 +108,28 @@ class TaskDetailScreen extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context, bool isOwner) {
-    return Container(
+    return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        border: Border(
-          bottom: BorderSide(color: AppTheme.border, width: 1),
-        ),
-      ),
       child: Row(
         children: [
           GestureDetector(
             onTap: () => Navigator.pop(context),
-            child: Container(
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                color: AppTheme.background,
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Iconify(
-                Ph.arrow_left,
-                color: AppTheme.textPrimary,
-                size: 20.sp,
-              ),
+            child: Iconify(
+              Ph.arrow_left,
+              color: AppTheme.textPrimary,
+              size: 24.sp,
             ),
           ),
-          Expanded(
-            child: Center(
-              child: Text(
-                'Task Details',
-                style: TextConstants.mediumText.copyWith(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-            ),
-          ),
+          const Spacer(),
           if (isOwner)
             GestureDetector(
               onTap: () => _showDeleteDialog(context),
-              child: Container(
-                padding: EdgeInsets.all(8.w),
-                decoration: BoxDecoration(
-                  color: AppTheme.error.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: Iconify(
-                  Ph.trash,
-                  color: AppTheme.error,
-                  size: 20.sp,
-                ),
+              child: Iconify(
+                Ph.trash,
+                color: AppTheme.error,
+                size: 22.sp,
               ),
-            )
-          else
-            SizedBox(width: 40.w),
+            ),
         ],
       ),
     );
@@ -173,7 +144,7 @@ class TaskDetailScreen extends StatelessWidget {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
           decoration: BoxDecoration(
-            color: _getPriorityColor(task.priority).withOpacity(0.15),
+            color: _getPriorityColor(task.priority).withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(20.r),
           ),
           child: Row(
@@ -205,8 +176,8 @@ class TaskDetailScreen extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
           decoration: BoxDecoration(
             color: task.isPersonal
-                ? AppTheme.textSecondary.withOpacity(0.1)
-                : AppTheme.primary.withOpacity(0.1),
+                ? AppTheme.textSecondary.withValues(alpha: 0.1)
+                : AppTheme.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(20.r),
           ),
           child: Row(
@@ -238,7 +209,7 @@ class TaskDetailScreen extends StatelessWidget {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
             decoration: BoxDecoration(
-              color: const Color(0xFF10B981).withOpacity(0.15),
+              color: const Color(0xFF10B981).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20.r),
             ),
             child: Row(
@@ -267,7 +238,7 @@ class TaskDetailScreen extends StatelessWidget {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
             decoration: BoxDecoration(
-              color: AppTheme.error.withOpacity(0.15),
+              color: AppTheme.error.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20.r),
             ),
             child: Row(
@@ -294,264 +265,195 @@ class TaskDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDueDateCard() {
+  Widget _buildDueDateRow() {
     final isOverdue = task.isOverdue && !task.isCompleted;
-    final isDueToday = task.isDueToday && !task.isCompleted;
 
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: isOverdue
-            ? AppTheme.error.withOpacity(0.05)
-            : isDueToday
-                ? AppTheme.primary.withOpacity(0.05)
-                : AppTheme.background,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(
-          color: isOverdue
-              ? AppTheme.error.withOpacity(0.3)
-              : isDueToday
-                  ? AppTheme.primary.withOpacity(0.3)
-                  : AppTheme.border,
+    return Row(
+      children: [
+        Iconify(
+          Ph.calendar_check,
+          size: 16.sp,
+          color: isOverdue ? AppTheme.error : AppTheme.textLight,
         ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(12.w),
-            decoration: BoxDecoration(
-              color: isOverdue
-                  ? AppTheme.error.withOpacity(0.1)
-                  : isDueToday
-                      ? AppTheme.primary.withOpacity(0.1)
-                      : AppTheme.surface,
-              borderRadius: BorderRadius.circular(10.r),
-            ),
-            child: Iconify(
-              Ph.calendar_check,
-              size: 28.sp,
-              color: isOverdue
-                  ? AppTheme.error
-                  : isDueToday
-                      ? AppTheme.primary
-                      : AppTheme.textSecondary,
-            ),
+        SizedBox(width: 8.w),
+        Text(
+          DateFormat('EEEE, MMMM d, yyyy').format(task.dueDate!),
+          style: TextConstants.mediumText.copyWith(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w500,
+            color: isOverdue ? AppTheme.error : AppTheme.textSecondary,
           ),
-          SizedBox(width: 14.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Due Date',
-                  style: TextConstants.smallText.copyWith(
-                    fontSize: 12.sp,
-                    color: AppTheme.textLight,
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  DateFormat('EEEE, MMMM d, yyyy').format(task.dueDate!),
-                  style: TextConstants.mediumText.copyWith(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w600,
-                    color: isOverdue ? AppTheme.error : AppTheme.textPrimary,
-                  ),
-                ),
-                if (task.dueDate!.hour != 0 || task.dueDate!.minute != 0)
-                  Text(
-                    DateFormat('h:mm a').format(task.dueDate!),
-                    style: TextConstants.smallText.copyWith(
-                      fontSize: 13.sp,
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
-              ],
+        ),
+        if (task.dueDate!.hour != 0 || task.dueDate!.minute != 0) ...[
+          SizedBox(width: 8.w),
+          Text(
+            '· ${DateFormat('h:mm a').format(task.dueDate!)}',
+            style: TextConstants.smallText.copyWith(
+              fontSize: 13.sp,
+              color: AppTheme.textLight,
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildInfoCards() {
-    return Wrap(
-      spacing: 12.w,
-      runSpacing: 12.h,
-      children: [
-        if (task.category != null && task.category!.isNotEmpty)
-          _buildInfoChip(Ph.tag, 'Category', task.category!),
-        if (task.course != null && task.course!.isNotEmpty)
-          _buildInfoChip(Ph.book_open, 'Course', task.course!),
-        if (task.faculty != null)
-          _buildInfoChip(Ph.buildings, 'Faculty', task.faculty!),
-        if (task.department != null)
-          _buildInfoChip(Ph.buildings, 'Department', task.department!),
-        if (task.level != null)
-          _buildInfoChip(Ph.graduation_cap, 'Level', task.level!),
       ],
     );
   }
 
-  Widget _buildInfoChip(String icon, String label, String value) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-      decoration: BoxDecoration(
-        color: AppTheme.background,
-        borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Iconify(
-            icon,
-            size: 16.sp,
-            color: AppTheme.primary,
+  bool _hasInfoItems() {
+    return (task.category != null && task.category!.isNotEmpty) ||
+        (task.course != null && task.course!.isNotEmpty) ||
+        task.faculty != null ||
+        task.department != null ||
+        task.level != null;
+  }
+
+  Widget _buildInfoRow() {
+    final items = <Widget>[];
+    if (task.category != null && task.category!.isNotEmpty)
+      items.add(_buildInfoItem(Ph.tag, task.category!));
+    if (task.course != null && task.course!.isNotEmpty)
+      items.add(_buildInfoItem(Ph.book_open, task.course!));
+    if (task.faculty != null)
+      items.add(_buildInfoItem(Ph.buildings, task.faculty!));
+    if (task.department != null)
+      items.add(_buildInfoItem(Ph.buildings, task.department!));
+    if (task.level != null)
+      items.add(_buildInfoItem(Ph.graduation_cap, task.level!));
+
+    return Wrap(spacing: 16.w, runSpacing: 8.h, children: items);
+  }
+
+  Widget _buildInfoItem(String icon, String value) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Iconify(icon, size: 15.sp, color: AppTheme.textLight),
+        SizedBox(width: 5.w),
+        Text(
+          value,
+          style: TextConstants.mediumText.copyWith(
+            fontSize: 13.sp,
+            color: AppTheme.textSecondary,
           ),
-          SizedBox(width: 8.w),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextConstants.smallText.copyWith(
-                  fontSize: 10.sp,
-                  color: AppTheme.textLight,
-                ),
-              ),
-              Text(
-                value,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSettingsSection(BuildContext context) {
+    final viewerId = currentUserId ?? FirebaseAuth.instance.currentUser?.uid;
+
+    return Column(
+      children: [
+        if (!task.isPersonal && viewerId != null)
+          _buildPublicTaskReminderRow(viewerId),
+        if (!task.isPersonal && viewerId != null) SizedBox(height: 16.h),
+        // Reminder
+        Row(
+          children: [
+            Iconify(
+              Ph.bell,
+              size: 18.sp,
+              color: task.hasReminder ? AppTheme.primary : AppTheme.textLight,
+            ),
+            SizedBox(width: 10.w),
+            Expanded(
+              child: Text(
+                'Reminder',
                 style: TextConstants.mediumText.copyWith(
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 14.sp,
                   color: AppTheme.textPrimary,
                 ),
               ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: TextConstants.mediumText.copyWith(
-        fontSize: 16.sp,
-        fontWeight: FontWeight.w600,
-        color: AppTheme.textPrimary,
-      ),
-    );
-  }
-
-  Widget _buildSettingsCards() {
-    return Column(
-      children: [
-        // Reminder setting
-        Container(
-          padding: EdgeInsets.all(14.w),
-          decoration: BoxDecoration(
-            color: AppTheme.background,
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: AppTheme.border),
-          ),
-          child: Row(
-            children: [
-              Iconify(
-                Ph.bell,
-                size: 22.sp,
+            ),
+            Text(
+              task.hasReminder ? 'On' : 'Off',
+              style: TextConstants.smallText.copyWith(
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w500,
                 color: task.hasReminder ? AppTheme.primary : AppTheme.textLight,
               ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Reminder',
-                      style: TextConstants.mediumText.copyWith(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      task.hasReminder ? 'Enabled' : 'Disabled',
-                      style: TextConstants.smallText.copyWith(
-                        fontSize: 12.sp,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: task.hasReminder
-                      ? AppTheme.primary.withOpacity(0.1)
-                      : AppTheme.surface,
-                  borderRadius: BorderRadius.circular(6.r),
-                ),
-                child: Text(
-                  task.hasReminder ? 'ON' : 'OFF',
-                  style: TextConstants.smallText.copyWith(
-                    fontSize: 11.sp,
-                    fontWeight: FontWeight.w600,
-                    color: task.hasReminder
-                        ? AppTheme.primary
-                        : AppTheme.textLight,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
-        SizedBox(height: 10.h),
-        // Created date
-        Container(
-          padding: EdgeInsets.all(14.w),
-          decoration: BoxDecoration(
-            color: AppTheme.background,
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: AppTheme.border),
-          ),
-          child: Row(
-            children: [
-              Iconify(
-                Ph.clock,
-                size: 22.sp,
-                color: AppTheme.textLight,
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Created',
-                      style: TextConstants.mediumText.copyWith(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      DateFormat('MMM d, yyyy • h:mm a').format(task.createdAt),
-                      style: TextConstants.smallText.copyWith(
-                        fontSize: 12.sp,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                  ],
+        SizedBox(height: 16.h),
+        // Created
+        Row(
+          children: [
+            Iconify(
+              Ph.clock,
+              size: 18.sp,
+              color: AppTheme.textLight,
+            ),
+            SizedBox(width: 10.w),
+            Expanded(
+              child: Text(
+                'Created',
+                style: TextConstants.mediumText.copyWith(
+                  fontSize: 14.sp,
+                  color: AppTheme.textPrimary,
                 ),
               ),
-            ],
-          ),
+            ),
+            Text(
+              DateFormat('MMM d, yyyy').format(task.createdAt),
+              style: TextConstants.smallText.copyWith(
+                fontSize: 13.sp,
+                color: AppTheme.textSecondary,
+              ),
+            ),
+          ],
         ),
       ],
+    );
+  }
+
+  Widget _buildPublicTaskReminderRow(String viewerId) {
+    final reminderDoc = FirebaseFirestore.instance
+        .collection('taskReminders')
+        .doc(task.id)
+        .collection('subscribers')
+        .doc(viewerId);
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: reminderDoc.snapshots(),
+      builder: (context, snapshot) {
+        final isSubscribed = snapshot.data?.exists == true;
+
+        return Row(
+          children: [
+            Iconify(
+              Ph.bell_ringing,
+              size: 18.sp,
+              color: isSubscribed ? AppTheme.primary : AppTheme.textLight,
+            ),
+            SizedBox(width: 10.w),
+            Expanded(
+              child: Text(
+                'Set Reminder',
+                style: TextConstants.mediumText.copyWith(
+                  fontSize: 14.sp,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+            ),
+            Switch(
+              value: isSubscribed,
+              activeColor: AppTheme.primary,
+              onChanged: (value) async {
+                if (value) {
+                  await reminderDoc.set({
+                    'userId': viewerId,
+                    'taskId': task.id,
+                    'subscribedAt': FieldValue.serverTimestamp(),
+                  });
+                } else {
+                  await reminderDoc.delete();
+                }
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -559,7 +461,7 @@ class TaskDetailScreen extends StatelessWidget {
     return Consumer<ResourceProvider>(
       builder: (context, provider, child) {
         return Container(
-          padding: EdgeInsets.all(16.w),
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
           decoration: BoxDecoration(
             color: AppTheme.surface,
             border: Border(
@@ -573,7 +475,7 @@ class TaskDetailScreen extends StatelessWidget {
             },
             child: Container(
               width: double.infinity,
-              padding: EdgeInsets.symmetric(vertical: 16.h),
+              padding: EdgeInsets.symmetric(vertical: 14.h),
               decoration: BoxDecoration(
                 color: task.isCompleted
                     ? AppTheme.textSecondary

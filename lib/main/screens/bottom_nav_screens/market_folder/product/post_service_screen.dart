@@ -3,11 +3,10 @@ import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/market_post_provider.dart';
+import 'package:campcon/main/widgets/multi_image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ph.dart';
 
@@ -19,7 +18,7 @@ class PostServiceScreen extends StatefulWidget {
 }
 
 class _PostServiceScreenState extends State<PostServiceScreen> {
-  File? _selectedImage;
+  List<File> _selectedImages = [];
   final _locationController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
@@ -75,20 +74,6 @@ class _PostServiceScreenState extends State<PostServiceScreen> {
       description: 'One-time fixed fee',
     ),
   ];
-
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
-    );
-
-    if (pickedFile != null) {
-      setState(() {
-        _selectedImage = File(pickedFile.path);
-      });
-    }
-  }
 
   String _getPriceLabel() {
     switch (_selectedWageType) {
@@ -151,17 +136,19 @@ class _PostServiceScreenState extends State<PostServiceScreen> {
 
     FocusScope.of(context).unfocus();
 
+    // Capture values - create copy of images list
     final location = _locationController.text.trim();
     final description = _descriptionController.text.trim();
     final category = _selectedCategory!;
-    final image = _selectedImage;
+    final images = List<File>.from(_selectedImages);
     final wageType = _selectedWageType;
 
+    // Clear form
     _locationController.clear();
     _descriptionController.clear();
     _priceController.clear();
     setState(() {
-      _selectedImage = null;
+      _selectedImages = [];
       _selectedCategory = null;
       _selectedWageType = 'hourly';
     });
@@ -175,10 +162,10 @@ class _PostServiceScreenState extends State<PostServiceScreen> {
       category: category,
       price: price,
       wageType: wageType,
-      image: image,
+      images: images.isNotEmpty ? images : null,
     );
 
-    debugPrint(success ? ' Service posted' : '❌ Failed to post service');
+    debugPrint(success ? '✓ Service posted' : '❌ Failed to post service');
   }
 
   void _showError(String message) {
@@ -198,16 +185,22 @@ class _PostServiceScreenState extends State<PostServiceScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
             _buildHeader(),
-
             Expanded(
               child: SingleChildScrollView(
                 padding: EdgeInsets.all(20.w),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildImageUpload(),
+                    // Multi-Image Picker
+                    MultiImagePicker(
+                      images: _selectedImages,
+                      onImagesChanged: (images) {
+                        setState(() => _selectedImages = images);
+                      },
+                      placeholderTitle: 'Add Service Image',
+                      placeholderSubtitle: 'Tap to upload',
+                    ),
                     SizedBox(height: 20.h),
                     _buildCategoryDropdown(),
                     SizedBox(height: 20.h),
@@ -238,8 +231,6 @@ class _PostServiceScreenState extends State<PostServiceScreen> {
                 ),
               ),
             ),
-
-            // Post Button
             _buildPostButton(),
           ],
         ),
@@ -291,73 +282,6 @@ class _PostServiceScreenState extends State<PostServiceScreen> {
     );
   }
 
-  Widget _buildImageUpload() {
-    return GestureDetector(
-      onTap: _pickImage,
-      child: Container(
-        height: 200.h,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: AppTheme.background,
-          border: Border.all(color: AppTheme.border, width: 1.5),
-        ),
-        child: _selectedImage != null
-            ? Stack(
-                children: [
-                  Image.file(
-                    _selectedImage!,
-                    width: double.infinity,
-                    height: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                  Positioned(
-                    top: 8.h,
-                    right: 8.w,
-                    child: GestureDetector(
-                      onTap: () => setState(() => _selectedImage = null),
-                      child: Container(
-                        padding: EdgeInsets.all(6.w),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.6),
-                          shape: BoxShape.circle,
-                        ),
-                        child:
-                            Icon(Icons.close, color: Colors.white, size: 18.sp),
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Iconify(
-                    Ph.user_circle,
-                    size: 48.sp,
-                    color: AppTheme.textLight,
-                  ),
-                  SizedBox(height: 12.h),
-                  Text(
-                    'Add Your Photo',
-                    style: TextConstants.mediumText.copyWith(
-                      fontSize: 16.sp,
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    'Tap to upload',
-                    style: TextConstants.smallText.copyWith(
-                      fontSize: 13.sp,
-                      color: AppTheme.textLight,
-                    ),
-                  ),
-                ],
-              ),
-      ),
-    );
-  }
-
   Widget _buildWageTypeSelector() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -385,14 +309,14 @@ class _PostServiceScreenState extends State<PostServiceScreen> {
           return GestureDetector(
             onTap: () {
               setState(() => _selectedWageType = wageType.id);
-              _priceController.clear(); // Clear price when changing type
+              _priceController.clear();
             },
             child: Container(
               margin: EdgeInsets.only(bottom: 12.h),
               padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? AppTheme.primary.withOpacity(0.1)
+                    ? AppTheme.primary.withValues(alpha: 0.1)
                     : AppTheme.surface,
                 borderRadius: BorderRadius.circular(12.r),
                 border: Border.all(
@@ -406,7 +330,7 @@ class _PostServiceScreenState extends State<PostServiceScreen> {
                     padding: EdgeInsets.all(10.w),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppTheme.primary.withOpacity(0.2)
+                          ? AppTheme.primary.withValues(alpha: 0.2)
                           : AppTheme.buttonBorder,
                       borderRadius: BorderRadius.circular(8.r),
                     ),
@@ -425,19 +349,16 @@ class _PostServiceScreenState extends State<PostServiceScreen> {
                           wageType.title,
                           style: TextConstants.mediumText.copyWith(
                             fontSize: 15.sp,
-                            fontWeight:
-                                isSelected ? FontWeight.w600 : FontWeight.w500,
-                            color: isSelected
-                                ? AppTheme.primary
-                                : AppTheme.textPrimary,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textPrimary,
                           ),
                         ),
                         SizedBox(height: 2.h),
                         Text(
                           wageType.subtitle,
                           style: TextConstants.smallText.copyWith(
-                            fontSize: 12.sp,
-                            color: AppTheme.textSecondary,
+                            fontSize: 13.sp,
+                            color: AppTheme.textLight,
                           ),
                         ),
                       ],

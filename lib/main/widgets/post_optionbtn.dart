@@ -17,6 +17,8 @@ class PostOptionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appColors = context.appColors;
+    final colorScheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: Column(
@@ -25,21 +27,21 @@ class PostOptionButton extends StatelessWidget {
             width: 80.w,
             height: 80.w,
             decoration: BoxDecoration(
-              color: Colors.orange.shade50,
+              color: appColors.primaryBackground,
               borderRadius: BorderRadius.circular(12.r),
             ),
             child: Icon(
               icon,
               size: 40.sp,
-              color: Colors.orange,
+              color: colorScheme.primary,
             ),
           ),
           SizedBox(height: 10.h),
           Text(
             label,
-            style: TextConstants.mediumText.copyWith(
+            style: TextConstants.medium(context).copyWith(
               fontSize: 14.sp,
-              color: AppTheme.textPrimary,
+              color: appColors.textPrimary,
             ),
           ),
         ],

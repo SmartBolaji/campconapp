@@ -24,9 +24,9 @@ class ShortTimeAgo extends timeago.LookupMessages {
   @override
   String days(int days) => '${days}d';
   @override
-  String aboutAMonth(int days) => '${(days / 30).floor()}m';
+  String aboutAMonth(int days) => '${(days / 30).floor()}mo';
   @override
-  String months(int months) => '${months}m';
+  String months(int months) => '${months}mo';
   @override
   String aboutAYear(int year) => '${year}y';
   @override

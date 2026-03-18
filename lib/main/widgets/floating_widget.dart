@@ -1,4 +1,3 @@
-import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:flutter/material.dart';
 
@@ -8,16 +7,17 @@ void showFloatingSnackBar(
   Color? backgroundColor,
   Color textColor = Colors.white,
 }) {
+  final colorScheme = Theme.of(context).colorScheme;
   final snackBar = SnackBar(
     content: Text(
       message,
-      style: TextConstants.smallText.copyWith(
+      style: TextConstants.small(context).copyWith(
         fontWeight: FontWeight.w600,
         color: textColor,
       ),
     ),
     behavior: SnackBarBehavior.floating,
-    backgroundColor: backgroundColor ?? AppTheme.primary,
+    backgroundColor: backgroundColor ?? colorScheme.primary,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.all(Radius.circular(12)),
     ),

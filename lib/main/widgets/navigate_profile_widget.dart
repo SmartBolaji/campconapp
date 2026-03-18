@@ -4,6 +4,7 @@ import 'package:campcon/main/models/post_model.dart';
 import 'package:campcon/main/models/user_model.dart';
 import 'package:campcon/main/provider/feed_provider.dart';
 import 'package:campcon/main/provider/notify_provider.dart';
+import 'package:campcon/main/provider/post_provider.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/post_options.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/post_view_widget.dart';
 import 'package:campcon/main/widgets/floating_widget.dart';
@@ -127,9 +128,17 @@ void navigateToPostView({
               );
 
               if (confirm == true && mounted) {
-                feedProvider.deletePostLocally(post.postId);
-                Navigator.pop(context); // Close the post view
-                showFloatingSnackBar(context, 'Post deleted');
+                try {
+                  // Delete from Firestore first
+                  await Provider.of<PostProvider>(context, listen: false)
+                      .deletePost(post.postId, post.imageUrls);
+                  // Then remove from local feed
+                  feedProvider.deletePostLocally(post.postId);
+                  Navigator.pop(context); // Close the post view
+                  showFloatingSnackBar(context, 'Post deleted');
+                } catch (e) {
+                  showFloatingSnackBar(context, 'Failed to delete post');
+                }
               }
             },
             onShare: () {

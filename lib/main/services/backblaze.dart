@@ -1,26 +1,20 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
 class BackblazeService {
-  final String keyId;
-  final String applicationKey;
-  final String bucketId;
-  final String bucketName;
+  // ── Singleton ───────────────────────────────────────────────
+  static final BackblazeService _instance = BackblazeService._internal();
+  factory BackblazeService() => _instance;
+  static BackblazeService get instance => _instance;
 
-  BackblazeService({
-    required this.keyId,
-    required this.applicationKey,
-    required this.bucketId,
-    required this.bucketName,
-  });
+  BackblazeService._internal();
 
-  // Update your settings to be more adaptive
-  final int baseQuality = 50;
+  // ── Compression Settings ─────────────────────────────────────
   final int maxWidth = 1000;
   final int maxHeight = 1000;
   final int maxFileSize = 250 * 1024;
@@ -29,64 +23,45 @@ class BackblazeService {
   final int mediumFileThreshold = 175 * 1024;
   final int largeFileThreshold = 250 * 1024;
 
-  // Authorize with Backblaze
-  Future<Map<String, String>> authorizeAccount() async {
-    final String credentials =
-        base64Encode(utf8.encode('$keyId:$applicationKey'));
-    final response = await http.get(
-      Uri.parse('https://api.backblazeb2.com/b2api/v2/b2_authorize_account'),
-      headers: {'Authorization': 'Basic $credentials'},
-    );
+  /// Upload compressed image via Cloud Function (server-side upload)
+  Future<String> uploadImageToCloud(File compressedFile) async {
+    try {
+      debugPrint('📤 Starting image upload to Cloud Function');
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return {
-        'apiUrl': data['apiUrl'],
-        'authorizationToken': data['authorizationToken'],
-      };
-    } else {
-      throw Exception('Failed to authorize account: ${response.body}');
-    }
-  }
+      // Read file as bytes
+      final bytes = await compressedFile.readAsBytes();
+      final base64Data = base64Encode(bytes);
 
-  // Upload Image
-  Future<String> uploadFile(File file) async {
-    final auth = await authorizeAccount();
-    final uploadUrlResponse = await http.post(
-      Uri.parse('${auth['apiUrl']}/b2api/v2/b2_get_upload_url'),
-      headers: {
-        'Authorization': auth['authorizationToken']!,
-      },
-      body: jsonEncode({'bucketId': bucketId}),
-    );
+      debugPrint('📦 Image size: ${(bytes.length / 1024).round()}KB');
+      debugPrint('🔐 Converted to base64: ${base64Data.length} chars');
 
-    if (uploadUrlResponse.statusCode == 200) {
-      final uploadData = jsonDecode(uploadUrlResponse.body);
-      final uploadUrl = uploadData['uploadUrl'];
-      final uploadAuthToken = uploadData['authorizationToken'];
+      // Get sanitized filename
+      final fileName = _sanitizeFileName(compressedFile.uri.pathSegments.last);
 
-      // 🔹 Get sanitized filename
-      String sanitizedFileName = _sanitizeFileName(file.uri.pathSegments.last);
+      // Call Cloud Function with image data
+      final callable = FirebaseFunctions.instance.httpsCallable('uploadImage');
 
-      final uploadResponse = await http.post(
-        Uri.parse(uploadUrl),
-        headers: {
-          'Authorization': uploadAuthToken!,
-          'X-Bz-File-Name': Uri.encodeComponent(sanitizedFileName),
-          'Content-Type': 'b2/x-auto',
-          'X-Bz-Content-Sha1': 'do_not_verify',
-        },
-        body: file.readAsBytesSync(),
-      );
+      debugPrint('🚀 Calling uploadImage Cloud Function...');
 
-      if (uploadResponse.statusCode == 200) {
-        final fileData = jsonDecode(uploadResponse.body);
-        return '${auth['apiUrl']}/file/$bucketName/${fileData['fileName']}';
+      final result = await callable.call({
+        'imageData': base64Data,
+        'fileName': fileName,
+        'contentType': 'image/webp',
+      });
+
+      final data = result.data as Map<String, dynamic>;
+
+      if (data['success'] == true) {
+        final url = data['url'] as String;
+        debugPrint('✅ Image uploaded successfully');
+        debugPrint('📎 URL: $url');
+        return url;
       } else {
-        throw Exception('File upload failed: ${uploadResponse.body}');
+        throw Exception('Upload response indicated failure');
       }
-    } else {
-      throw Exception('Failed to get upload URL: ${uploadUrlResponse.body}');
+    } catch (e) {
+      debugPrint('❌ Error uploading image to Cloud Function: $e');
+      rethrow;
     }
   }
 
@@ -98,7 +73,9 @@ class BackblazeService {
         .toLowerCase(); // Convert to lowercase for consistency
   }
 
-  // Make compress method public
+  // ── Image Compression ────────────────────────────────────────
+
+  /// Compress image to WebP format with adaptive quality
   Future<File> compressImage(File file) async {
     try {
       final originalFileSize = await file.length();
@@ -195,26 +172,7 @@ class BackblazeService {
     }
   }
 
-  // Helper method to determine content type
-  String getContentType(String extension) {
-    switch (extension.toLowerCase()) {
-      case '.jpg':
-      case '.jpeg':
-        return 'image/jpeg';
-      case '.png':
-        return 'image/png';
-      case '.webp':
-        return 'image/webp';
-      case '.gif':
-        return 'image/gif';
-      case '.heic':
-        return 'image/heic';
-      default:
-        return 'b2/x-auto';
-    }
-  }
-
-  // More adaptive quality algorithm - determines appropriate quality setting
+  /// More adaptive quality algorithm - determines appropriate quality setting
   int getAdaptiveQuality(File file, int originalSize) {
     // Check file extension for format-specific considerations
     final ext = path.extension(file.path).toLowerCase();
@@ -232,5 +190,24 @@ class BackblazeService {
 
     // For smaller files, preserve more quality
     return 55; // Default quality for smaller files
+  }
+
+  // Helper method to determine content type
+  String getContentType(String extension) {
+    switch (extension.toLowerCase()) {
+      case '.jpg':
+      case '.jpeg':
+        return 'image/jpeg';
+      case '.png':
+        return 'image/png';
+      case '.webp':
+        return 'image/webp';
+      case '.gif':
+        return 'image/gif';
+      case '.heic':
+        return 'image/heic';
+      default:
+        return 'b2/x-auto';
+    }
   }
 }

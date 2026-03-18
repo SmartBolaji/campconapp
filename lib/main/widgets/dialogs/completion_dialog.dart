@@ -208,8 +208,8 @@ class _CompletionDialogState extends State<CompletionDialog>
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  AppTheme.primary.withOpacity(0.2),
-                  AppTheme.primary.withOpacity(0.0),
+                  AppTheme.primary.withValues(alpha: 0.2),
+                  AppTheme.primary.withValues(alpha: 0.0),
                 ],
               ),
             ),
@@ -224,7 +224,7 @@ class _CompletionDialogState extends State<CompletionDialog>
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: AppTheme.primary.withOpacity(0.4),
+                color: AppTheme.primary.withValues(alpha: 0.4),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -322,7 +322,7 @@ class _CompletionDialogState extends State<CompletionDialog>
                 Container(
                   padding: EdgeInsets.all(8.w),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryBackground.withOpacity(0.5),
+                    color: AppTheme.primaryBackground.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Icon(
@@ -403,7 +403,7 @@ class _CompletionDialogState extends State<CompletionDialog>
                       // boxShadow: !provider.isButtonPressed
                       //     ? [
                       //         BoxShadow(
-                      //           color: AppTheme.primary.withOpacity(0.4),
+                      //           color: AppTheme.primary.withValues(alpha: 0.4),
                       //           blurRadius: 16,
                       //           offset: const Offset(0, 8),
                       //         ),

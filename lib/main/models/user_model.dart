@@ -1,4 +1,4 @@
-import 'dart:io';
+
 
 class UserModel {
   final String uid;
@@ -29,6 +29,14 @@ class UserModel {
   final List<String> searchHistory; // Recent search terms
   final List<String> viewedCampuses; // Campuses user has shown interest in
 
+  // Professional account fields
+  final bool isProfessional;
+  final String? businessCategory;
+  final String? businessName;
+  final String? businessDescription;
+  final Map<String, dynamic>? businessHours;
+  final Map<String, dynamic>? contactInfo;
+
   UserModel({
     required this.uid,
     required this.email,
@@ -56,6 +64,13 @@ class UserModel {
     this.engagedAuthors = const [],
     this.searchHistory = const [],
     this.viewedCampuses = const [],
+    // Professional
+    this.isProfessional = false,
+    this.businessCategory,
+    this.businessName,
+    this.businessDescription,
+    this.businessHours,
+    this.contactInfo,
   });
 
   // Add getter for fullName
@@ -94,6 +109,17 @@ class UserModel {
       engagedAuthors: List<String>.from(map['engagedAuthors'] ?? []),
       searchHistory: List<String>.from(map['searchHistory'] ?? []),
       viewedCampuses: List<String>.from(map['viewedCampuses'] ?? []),
+      // Professional
+      isProfessional: map['isProfessional'] ?? false,
+      businessCategory: map['businessCategory'],
+      businessName: map['businessName'],
+      businessDescription: map['businessDescription'],
+      businessHours: map['businessHours'] != null
+          ? Map<String, dynamic>.from(map['businessHours'])
+          : null,
+      contactInfo: map['contactInfo'] != null
+          ? Map<String, dynamic>.from(map['contactInfo'])
+          : null,
     );
   }
 
@@ -129,6 +155,13 @@ class UserModel {
       'engagedAuthors': engagedAuthors,
       'searchHistory': searchHistory,
       'viewedCampuses': viewedCampuses,
+      // Professional
+      'isProfessional': isProfessional,
+      'businessCategory': businessCategory,
+      'businessName': businessName,
+      'businessDescription': businessDescription,
+      'businessHours': businessHours,
+      'contactInfo': contactInfo,
     };
   }
 
@@ -163,6 +196,13 @@ class UserModel {
     List<String>? engagedAuthors,
     List<String>? searchHistory,
     List<String>? viewedCampuses,
+    // Professional
+    bool? isProfessional,
+    String? businessCategory,
+    String? businessName,
+    String? businessDescription,
+    Map<String, dynamic>? businessHours,
+    Map<String, dynamic>? contactInfo,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -191,6 +231,13 @@ class UserModel {
       engagedAuthors: engagedAuthors ?? this.engagedAuthors,
       searchHistory: searchHistory ?? this.searchHistory,
       viewedCampuses: viewedCampuses ?? this.viewedCampuses,
+      // Professional
+      isProfessional: isProfessional ?? this.isProfessional,
+      businessCategory: businessCategory ?? this.businessCategory,
+      businessName: businessName ?? this.businessName,
+      businessDescription: businessDescription ?? this.businessDescription,
+      businessHours: businessHours ?? this.businessHours,
+      contactInfo: contactInfo ?? this.contactInfo,
     );
   }
 }

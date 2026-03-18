@@ -1,22 +1,24 @@
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
-import 'package:campcon/main/provider/feed_provider.dart'
-    show PostState, FeedProvider;
+import 'package:campcon/main/provider/feed_provider.dart' show FeedProvider, PostState;
 import 'package:campcon/main/provider/notify_provider.dart';
 import 'package:campcon/main/provider/profile_provider.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/post_folder/post_comments_screen.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/post_options.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/post_widget.dart';
+import 'package:campcon/main/widgets/empty_state_view.dart';
 import 'package:campcon/main/widgets/floating_widget.dart';
 import 'package:campcon/main/widgets/navigate_profile_widget.dart';
+import 'package:campcon/main/widgets/shimmer_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:iconify_flutter/icons/ph.dart';
 import 'package:provider/provider.dart';
 
 enum ProfileTabType { posts, reposts, media, saved }
 
 class ProfilePostsList {
-  // Static method to build slivers for use in CustomScrollView
   static List<Widget> buildSlivers({
     required BuildContext context,
     required ProfileTabType tabType,
@@ -27,56 +29,39 @@ class ProfilePostsList {
     required Future<void> Function() onRefresh,
   }) {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final currentUserId = authProvider.currentUser?.uid ?? '';
+    final activeUserId = authProvider.currentUser?.uid ?? currentUserId;
 
-    final posts = _getPostsListStatic(provider, tabType);
-    final isLoading = _isLoadingStatic(provider, tabType);
-    final hasMore = _hasMoreStatic(provider, tabType);
-    final isEmpty = posts.isEmpty && !isLoading;
+    final posts = _getPostsList(provider, tabType);
+    final isLoading = _isLoading(provider, tabType);
+    final hasMore = _hasMore(provider, tabType);
 
-    // Check if this is the saved tab and not current user
     if (tabType == ProfileTabType.saved && !provider.isCurrentUser) {
       return [
-        SliverFillRemaining(
-          child: Container(
-            color: AppTheme.surface,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.bookmark_border,
-                      size: 64.sp, color: AppTheme.textLight),
-                  SizedBox(height: 16.h),
-                  Text(
-                    'Saved posts are private',
-                    style: TextConstants.smallText
-                        .copyWith(color: AppTheme.textSecondary),
-                  ),
-                ],
-              ),
-            ),
+        const SliverFillRemaining(
+          child: EmptyStateView(
+            icon: Ph.bookmark_simple,
+            title: 'Saved posts are private',
+            subtitle: 'Only you can view your saved posts.',
           ),
         ),
       ];
     }
 
-    // Loading state
     if (isLoading && posts.isEmpty) {
       return [
         SliverFillRemaining(
-          child: Center(
-            child: CircularProgressIndicator(color: AppTheme.primary),
+          child: ShimmerList(
+            itemCount: 4,
+            type: ShimmerCardType.post,
+            padding: EdgeInsets.only(top: 10.h, bottom: 80.h),
           ),
         ),
       ];
     }
 
-    // Empty state
-    if (isEmpty) {
+    if (posts.isEmpty) {
       return [
-        SliverFillRemaining(
-          child: _buildEmptyStateStatic(context, tabType),
-        ),
+        SliverFillRemaining(child: _buildEmptyState(tabType)),
       ];
     }
 
@@ -88,28 +73,52 @@ class ProfilePostsList {
               return Padding(
                 padding: EdgeInsets.all(16.w),
                 child: Center(
-                  child: CircularProgressIndicator(color: AppTheme.primary),
+                  child: SizedBox(
+                    width: 22.w,
+                    height: 22.w,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.2,
+                      color: AppTheme.primary,
+                    ),
+                  ),
                 ),
               );
+            }
+
+            if (index >= posts.length - 2 && hasMore && !isLoading) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                switch (tabType) {
+                  case ProfileTabType.posts:
+                    provider.loadUserPosts();
+                    break;
+                  case ProfileTabType.reposts:
+                    provider.loadUserReposts();
+                    break;
+                  case ProfileTabType.media:
+                    provider.loadUserMedia();
+                    break;
+                  case ProfileTabType.saved:
+                    provider.loadSavedPosts();
+                    break;
+                }
+              });
             }
 
             final postWithAuthor = posts[index];
             final post = postWithAuthor.post;
             final author = postWithAuthor.author;
             final postState = provider.getPostState(post.postId);
-            final isMyPost = post.userId == currentUserId;
+            final isMyPost = post.userId == activeUserId;
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Repost indicator
                 if (postWithAuthor.repostedBy != null)
                   Padding(
                     padding: EdgeInsets.only(left: 16.w, top: 8.h, bottom: 4.h),
                     child: Row(
                       children: [
-                        Icon(Icons.repeat,
-                            size: 14.sp, color: AppTheme.primary),
+                        Icon(Icons.repeat, size: 14.sp, color: AppTheme.primary),
                         SizedBox(width: 6.w),
                         Text(
                           '${postWithAuthor.repostedBy!.name ?? postWithAuthor.repostedBy!.username} reposted',
@@ -133,13 +142,13 @@ class ProfilePostsList {
                     isBookmarked: postState.isBookmarked,
                     isReposted: postState.isReposted,
                   ),
-                  currentUserId: currentUserId,
+                  currentUserId: activeUserId,
                   onTap: () {
                     navigateToPostView(
                       context: context,
                       post: post,
                       author: author,
-                      currentUserId: currentUserId,
+                      currentUserId: activeUserId,
                       postState: PostState(
                         likesCount: postState.likesCount,
                         repliesCount: postState.repliesCount,
@@ -154,37 +163,21 @@ class ProfilePostsList {
                     );
                   },
                   onLike: () async {
-                    // Get current user from auth provider
                     final currentUser = authProvider.currentUser;
-
                     await provider.toggleLike(
                       post.postId,
                       post.userId,
-                      Provider.of<NotifyProvider>(
-                        context,
-                        listen: false,
-                      ),
+                      Provider.of<NotifyProvider>(context, listen: false),
                       currentUser,
                       post.imageUrls.isNotEmpty ? post.imageUrls.first : null,
                     );
                   },
                   onComment: () {
-                    navigateToPostView(
-                      context: context,
-                      post: post,
-                      author: author,
-                      currentUserId: currentUserId,
-                      postState: PostState(
-                        likesCount: postState.likesCount,
-                        repliesCount: postState.repliesCount,
-                        repostsCount: postState.repostsCount,
-                        isLiked: postState.isLiked,
-                        isBookmarked: postState.isBookmarked,
-                        isReposted: postState.isReposted,
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PostCommentsScreen(postId: post.postId, post: post),
                       ),
-                      feedProvider: feedProvider,
-                      isMyPost: isMyPost,
-                      focusComment: true,
                     );
                   },
                   onRepost: () async {
@@ -233,9 +226,10 @@ class ProfilePostsList {
     ];
   }
 
-  // Helper static methods
-  static List<PostWithAuthorProfile> _getPostsListStatic(
-      ProfileProvider provider, ProfileTabType tabType) {
+  static List<PostWithAuthorProfile> _getPostsList(
+    ProfileProvider provider,
+    ProfileTabType tabType,
+  ) {
     switch (tabType) {
       case ProfileTabType.posts:
         return provider.userPosts;
@@ -248,8 +242,7 @@ class ProfilePostsList {
     }
   }
 
-  static bool _isLoadingStatic(
-      ProfileProvider provider, ProfileTabType tabType) {
+  static bool _isLoading(ProfileProvider provider, ProfileTabType tabType) {
     switch (tabType) {
       case ProfileTabType.posts:
         return provider.isLoadingPosts;
@@ -262,7 +255,7 @@ class ProfilePostsList {
     }
   }
 
-  static bool _hasMoreStatic(ProfileProvider provider, ProfileTabType tabType) {
+  static bool _hasMore(ProfileProvider provider, ProfileTabType tabType) {
     switch (tabType) {
       case ProfileTabType.posts:
         return provider.hasMorePosts;
@@ -275,46 +268,32 @@ class ProfilePostsList {
     }
   }
 
-  static Widget _buildEmptyStateStatic(
-      BuildContext context, ProfileTabType tabType) {
-    String message;
-    IconData icon;
-
+  static Widget _buildEmptyState(ProfileTabType tabType) {
     switch (tabType) {
       case ProfileTabType.posts:
-        message = 'No posts yet';
-        icon = Icons.article_outlined;
-        break;
+        return const EmptyStateView(
+          icon: Ph.article,
+          title: 'No posts yet',
+          subtitle: 'When posts are shared, they will show up here.',
+        );
       case ProfileTabType.reposts:
-        message = 'No reposts yet';
-        icon = Icons.repeat;
-        break;
+        return const EmptyStateView(
+          icon: Ph.repeat,
+          title: 'No reposts yet',
+          subtitle: 'Reposted content will appear here.',
+        );
       case ProfileTabType.media:
-        message = 'No media yet';
-        icon = Icons.photo_library_outlined;
-        break;
+        return const EmptyStateView(
+          icon: Ph.image_square,
+          title: 'No media yet',
+          subtitle: 'Photos and videos will appear here.',
+        );
       case ProfileTabType.saved:
-        message = 'No saved items yet';
-        icon = Icons.bookmark_border;
-        break;
+        return const EmptyStateView(
+          icon: Ph.bookmark_simple,
+          title: 'No saved items yet',
+          subtitle: 'Saved posts are shown here for quick access.',
+        );
     }
-
-    return Container(
-      color: AppTheme.background,
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 64.sp, color: AppTheme.textLight),
-            SizedBox(height: 16.h),
-            Text(
-              message,
-              style: TextConstants.smallText
-                  .copyWith(color: AppTheme.textSecondary),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

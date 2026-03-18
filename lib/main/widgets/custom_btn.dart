@@ -10,6 +10,7 @@ class CustomButton extends StatelessWidget {
   final Color backgroundColor;
   final Color textColor;
   final bool? useWidth;
+  final bool isLoading;
 
   const CustomButton({
     super.key,
@@ -19,12 +20,13 @@ class CustomButton extends StatelessWidget {
     required this.backgroundColor,
     required this.textColor,
     this.useWidth = true,
+    this.isLoading = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: onPressed,
+      onTap: isLoading ? null : onPressed,
       borderRadius: BorderRadius.circular(25.r),
       child: Container(
         width: useWidth == true ? 200.w : null,
@@ -36,26 +38,35 @@ class CustomButton extends StatelessWidget {
           width: double.infinity,
           height: 50.h,
           alignment: Alignment.center,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (icon != null) ...[
-                Iconify(
-                  icon!,
-                  color: textColor,
-                  size: 20.sp,
+          child: isLoading
+              ? SizedBox(
+                  width: 24.w,
+                  height: 24.w,
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(textColor),
+                    strokeWidth: 2.w,
+                  ),
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (icon != null) ...[
+                      Iconify(
+                        icon!,
+                        color: textColor,
+                        size: 20.sp,
+                      ),
+                      SizedBox(width: 10.w),
+                    ],
+                    Text(
+                      text,
+                      style: TextConstants.smallText.copyWith(
+                        color: textColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(width: 10.w),
-              ],
-              Text(
-                text,
-                style: TextConstants.smallText.copyWith(
-                  color: textColor,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

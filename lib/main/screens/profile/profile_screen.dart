@@ -1,21 +1,18 @@
 import 'package:campcon/main/constants/app_colors.dart';
-import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/user_model.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/feed_provider.dart';
 import 'package:campcon/main/provider/follow_provider.dart';
 import 'package:campcon/main/provider/profile_provider.dart';
-import 'package:campcon/main/screens/profile/edit_profile_screen.dart';
-import 'package:campcon/main/screens/profile/profile_option.dart';
-import 'package:campcon/main/screens/profile/menu_screen.dart';
-import 'package:campcon/main/screens/profile/widgets/profile_button_widget.dart';
 import 'package:campcon/main/screens/profile/widgets/profile_header_widget.dart';
-import 'package:campcon/main/screens/profile/widgets/profile_posts_list.dart';
+import 'package:campcon/main/screens/profile/widgets/profile_actions_section.dart';
+import 'package:campcon/main/screens/profile/widgets/profile_tabs_section.dart';
+import 'package:campcon/main/screens/profile/widgets/profile_tab_content.dart';
+import 'package:campcon/main/screens/profile/widgets/full_bio_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ph.dart';
-import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -89,7 +86,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final textPainter = TextPainter(
           text: TextSpan(
             text: profileProvider.profileUser?.aboutMe ?? '',
-            style: TextConstants.smallText.copyWith(
+            style: TextStyle(
               color: AppTheme.textPrimary,
               height: 1.5,
               fontSize: 13.sp,
@@ -104,136 +101,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  // Show full bio in bottom sheet
   void _showFullBio(UserModel user) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       isScrollControlled: true,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
       ),
-      builder: (context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.6,
-          minChildSize: 0.4,
-          maxChildSize: 0.9,
-          expand: false,
-          builder: (context, scrollController) {
-            return Container(
-              padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 24.w),
-              child: Column(
-                children: [
-                  // Drag indicator
-                  Center(
-                    child: Container(
-                      width: 40.w,
-                      height: 4.h,
-                      margin: EdgeInsets.only(bottom: 20.h),
-                      decoration: BoxDecoration(
-                        color: AppTheme.border,
-                        borderRadius: BorderRadius.circular(2.r),
-                      ),
-                    ),
-                  ),
-
-                  // Header
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 24.r,
-                        backgroundColor: AppTheme.primary.withOpacity(0.1),
-                        backgroundImage: user.profileImageUrl != null &&
-                                user.profileImageUrl!.isNotEmpty
-                            ? NetworkImage(user.profileImageUrl!)
-                            : null,
-                        child: user.profileImageUrl == null ||
-                                user.profileImageUrl!.isEmpty
-                            ? Iconify(
-                                Ph.user,
-                                size: 24.sp,
-                                color: AppTheme.primary,
-                              )
-                            : null,
-                      ),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              user.name ?? "No Name",
-                              style: TextConstants.mediumText.copyWith(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16.sp,
-                                color: AppTheme.textPrimary,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Text(
-                              "@${user.username}",
-                              style: TextConstants.smallText.copyWith(
-                                color: AppTheme.textLight,
-                                fontSize: 13.sp,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          Icons.close,
-                          color: AppTheme.textSecondary,
-                          size: 24.sp,
-                        ),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-
-                  SizedBox(height: 24.h),
-
-                  // Divider
-                  Container(
-                    height: 1,
-                    color: AppTheme.border,
-                  ),
-
-                  SizedBox(height: 24.h),
-
-                  // Full Bio
-                  Expanded(
-                    child: SingleChildScrollView(
-                      controller: scrollController,
-                      child: Text(
-                        user.aboutMe ?? '',
-                        style: TextConstants.mediumText.copyWith(
-                          color: AppTheme.textPrimary,
-                          height: 1.6,
-                          fontSize: 15.sp,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
+      builder: (context) => FullBioSheet(user: user),
     );
-  }
-
-  Future<void> _handleFollowToggle() async {
-    final followProvider = Provider.of<FollowProvider>(context, listen: false);
-    await _profileProvider.toggleFollow(followProvider: followProvider);
   }
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: colorScheme.surface,
       body: Consumer2<AuthProvider, ProfileProvider>(
         builder: (context, authProvider, profileProvider, child) {
           final profileUser = profileProvider.profileUser;
@@ -241,6 +125,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           final errorMessage = profileProvider.errorMessage;
           final currentUserId = authProvider.currentUser?.uid ?? '';
 
+          // Loading state
           if (profileUser == null && isLoading) {
             return Center(
               child: CircularProgressIndicator(
@@ -249,6 +134,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             );
           }
 
+          // Error state
           if (errorMessage != null) {
             return Center(
               child: Column(
@@ -262,7 +148,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   SizedBox(height: 16.h),
                   Text(
                     errorMessage,
-                    style: TextConstants.smallText.copyWith(
+                    style: TextStyle(
                       color: AppTheme.textSecondary,
                     ),
                     textAlign: TextAlign.center,
@@ -272,6 +158,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             );
           }
 
+          // Empty state
           if (profileUser == null) {
             return Center(
               child: CircularProgressIndicator(
@@ -296,7 +183,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       expandedHeight: profileProvider.hasBio ? 360.h : 330.h,
                       floating: false,
                       pinned: true,
-                      backgroundColor: AppTheme.surface,
+                      backgroundColor: colorScheme.surface,
                       elevation: 0,
                       forceElevated: innerBoxIsScrolled,
                       leading: IconButton(
@@ -307,61 +194,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         onPressed: () => Navigator.pop(context),
                       ),
-                      // Add title that appears when collapsed
-                      title: innerBoxIsScrolled
-                          ? Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 16.r,
-                                  backgroundColor:
-                                      AppTheme.primary.withOpacity(0.1),
-                                  backgroundImage:
-                                      user.profileImageUrl != null &&
-                                              user.profileImageUrl != ''
-                                          ? NetworkImage(user.profileImageUrl!)
-                                          : null,
-                                  child: user.profileImageUrl == null ||
-                                          user.profileImageUrl == ''
-                                      ? Iconify(
-                                          Ph.user,
-                                          size: 16.sp,
-                                          color: AppTheme.primary,
-                                        )
-                                      : null,
-                                ),
-                                SizedBox(width: 12.w),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        user.name ?? "No Name",
-                                        style:
-                                            TextConstants.mediumText.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16.sp,
-                                          color: AppTheme.textPrimary,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      Text(
-                                        "@${user.username}",
-                                        style: TextConstants.smallText.copyWith(
-                                          color: AppTheme.textLight,
-                                          fontSize: 11.sp,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            )
-                          : null,
+                      title:
+                          innerBoxIsScrolled ? _buildAppBarTitle(user) : null,
                       flexibleSpace: FlexibleSpaceBar(
                         collapseMode: CollapseMode.parallax,
                         background: Container(
@@ -374,10 +208,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               profileProvider: profileProvider,
                               bioKey: _bioKey,
                               onShowFullBio: () => _showFullBio(user),
-                              currentUserActions:
-                                  _buildCurrentUserActions(authProvider),
-                              otherUserActions:
-                                  _buildOtherUserActions(profileProvider),
+                              currentUserActions: ProfileActionsSection(
+                                user: user,
+                                isCurrentUser: true,
+                                profileProvider: profileProvider,
+                                authProvider: authProvider,
+                                onProfileUpdated: () {
+                                  _loadUserProfile();
+                                },
+                              ),
+                              otherUserActions: ProfileActionsSection(
+                                user: user,
+                                isCurrentUser: false,
+                                profileProvider: profileProvider,
+                                authProvider: authProvider,
+                                onProfileUpdated: () {},
+                              ),
                               followersCount: isLoading
                                   ? "0"
                                   : profileProvider.followersCount.toString(),
@@ -390,118 +236,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       bottom: PreferredSize(
                         preferredSize: Size.fromHeight(48.h),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                color: AppTheme.border,
-                                width: 1,
-                              ),
-                            ),
-                            color: AppTheme.surface,
-                          ),
-                          child: TabBar(
-                            indicatorColor: AppTheme.primary,
-                            indicatorWeight: 2,
-                            labelColor: AppTheme.primary,
-                            unselectedLabelColor: AppTheme.textLight,
-                            labelStyle: TextConstants.smallText.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                            unselectedLabelStyle: TextConstants.smallText,
-                            tabs: const [
-                              Tab(text: "Posts"),
-                              Tab(text: 'Reposts'),
-                              Tab(text: "Media"),
-                              Tab(text: "Saved"),
-                            ],
-                          ),
-                        ),
+                        child: const ProfileTabsSection(),
                       ),
                     ),
                   ),
                 ];
               },
-              body: Consumer2<ProfileProvider, FeedProvider>(
-                builder: (context, profileProvider, feedProvider, child) {
-                  return Padding(
-                    padding: EdgeInsets.only(top: 135.h),
-                    child: TabBarView(
-                      children: [
-                        // Posts tab
-                        RefreshIndicator(
-                          onRefresh: () =>
-                              profileProvider.loadUserPosts(refresh: true),
-                          color: AppTheme.primary,
-                          child: CustomScrollView(
-                            slivers: ProfilePostsList.buildSlivers(
-                              context: context,
-                              tabType: ProfileTabType.posts,
-                              currentUserId: currentUserId,
-                              provider: profileProvider,
-                              feedProvider: feedProvider,
-                              scrollController: ScrollController(),
-                              onRefresh: () =>
-                                  profileProvider.loadUserPosts(refresh: true),
-                            ),
-                          ),
-                        ),
-                        // Reposts tab
-                        RefreshIndicator(
-                          onRefresh: () =>
-                              profileProvider.loadUserReposts(refresh: true),
-                          color: AppTheme.primary,
-                          child: CustomScrollView(
-                            slivers: ProfilePostsList.buildSlivers(
-                              context: context,
-                              tabType: ProfileTabType.reposts,
-                              currentUserId: currentUserId,
-                              provider: profileProvider,
-                              feedProvider: feedProvider,
-                              scrollController: ScrollController(),
-                              onRefresh: () => profileProvider.loadUserReposts(
-                                  refresh: true),
-                            ),
-                          ),
-                        ),
-                        // Media tab
-                        RefreshIndicator(
-                          onRefresh: () =>
-                              profileProvider.loadUserMedia(refresh: true),
-                          color: AppTheme.primary,
-                          child: CustomScrollView(
-                            slivers: ProfilePostsList.buildSlivers(
-                              context: context,
-                              tabType: ProfileTabType.media,
-                              currentUserId: currentUserId,
-                              provider: profileProvider,
-                              feedProvider: feedProvider,
-                              scrollController: ScrollController(),
-                              onRefresh: () =>
-                                  profileProvider.loadUserMedia(refresh: true),
-                            ),
-                          ),
-                        ),
-                        // Saved tab
-                        RefreshIndicator(
-                          onRefresh: () =>
-                              profileProvider.loadSavedPosts(refresh: true),
-                          color: AppTheme.primary,
-                          child: CustomScrollView(
-                            slivers: ProfilePostsList.buildSlivers(
-                              context: context,
-                              tabType: ProfileTabType.saved,
-                              currentUserId: currentUserId,
-                              provider: profileProvider,
-                              feedProvider: feedProvider,
-                              scrollController: ScrollController(),
-                              onRefresh: () =>
-                                  profileProvider.loadSavedPosts(refresh: true),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+              body: Consumer<FeedProvider>(
+                builder: (context, feedProvider, child) {
+                  return ProfileTabContent(
+                    currentUserId: currentUserId,
+                    profileProvider: profileProvider,
+                    feedProvider: feedProvider,
                   );
                 },
               ),
@@ -512,143 +258,61 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildCurrentUserActions(AuthProvider authProvider) {
-    final followProvider = Provider.of<FollowProvider>(context, listen: false);
-
+  Widget _buildAppBarTitle(UserModel user) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        CircleAvatar(
+          radius: 16.r,
+          backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+          backgroundImage:
+              user.profileImageUrl != null && user.profileImageUrl != ''
+                  ? NetworkImage(user.profileImageUrl!)
+                  : null,
+          child: user.profileImageUrl == null || user.profileImageUrl == ''
+              ? Iconify(
+                  Ph.user,
+                  size: 16.sp,
+                  color: AppTheme.primary,
+                )
+              : null,
+        ),
+        SizedBox(width: 12.w),
         Expanded(
-          child: ProfileButton(
-            text: "Edit",
-            onTap: () {
-              Navigator.push<bool>(
-                context,
-                PageTransition(
-                  type: PageTransitionType.rightToLeft,
-                  child: const EditProfileScreen(),
-                  duration: const Duration(milliseconds: 300),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      user.name ?? "No Name",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16.sp,
+                        color: AppTheme.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (user.isProfessional) ...[
+                    SizedBox(width: 4.w),
+                    Iconify(Ph.star_fill,
+                        size: 14.r, color: const Color(0xFFFFD700)),
+                  ],
+                ],
+              ),
+              Text(
+                "@${user.username}",
+                style: TextStyle(
+                  color: AppTheme.textLight,
+                  fontSize: 11.sp,
                 ),
-              ).then((updated) {
-                if (updated == true) {
-                  // refresh profile (same logic you had)
-                  _profileProvider.refreshProfile(
-                    followProvider: followProvider,
-                    updatedCurrentUser:
-                        Provider.of<AuthProvider>(context, listen: false)
-                            .currentUser,
-                  );
-                }
-              });
-            },
-          ),
-        ),
-        SizedBox(width: 12.w),
-        Expanded(
-          child: ProfileButton(
-            text: "Share",
-            onTap: () {
-              // Share profile logic
-            },
-          ),
-        ),
-        SizedBox(width: 12.w),
-        GestureDetector(
-          child: Container(
-            height: 40.h,
-            width: 40.w,
-            padding: EdgeInsets.all(8.w),
-            decoration: BoxDecoration(
-              color: AppTheme.buttonBorder,
-              borderRadius: BorderRadius.circular(20.r),
-            ),
-            child: Iconify(
-              Ph.dots_three,
-              color: AppTheme.textPrimary,
-              size: 18.sp,
-            ),
-          ),
-          onTap: () {
-            Navigator.push(
-              context,
-              PageTransition(
-                type: PageTransitionType.rightToLeft,
-                child: const MenuScreen(),
-                duration: const Duration(milliseconds: 300),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildOtherUserActions(ProfileProvider profileProvider) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Expanded(
-          child: ProfileButton(
-            text: profileProvider.isLoading
-                ? "..."
-                : profileProvider.isFollowing
-                    ? "Following"
-                    : "Follow",
-            onTap: profileProvider.isFollowLoading || profileProvider.isLoading
-                ? null
-                : _handleFollowToggle,
-            backgroundColor: profileProvider.isFollowing
-                ? AppTheme.buttonBorder
-                : AppTheme.primary,
-            textColor: profileProvider.isFollowing
-                ? AppTheme.textPrimary
-                : AppTheme.white,
-          ),
-        ),
-        SizedBox(width: 12.w),
-        Expanded(
-          child: ProfileButton(
-            text: "Message",
-            onTap: () {
-              // Message logic
-            },
-          ),
-        ),
-        SizedBox(width: 12.w),
-        GestureDetector(
-          onTap: () => ProfileOptions.show(
-            context,
-            userName: profileProvider.profileUser?.name,
-            onShare: () {
-              // TODO: Implement share profile
-            },
-            onCopyLink: () {
-              // TODO: Implement copy link
-            },
-            onReport: () {
-              // TODO: Implement report user
-            },
-            onBlock: () {
-              // TODO: Implement block user
-            },
-          ),
-          child: Container(
-            height: 40.h,
-            width: 40.w,
-            padding: EdgeInsets.all(10.w),
-            decoration: BoxDecoration(
-              color: AppTheme.surface,
-              border: Border.all(
-                color: AppTheme.border,
-              ),
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            child: Iconify(
-              Ph.dots_three,
-              color: AppTheme.textPrimary,
-              size: 18.sp,
-            ),
+            ],
           ),
         ),
       ],

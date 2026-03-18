@@ -1,14 +1,18 @@
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
+import 'package:campcon/main/provider/search_provider.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/home_folder/campus_screen.dart';
-import 'package:campcon/main/screens/bottom_nav_screens/home_folder/events/events_screen.dart';
+// import 'package:campcon/main/screens/bottom_nav_screens/home_folder/events/events_screen.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/home_folder/for_you_screen.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/home_folder/friends_screen.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/new_post.dart';
+import 'package:campcon/main/screens/search/search_screen.dart';
 import 'package:campcon/main/widgets/action_search_bar.dart';
 import 'package:campcon/main/widgets/custom_top_bar.dart';
+import 'package:campcon/main/widgets/profile_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:page_transition/page_transition.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -35,8 +39,10 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: colorScheme.surface,
+      endDrawer: const ProfileDrawer(),
       body: SafeArea(
         child: NestedScrollView(
           headerSliverBuilder: (context, innerBoxIsScrolled) {
@@ -44,12 +50,25 @@ class _HomeScreenState extends State<HomeScreen>
               // Top section (logo, search bar, create post button)
               SliverToBoxAdapter(
                 child: Container(
-                  color: AppTheme.surface,
+                  color: colorScheme.surface,
                   padding: EdgeInsets.fromLTRB(20.w, 5.h, 20.w, 20.h),
                   child: Column(
                     children: [
                       //  Use reusable top bar
-                      const CustomTopBar(),
+                      CustomTopBar(
+                        onSearchTap: () {
+                          Navigator.push(
+                            context,
+                            PageTransition(
+                              type: PageTransitionType.fade,
+                              duration: const Duration(milliseconds: 200),
+                              child: const SearchScreen(
+                                context: SearchContext.home,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                       SizedBox(height: 20.h),
 
                       //  Create Post Button using ActionSearchBar
@@ -72,20 +91,20 @@ class _HomeScreenState extends State<HomeScreen>
               SliverPersistentHeader(
                 pinned: true,
                 delegate: _TabBarDelegate(
-                  tabBar: _buildTabBar(),
+                  tabBar: _buildTabBar(colorScheme),
                 ),
               ),
             ];
           },
           body: Container(
-            color: AppTheme.surface,
+            color: colorScheme.surface,
             child: TabBarView(
               controller: _tabController,
               children: const [
                 MyForYouScreen(),
                 FriendsScreen(),
                 CampusScreen(),
-                EventsScreen(),
+                // EventsScreen(), // Temporarily disabled
               ],
             ),
           ),
@@ -94,21 +113,23 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget _buildTabBar() {
+  Widget _buildTabBar(ColorScheme colorScheme) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.surface,
-        border: Border(
-          bottom: BorderSide(
-            color: AppTheme.border,
-            width: 1,
-          ),
-        ),
+        color: colorScheme.surface,
+        // border: Border(
+        //   bottom: BorderSide(
+        //     color: colorScheme.outline,
+        //     width: 1,
+        //   ),
+        // ),
       ),
       child: TabBar(
+        dividerColor: AppTheme.border,
+        dividerHeight: 1.h,
         controller: _tabController,
         isScrollable: false,
-        labelColor: AppTheme.primary,
+        labelColor: colorScheme.primary,
         unselectedLabelColor: AppTheme.textLight,
         labelStyle: TextConstants.mediumText.copyWith(
           fontSize: 14.sp,
@@ -118,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen>
           fontSize: 14.sp,
           fontWeight: FontWeight.w500,
         ),
-        indicatorColor: AppTheme.primary,
+        indicatorColor: colorScheme.primary,
         indicatorWeight: 3,
         indicatorSize: TabBarIndicatorSize.label,
         labelPadding: EdgeInsets.symmetric(horizontal: 8.w),
@@ -126,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen>
           Tab(text: "My FYP"),
           Tab(text: "Friends"),
           Tab(text: "Campus"),
-          Tab(text: "Events"),
+          // Tab(text: "Events"), // Temporarily disabled
         ],
       ),
     );

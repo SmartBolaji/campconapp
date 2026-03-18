@@ -37,10 +37,10 @@ class EventTitleSection extends StatelessWidget {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
               decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.1),
+                color: AppTheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20.r),
                 border: Border.all(
-                  color: AppTheme.primary.withOpacity(0.3),
+                  color: AppTheme.primary.withValues(alpha: 0.3),
                 ),
               ),
               child: Row(
@@ -72,13 +72,13 @@ class EventTitleSection extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                 decoration: BoxDecoration(
                   color: event.availableTickets < 10
-                      ? AppTheme.warning.withOpacity(0.1)
-                      : AppTheme.success.withOpacity(0.1),
+                      ? AppTheme.warning.withValues(alpha: 0.1)
+                      : AppTheme.success.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20.r),
                   border: Border.all(
                     color: event.availableTickets < 10
-                        ? AppTheme.warning.withOpacity(0.3)
-                        : AppTheme.success.withOpacity(0.3),
+                        ? AppTheme.warning.withValues(alpha: 0.3)
+                        : AppTheme.success.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Row(

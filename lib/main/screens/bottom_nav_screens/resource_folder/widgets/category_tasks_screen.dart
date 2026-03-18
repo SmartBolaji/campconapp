@@ -26,7 +26,7 @@ class CategoryTasksScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: Column(
           children: [
@@ -69,8 +69,11 @@ class CategoryTasksScreen extends StatelessWidget {
                             sectionColor: AppTheme.primary,
                           ),
                           SizedBox(height: 12.h),
-                          ...publicTasks.map((task) =>
-                              _buildTaskItem(context, task, provider)),
+                          _buildTaskGrid(publicTasks
+                              .map((task) => _buildTaskItem(
+                                  context, task, provider,
+                                  isPublic: true))
+                              .toList()),
                           SizedBox(height: 24.h),
                         ],
 
@@ -83,8 +86,10 @@ class CategoryTasksScreen extends StatelessWidget {
                             sectionColor: AppTheme.textSecondary,
                           ),
                           SizedBox(height: 12.h),
-                          ...personalTasks.map((task) =>
-                              _buildTaskItem(context, task, provider)),
+                          _buildTaskGrid(personalTasks
+                              .map((task) =>
+                                  _buildTaskItem(context, task, provider))
+                              .toList()),
                         ],
                       ],
                     ),
@@ -128,7 +133,7 @@ class CategoryTasksScreen extends StatelessWidget {
           // Container(
           //   padding: EdgeInsets.all(10.w),
           //   decoration: BoxDecoration(
-          //     color: color.withOpacity(0.1),
+          //     color: color.withValues(alpha: 0.1),
           //     borderRadius: BorderRadius.circular(10.r),
           //   ),
           //   child: Icon(
@@ -173,12 +178,12 @@ class CategoryTasksScreen extends StatelessWidget {
   }) {
     return Row(
       children: [
-        Iconify(
-          icon,
-          size: 18.sp,
-          color: sectionColor,
-        ),
-        SizedBox(width: 8.w),
+        // Iconify(
+        //   icon,
+        //   size: 18.sp,
+        //   color: sectionColor,
+        // ),
+        // SizedBox(width: 8.w),
         Text(
           title,
           style: TextConstants.mediumText.copyWith(
@@ -191,7 +196,7 @@ class CategoryTasksScreen extends StatelessWidget {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
           decoration: BoxDecoration(
-            color: sectionColor.withOpacity(0.1),
+            color: sectionColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10.r),
           ),
           child: Text(
@@ -207,29 +212,50 @@ class CategoryTasksScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildTaskGrid(List<Widget> items) {
+    final List<Widget> rows = [];
+    for (int i = 0; i < items.length; i += 2) {
+      rows.add(
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: items[i]),
+            SizedBox(width: 10.w),
+            if (i + 1 < items.length)
+              Expanded(child: items[i + 1])
+            else
+              const Expanded(child: SizedBox.shrink()),
+          ],
+        ),
+      );
+    }
+    return Column(children: rows);
+  }
+
   Widget _buildTaskItem(
-      BuildContext context, TaskModel task, ResourceProvider provider) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 8.h),
-      child: TaskTile(
-        task: task,
-        currentUserId: provider.currentUserId,
-        onTap: () {
-          Navigator.push(
-            context,
-            PageTransition(
-              type: PageTransitionType.rightToLeft,
-              child: TaskDetailScreen(
-                task: task,
-                currentUserId: provider.currentUserId,
-              ),
+      BuildContext context, TaskModel task, ResourceProvider provider,
+      {bool isPublic = false}) {
+    return TaskTile(
+      task: task,
+      currentUserId: provider.currentUserId,
+      onTap: () {
+        Navigator.push(
+          context,
+          PageTransition(
+            type: PageTransitionType.rightToLeft,
+            child: TaskDetailScreen(
+              task: task,
+              currentUserId: provider.currentUserId,
             ),
-          );
-        },
-        onToggleComplete: () {
-          provider.toggleTaskCompletion(task.id, !task.isCompleted);
-        },
-      ),
+          ),
+        );
+      },
+      // Public tasks are informational only — no completion toggle
+      onToggleComplete: isPublic
+          ? null
+          : () {
+              provider.toggleTaskCompletion(task.id, !task.isCompleted);
+            },
     );
   }
 
@@ -269,7 +295,7 @@ class CategoryTasksScreen extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(24.w),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(

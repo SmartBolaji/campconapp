@@ -3,15 +3,20 @@ import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/post_model.dart';
 import 'package:campcon/main/models/user_model.dart';
 import 'package:campcon/main/provider/feed_provider.dart';
+import 'package:campcon/main/provider/poll_provider.dart';
 import 'package:campcon/main/screens/profile/profile_screen.dart';
 import 'package:campcon/main/widgets/format_time.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/image_widget.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/poll_display_widget.dart';
 import 'package:campcon/main/services/cache.dart'; //  Add this import
 import 'package:cached_network_image/cached_network_image.dart'; //  Add this import
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/ph.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:provider/provider.dart';
 
 class PostWidget extends StatelessWidget {
   final PostModel post;
@@ -73,6 +78,8 @@ class PostWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasImages = post.imageUrls.isNotEmpty;
     final screenWidth = MediaQuery.of(context).size.width;
+    final appColors = context.appColors;
+    final colorScheme = Theme.of(context).colorScheme;
 
     final displayName = author?.name ?? post.username;
     final displayImage = author?.profileImageUrl ?? '';
@@ -82,10 +89,10 @@ class PostWidget extends StatelessWidget {
       child: Container(
         margin: EdgeInsets.only(bottom: 2.h),
         decoration: BoxDecoration(
-          color: AppTheme.surface,
+          color: appColors.surface,
           border: Border(
             bottom: BorderSide(
-              color: AppTheme.border,
+              color: appColors.border,
               width: 1,
             ),
           ),
@@ -104,7 +111,7 @@ class PostWidget extends StatelessWidget {
                     onTap: () => _navigateToProfile(context),
                     child: CircleAvatar(
                       radius: 20.r,
-                      backgroundColor: AppTheme.primaryBackground,
+                      backgroundColor: appColors.primaryBackground,
                       backgroundImage: displayImage.isNotEmpty
                           ? CachedNetworkImageProvider(
                               displayImage,
@@ -112,10 +119,10 @@ class PostWidget extends StatelessWidget {
                             )
                           : null,
                       child: displayImage.isEmpty
-                          ? Icon(
-                              Icons.person,
+                          ? Iconify(
+                              Ph.user,
                               size: 20.sp,
-                              color: AppTheme.primary,
+                              color: colorScheme.primary,
                             )
                           : null,
                     ),
@@ -133,10 +140,10 @@ class PostWidget extends StatelessWidget {
                                 onTap: () => _navigateToProfile(context),
                                 child: Text(
                                   displayName,
-                                  style: TextConstants.mediumText.copyWith(
+                                  style: TextConstants.medium(context).copyWith(
                                     fontSize: 15.sp,
                                     fontWeight: FontWeight.w600,
-                                    color: AppTheme.textPrimary,
+                                    color: appColors.textPrimary,
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -145,17 +152,17 @@ class PostWidget extends StatelessWidget {
                             SizedBox(width: 6.w),
                             Text(
                               '·',
-                              style: TextConstants.smallText.copyWith(
+                              style: TextConstants.small(context).copyWith(
                                 fontSize: 14.sp,
-                                color: AppTheme.textLight,
+                                color: appColors.textLight,
                               ),
                             ),
                             SizedBox(width: 6.w),
                             Text(
                               formatDateTime(post.createdAt),
-                              style: TextConstants.smallText.copyWith(
+                              style: TextConstants.small(context).copyWith(
                                 fontSize: 13.sp,
-                                color: AppTheme.textLight,
+                                color: appColors.textLight,
                               ),
                             ),
                           ],
@@ -164,12 +171,12 @@ class PostWidget extends StatelessWidget {
                           SizedBox(height: 2.h),
                           Text(
                             post.content,
-                            style: TextConstants.mediumText.copyWith(
+                            style: TextConstants.medium(context).copyWith(
                               fontSize: 14.sp,
-                              color: AppTheme.textPrimary,
+                              color: appColors.textPrimary,
                               height: 1.4,
                             ),
-                            maxLines: 1,
+                            maxLines: 5,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ],
@@ -181,7 +188,7 @@ class PostWidget extends StatelessWidget {
                     child: Icon(
                       Icons.more_horiz,
                       size: 20.sp,
-                      color: AppTheme.textLight,
+                      color: appColors.textLight,
                     ),
                   ),
                 ],
@@ -214,6 +221,26 @@ class PostWidget extends StatelessWidget {
                 ),
               SizedBox(height: 12.h),
             ],
+            // Poll widget
+            if (post.poll != null) ...[
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: PollDisplayWidget(
+                  poll: post.poll!,
+                  postId: post.postId,
+                  currentUserId: currentUserId,
+                  onVote: (optionId) {
+                    context.read<PollProvider>().votePoll(
+                          postId: post.postId,
+                          optionId: optionId,
+                          userId: currentUserId,
+                          currentPoll: post.poll!,
+                        );
+                  },
+                ),
+              ),
+              SizedBox(height: 12.h),
+            ],
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 0.h),
               child: Row(
@@ -222,6 +249,7 @@ class PostWidget extends StatelessWidget {
                     icon: FeatherIcons.messageCircle,
                     count: postState.repliesCount,
                     onTap: onComment,
+                    context: context,
                   ),
                   SizedBox(width: 16.w),
                   _buildActionButton(
@@ -229,7 +257,8 @@ class PostWidget extends StatelessWidget {
                     count: postState.repostsCount,
                     onTap: onRepost,
                     isActive: postState.isReposted,
-                    activeColor: AppTheme.primary,
+                    activeColor: colorScheme.primary,
+                    context: context,
                   ),
                   SizedBox(width: 16.w),
                   _buildActionButton(
@@ -239,7 +268,8 @@ class PostWidget extends StatelessWidget {
                     count: postState.likesCount,
                     onTap: onLike,
                     isActive: postState.isLiked,
-                    activeColor: AppTheme.error,
+                    activeColor: colorScheme.error,
+                    context: context,
                   ),
                   const Spacer(),
                   GestureDetector(
@@ -247,7 +277,7 @@ class PostWidget extends StatelessWidget {
                     child: Icon(
                       FeatherIcons.send,
                       size: 18.sp,
-                      color: AppTheme.textLight,
+                      color: appColors.textLight,
                     ),
                   ),
                   SizedBox(width: 16.w),
@@ -259,8 +289,8 @@ class PostWidget extends StatelessWidget {
                           : Icons.bookmark_border,
                       size: 20.sp,
                       color: postState.isBookmarked
-                          ? AppTheme.primary
-                          : AppTheme.textLight,
+                          ? colorScheme.primary
+                          : appColors.textLight,
                     ),
                   ),
                 ],
@@ -277,9 +307,11 @@ class PostWidget extends StatelessWidget {
     required IconData icon,
     required int count,
     required VoidCallback? onTap,
+    required BuildContext context,
     bool isActive = false,
     Color? activeColor,
   }) {
+    final appColors = context.appColors;
     return GestureDetector(
       onTap: onTap,
       child: Row(
@@ -288,18 +320,18 @@ class PostWidget extends StatelessWidget {
             icon,
             size: 18.sp,
             color: isActive
-                ? (activeColor ?? AppTheme.primary)
-                : AppTheme.textLight,
+                ? (activeColor ?? Theme.of(context).colorScheme.primary)
+                : appColors.textLight,
           ),
           if (count > 0) ...[
             SizedBox(width: 6.w),
             Text(
               _formatCount(count),
-              style: TextConstants.smallText.copyWith(
+              style: TextConstants.small(context).copyWith(
                 fontSize: 12.sp,
                 color: isActive
-                    ? (activeColor ?? AppTheme.primary)
-                    : AppTheme.textLight,
+                    ? (activeColor ?? Theme.of(context).colorScheme.primary)
+                    : appColors.textLight,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
               ),
             ),

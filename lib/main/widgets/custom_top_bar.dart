@@ -1,7 +1,8 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
-import 'package:campcon/main/screens/profile/profile_screen.dart';
+import 'package:campcon/main/widgets/profile_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -46,25 +47,14 @@ class CustomTopBar extends StatelessWidget {
     this.cartItemCount = 0,
   }) : super(key: key);
 
-  // Calculate the width of right actions
-  double _getRightActionsWidth() {
-    double width = 0;
-    if (showCart) width += 35.w;
-    if (showCart && showAdd) width += 12.w; // spacing
-    if (showAdd || showEdit || showSearch) width += 35.w;
-    if (width == 0) width = 35.w; // placeholder width
-    return width;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
+        final appColors = context.appColors;
+        final colorScheme = Theme.of(context).colorScheme;
         final currentUser = authProvider.currentUser;
         final bool isLoggedIn = currentUser != null;
-
-        final double rightWidth = _getRightActionsWidth();
-        const double leftWidth = 35; // Profile avatar width
 
         return Stack(
           alignment: Alignment.center,
@@ -73,7 +63,7 @@ class CustomTopBar extends StatelessWidget {
             Center(
               child: centerWidget ??
                   (centerText != null
-                      ? Text(centerText!, style: TextConstants.mediumText)
+                      ? Text(centerText!, style: TextConstants.medium(context))
                       : Image.asset(
                           'assets/images/small_logo.png',
                           height: 22.h,
@@ -88,13 +78,8 @@ class CustomTopBar extends StatelessWidget {
                 GestureDetector(
                   onTap: () {
                     if (isLoggedIn) {
-                      Navigator.push(
-                        context,
-                        PageTransition(
-                          type: PageTransitionType.rightToLeft,
-                          child: ProfileScreen(userId: currentUser.uid),
-                        ),
-                      );
+                      // Open profile drawer
+                      Scaffold.of(context).openEndDrawer();
                     }
                   },
                   child: Container(
@@ -106,17 +91,18 @@ class CustomTopBar extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: isLoggedIn && currentUser.profileImageUrl == null
-                          ? AppTheme.primaryBackground
+                          ? appColors.primaryBackground
                           : null,
                       image: isLoggedIn && currentUser.profileImageUrl != null
                           ? DecorationImage(
-                              image: NetworkImage(currentUser.profileImageUrl!),
+                              image: CachedNetworkImageProvider(
+                                  currentUser.profileImageUrl!),
                               fit: BoxFit.cover,
                               onError: (exception, stackTrace) => Container(
-                                color: AppTheme.primaryBackground,
+                                color: appColors.primaryBackground,
                                 child: Iconify(
                                   Ph.user,
-                                  color: AppTheme.primary,
+                                  color: colorScheme.primary,
                                   size: 20.sp,
                                 ),
                               ),
@@ -126,7 +112,7 @@ class CustomTopBar extends StatelessWidget {
                     child: isLoggedIn && currentUser.profileImageUrl == null
                         ? Iconify(
                             Ph.user,
-                            color: AppTheme.primary,
+                            color: colorScheme.primary,
                             size: 20.sp,
                           )
                         : null,
@@ -147,12 +133,12 @@ class CustomTopBar extends StatelessWidget {
                               width: 35.w,
                               height: 35.h,
                               decoration: BoxDecoration(
-                                color: AppTheme.primaryBackground,
+                                color: appColors.primaryBackground,
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
                                 FontAwesomeIcons.cartShopping,
-                                color: AppTheme.primary,
+                                color: colorScheme.primary,
                                 size: 17.sp,
                               ),
                             ),
@@ -164,10 +150,10 @@ class CustomTopBar extends StatelessWidget {
                                 child: Container(
                                   padding: EdgeInsets.all(4.w),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.error,
+                                    color: colorScheme.error,
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: AppTheme.surface,
+                                      color: appColors.surface,
                                       width: 1.5,
                                     ),
                                   ),
@@ -180,7 +166,8 @@ class CustomTopBar extends StatelessWidget {
                                       cartItemCount > 9
                                           ? '9+'
                                           : '$cartItemCount',
-                                      style: TextConstants.smallText.copyWith(
+                                      style:
+                                          TextConstants.small(context).copyWith(
                                         fontSize: 9.sp,
                                         fontWeight: FontWeight.w600,
                                         color: Colors.white,
@@ -204,12 +191,12 @@ class CustomTopBar extends StatelessWidget {
                           width: 35.w,
                           height: 35.h,
                           decoration: BoxDecoration(
-                            color: AppTheme.primary,
+                            color: colorScheme.primary,
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
                             Icons.add,
-                            color: AppTheme.white,
+                            color: colorScheme.onPrimary,
                             size: 24.sp,
                           ),
                         ),
@@ -222,7 +209,7 @@ class CustomTopBar extends StatelessWidget {
                           onPressed: onEditTap ?? () {},
                           icon: Icon(
                             FeatherIcons.edit,
-                            color: AppTheme.textPrimary,
+                            color: appColors.textPrimary,
                             size: 22.sp,
                           ),
                           padding: EdgeInsets.zero,
@@ -236,7 +223,7 @@ class CustomTopBar extends StatelessWidget {
                           onPressed: onSearchTap ?? () {},
                           icon: Icon(
                             FeatherIcons.search,
-                            color: AppTheme.textPrimary,
+                            color: appColors.textPrimary,
                             size: 24.sp,
                           ),
                           padding: EdgeInsets.zero,
@@ -251,7 +238,7 @@ class CustomTopBar extends StatelessWidget {
                           icon: customIcon ??
                               Icon(
                                 IconlyLight.setting,
-                                color: AppTheme.textPrimary,
+                                color: appColors.textPrimary,
                                 size: 22.sp,
                               ),
                           padding: EdgeInsets.zero,

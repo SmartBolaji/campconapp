@@ -35,7 +35,7 @@ class TicketInfoCard extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(10.w),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.1),
+                  color: AppTheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10.r),
                 ),
                 child: Iconify(
@@ -74,10 +74,10 @@ class TicketInfoCard extends StatelessWidget {
             child: Container(
               padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.1),
+                color: AppTheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12.r),
                 border: Border.all(
-                  color: AppTheme.primary.withOpacity(0.3),
+                  color: AppTheme.primary.withValues(alpha: 0.3),
                 ),
               ),
               child: Row(

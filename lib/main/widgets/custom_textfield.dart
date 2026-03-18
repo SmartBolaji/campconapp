@@ -14,6 +14,7 @@ class CustomTxtfield extends StatefulWidget {
   final IconData? prefixIcon;
   final IconData? suffixIcon;
   final VoidCallback? onSuffixIconPressed;
+  final Color? suffixIconColor;
   final bool enabled;
   final int? maxLines;
 
@@ -29,6 +30,7 @@ class CustomTxtfield extends StatefulWidget {
     this.prefixIcon,
     this.suffixIcon,
     this.onSuffixIconPressed,
+    this.suffixIconColor,
     this.enabled = true,
     this.maxLines = 1,
   }) : super(key: key);
@@ -41,6 +43,7 @@ class _CustomTextFieldState extends State<CustomTxtfield>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<Color?> _borderColorAnimation;
+  late ColorTween _borderColorTween;
   bool _isFocused = false;
   bool _obscureText = false;
 
@@ -52,10 +55,18 @@ class _CustomTextFieldState extends State<CustomTxtfield>
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
-    _borderColorAnimation = ColorTween(
-      begin: Constants.backgroundColor,
-      end: Constants.primaryColors,
-    ).animate(_animationController);
+    _borderColorTween = ColorTween();
+    _borderColorAnimation = _borderColorTween.animate(_animationController);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final appColors = context.appColors;
+    final colorScheme = Theme.of(context).colorScheme;
+    _borderColorTween
+      ..begin = appColors.border
+      ..end = colorScheme.primary;
   }
 
   @override
@@ -72,12 +83,14 @@ class _CustomTextFieldState extends State<CustomTxtfield>
 
   @override
   Widget build(BuildContext context) {
+    final appColors = context.appColors;
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (widget.label != null) ...[
           Text(widget.label!,
-              style: TextConstants.smallText.copyWith(
+              style: TextConstants.small(context).copyWith(
                 fontWeight: FontWeight.bold,
               )),
           SizedBox(height: 8.h),
@@ -104,13 +117,14 @@ class _CustomTextFieldState extends State<CustomTxtfield>
                 onChanged: widget.onChanged,
                 enabled: widget.enabled,
                 maxLines: widget.maxLines,
-                style: TextConstants.smallText.copyWith(
+                style: TextConstants.small(context).copyWith(
                   fontWeight: FontWeight.bold,
+                  color: appColors.textPrimary,
                 ),
                 decoration: InputDecoration(
                   hintText: widget.hintText,
                   hintStyle: TextStyle(
-                    color: Colors.grey[400],
+                    color: appColors.textSecondary.withValues(alpha: 0.6),
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w400,
                   ),
@@ -118,8 +132,8 @@ class _CustomTextFieldState extends State<CustomTxtfield>
                       ? Icon(
                           widget.prefixIcon,
                           color: _isFocused
-                              ? Constants.primaryColors
-                              : Constants.backgroundColor,
+                              ? colorScheme.primary
+                              : appColors.textSecondary,
                           size: 20.sp,
                         )
                       : null,
@@ -130,8 +144,8 @@ class _CustomTextFieldState extends State<CustomTxtfield>
                                 ? Icons.visibility_off
                                 : Icons.visibility,
                             color: _isFocused
-                                ? Constants.primaryColors
-                                : Constants.textPrimary,
+                                ? colorScheme.primary
+                                : appColors.textSecondary,
                             size: 20.sp,
                           ),
                           onPressed: _togglePasswordVisibility,
@@ -140,50 +154,49 @@ class _CustomTextFieldState extends State<CustomTxtfield>
                           ? IconButton(
                               icon: Icon(
                                 widget.suffixIcon,
-                                color: _isFocused
-                                    ? Constants.primaryColors
-                                    : Constants.backgroundColor,
+                                color: widget.suffixIconColor ??
+                                    (_isFocused
+                                        ? colorScheme.primary
+                                        : appColors.textSecondary),
                                 size: 20.sp,
                               ),
                               onPressed: widget.onSuffixIconPressed,
                             )
                           : null),
                   filled: true,
-                  fillColor:
-                      widget.enabled ? Colors.grey[300] : Colors.grey[100],
+                  fillColor: appColors.surface.withValues(alpha: 0.5),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12.r),
                     borderSide: BorderSide(
-                      color: _borderColorAnimation.value ??
-                          Constants.backgroundColor!,
+                      color: _borderColorAnimation.value ?? appColors.border,
                       width: 1.5,
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12.r),
                     borderSide: BorderSide(
-                      color: Constants.backgroundColor!,
+                      color: appColors.border,
                       width: 1,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12.r),
                     borderSide: BorderSide(
-                      color: Constants.primaryColors,
+                      color: colorScheme.primary,
                       width: 2.w,
                     ),
                   ),
                   errorBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12.r),
                     borderSide: BorderSide(
-                      color: Constants.error,
+                      color: colorScheme.error,
                       width: 1.5.w,
                     ),
                   ),
                   disabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12.r),
                     borderSide: BorderSide(
-                      color: Constants.backgroundColor!,
+                      color: appColors.border,
                       width: 1,
                     ),
                   ),

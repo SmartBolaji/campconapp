@@ -3,8 +3,6 @@ import 'package:campcon/main/models/notification_model.dart';
 import 'package:campcon/main/provider/notify_provider.dart';
 
 class NotificationHelper {
-  // Varibale 
-  static NotifyProvider? notifyProvider;
   /// Create a like notification
   static Future<void> createLikeNotification({
     required NotifyProvider notifyProvider,
@@ -15,7 +13,7 @@ class NotificationHelper {
     required String postId,
     String? postImageUrl,
   }) async {
-    await notifyProvider!.createNotification(
+    await notifyProvider.createNotification(
       recipientId: recipientId,
       actorId: actorId,
       actorName: actorName,

@@ -48,7 +48,7 @@ class TicketQuantitySelector extends StatelessWidget {
                   padding:
                       EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: AppTheme.primary.withOpacity(0.1),
+                    color: AppTheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Text(
@@ -78,9 +78,9 @@ class TicketQuantitySelector extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: AppTheme.error.withOpacity(0.1),
+        color: AppTheme.error.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppTheme.error.withOpacity(0.3)),
+        border: Border.all(color: AppTheme.error.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -105,7 +105,7 @@ class TicketQuantitySelector extends StatelessWidget {
                   'This event is no longer accepting ticket purchases.',
                   style: TextConstants.smallText.copyWith(
                     fontSize: 12.sp,
-                    color: AppTheme.error.withOpacity(0.8),
+                    color: AppTheme.error.withValues(alpha: 0.8),
                   ),
                 ),
               ],
@@ -137,7 +137,7 @@ class TicketQuantitySelector extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(8.w),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.1),
+                  color: AppTheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Iconify(
@@ -242,7 +242,7 @@ class TicketQuantitySelector extends StatelessWidget {
         padding: EdgeInsets.all(10.w),
         decoration: BoxDecoration(
           color: isEnabled
-              ? AppTheme.primary.withOpacity(0.1)
+              ? AppTheme.primary.withValues(alpha: 0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(8.r),
         ),

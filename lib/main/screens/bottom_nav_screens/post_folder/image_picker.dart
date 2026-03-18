@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:campcon/main/provider/media_provider.dart';
 import 'package:campcon/main/widgets/floating_widget.dart';
-import 'package:campcon/main/widgets/navigation_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttericon/font_awesome5_icons.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -218,10 +217,9 @@ class ProductImagePickerState extends State<ProductImagePicker> {
 
     final imageProvider = Provider.of<MediaSelectionProvider>(context);
 
-    return WillPopScope(
-      onWillPop: () async {
-        imageProvider.clearSelection();
-        return true;
+    return PopScope(
+      onPopInvoked: (bool didPop) {
+        if (didPop) imageProvider.clearSelection();
       },
       child: Scaffold(
         backgroundColor: Colors.grey.shade100,

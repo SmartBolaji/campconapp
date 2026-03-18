@@ -22,6 +22,14 @@ class ProductProvider extends ChangeNotifier {
   List<PickupCenterModel> _approvedPickupCenters = [];
   bool _isLoadingPickupCenters = false;
 
+  // Related products
+  List<Product> _relatedProducts = [];
+  bool _isLoadingRelated = false;
+
+  // Seller rating aggregate
+  double _sellerAverageRating = 0.0;
+  int _sellerTotalReviews = 0;
+
   // Loading states
   bool _isLoadingSeller = false;
   bool _isPlacingOrder = false;
@@ -39,6 +47,10 @@ class ProductProvider extends ChangeNotifier {
   bool get isLoadingPickupCenters => _isLoadingPickupCenters;
   bool get isPlacingOrder => _isPlacingOrder;
   String? get error => _error;
+  List<Product> get relatedProducts => _relatedProducts;
+  bool get isLoadingRelated => _isLoadingRelated;
+  double get sellerAverageRating => _sellerAverageRating;
+  int get sellerTotalReviews => _sellerTotalReviews;
 
   // Pickup centers list
   List<PickupCenterModel> get approvedPickupCenters => _approvedPickupCenters;
@@ -71,11 +83,38 @@ class ProductProvider extends ChangeNotifier {
     _resetOrderDetails();
     notifyListeners();
 
-    // Load seller data and pickup centers in parallel
+    // Load seller data, pickup centers, and related products in parallel
     await Future.wait([
       _loadSellerData(product.sellerId),
       loadApprovedPickupCenters(),
+      fetchRelatedProducts(product.category, product.id),
     ]);
+  }
+
+  Future<void> fetchRelatedProducts(String category, String excludeId) async {
+    _isLoadingRelated = true;
+    notifyListeners();
+
+    try {
+      final snapshot = await _firestore
+          .collection('marketplace')
+          .where('category', isEqualTo: category)
+          .limit(11)
+          .get();
+
+      _relatedProducts = snapshot.docs
+          .map((doc) => Product.fromJson(doc.data()))
+          .where((p) => p.id != excludeId)
+          .take(10)
+          .toList();
+
+      _isLoadingRelated = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoadingRelated = false;
+      notifyListeners();
+      debugPrint('❌ Error loading related products: $e');
+    }
   }
 
   Future<void> _loadSellerData(String sellerId) async {
@@ -108,11 +147,43 @@ class ProductProvider extends ChangeNotifier {
 
       _isLoadingSeller = false;
       notifyListeners();
+
+      // Fetch seller rating from their products
+      _fetchSellerRating(sellerId);
     } catch (e) {
       _isLoadingSeller = false;
       _error = 'Failed to load seller information';
       notifyListeners();
       debugPrint('❌ Error loading seller data: $e');
+    }
+  }
+
+  Future<void> _fetchSellerRating(String sellerId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('marketplace')
+          .where('sellerId', isEqualTo: sellerId)
+          .get();
+
+      double totalRating = 0;
+      int totalReviews = 0;
+
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final avg = (data['averageRating'] as num?)?.toDouble() ?? 0.0;
+        final count = (data['reviewCount'] as num?)?.toInt() ?? 0;
+        if (avg > 0) {
+          totalRating += avg * count;
+          totalReviews += count;
+        }
+      }
+
+      _sellerAverageRating =
+          totalReviews > 0 ? totalRating / totalReviews : 0.0;
+      _sellerTotalReviews = totalReviews;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('❌ Error fetching seller rating: $e');
     }
   }
 
@@ -277,10 +348,14 @@ class ProductProvider extends ChangeNotifier {
   void reset() {
     _currentProduct = null;
     _sellerData = null;
+    _relatedProducts = [];
+    _sellerAverageRating = 0.0;
+    _sellerTotalReviews = 0;
     _resetOrderDetails();
     _approvedPickupCenters = [];
     _isLoadingSeller = false;
     _isLoadingPickupCenters = false;
+    _isLoadingRelated = false;
     _isPlacingOrder = false;
     _error = null;
     notifyListeners();

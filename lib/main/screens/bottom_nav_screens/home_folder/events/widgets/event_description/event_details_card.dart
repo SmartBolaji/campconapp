@@ -51,14 +51,14 @@ class EventDetailsCard extends StatelessWidget {
             onTap: () => _openMaps(context),
             isLink: true,
           ),
-          // SizedBox(height: 16.h),
-          // _buildDetailRow(
-          //   context: context,
-          //   icon: Ph.graduation_cap,
-          //   label: 'School',
-          //   value: event.school,
-          //   valueColor: AppTheme.textSecondary,
-          // ),
+          SizedBox(height: 16.h),
+          _buildDetailRow(
+            context: context,
+            icon: Ph.graduation_cap,
+            label: 'School',
+            value: event.school,
+            valueColor: AppTheme.textSecondary,
+          ),
         ],
       ),
     );
@@ -80,7 +80,7 @@ class EventDetailsCard extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(10.w),
             decoration: BoxDecoration(
-              color: AppTheme.primary.withOpacity(0.1),
+              color: AppTheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10.r),
             ),
             child: Iconify(

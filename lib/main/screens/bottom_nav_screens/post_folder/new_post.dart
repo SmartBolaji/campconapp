@@ -1,16 +1,14 @@
-import 'dart:io';
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
-import 'package:campcon/main/provider/feed_provider.dart';
 import 'package:campcon/main/provider/media_provider.dart';
 import 'package:campcon/main/provider/new_post_provider.dart';
 import 'package:campcon/main/provider/post_provider.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/post_image_picker.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/local_image_widget.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/poll_creation_sheet.dart';
 import 'package:campcon/main/widgets/dialogs/campus_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ph.dart';
@@ -25,8 +23,6 @@ class NewPostScreen extends StatefulWidget {
 }
 
 class _NewPostScreenState extends State<NewPostScreen> {
-  bool _hasShownDialog = false;
-
   @override
   void initState() {
     super.initState();
@@ -62,9 +58,10 @@ class _NewPostScreenState extends State<NewPostScreen> {
     final campus = currentUser.campus ?? '';
     final content = newPostProvider.contentController.text.trim();
     final images = mediaProvider.selectedFiles;
+    final poll = newPostProvider.currentPoll;
 
-    if (content.isEmpty && images.isEmpty) {
-      _showError('Please add some content or images');
+    if (content.isEmpty && images.isEmpty && poll == null) {
+      _showError('Please add some content, images, or create a poll');
       return;
     }
 
@@ -86,6 +83,7 @@ class _NewPostScreenState extends State<NewPostScreen> {
       content: content,
       campus: campus,
       images: images.isNotEmpty ? images : null,
+      poll: poll,
     );
 
     debugPrint(success ? ' Post created silently' : '❌ Silent upload failed');
@@ -119,10 +117,11 @@ class _NewPostScreenState extends State<NewPostScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Consumer<NewPostProvider>(
       builder: (context, newPostProvider, child) {
         return Scaffold(
-          backgroundColor: AppTheme.surface,
+          backgroundColor: colorScheme.surface,
           resizeToAvoidBottomInset: false, //  Prevent automatic resize
           body: SafeArea(
             child: Column(
@@ -293,7 +292,26 @@ class _NewPostScreenState extends State<NewPostScreen> {
           ),
           SizedBox(width: 16.w),
 
-          // Camera button
+          // Poll button
+          _buildActionIcon(
+            icon: IconlyLight.chart,
+            isActive: newPostProvider.hasPoll,
+            onTap: () {
+              showModalBottomSheet(
+                context: context,
+                builder: (context) => PollCreationSheet(
+                  onPollCreated: (poll) {
+                    context.read<NewPostProvider>().setPoll(poll);
+                  },
+                ),
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+              );
+            },
+          ),
+          SizedBox(width: 16.w),
+
+          // Location button
           _buildActionIcon(
             icon: IconlyLight.location,
             onTap: () {
@@ -312,7 +330,7 @@ class _NewPostScreenState extends State<NewPostScreen> {
               return Container(
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.1),
+                  color: AppTheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Text(
@@ -359,8 +377,9 @@ class _NewPostScreenState extends State<NewPostScreen> {
       child: Container(
         padding: EdgeInsets.all(8.w),
         decoration: BoxDecoration(
-          color:
-              isActive ? AppTheme.primary.withOpacity(0.1) : Colors.transparent,
+          color: isActive
+              ? AppTheme.primary.withValues(alpha: 0.1)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(8.r),
         ),
         child: Icon(

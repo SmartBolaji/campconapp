@@ -14,6 +14,8 @@ class TicketOrderSummary extends StatelessWidget {
   final VoidCallback onConfirm;
   final VoidCallback onCancel;
   final bool isProcessing;
+  final String? tierName;
+  final double? tierPrice;
 
   const TicketOrderSummary({
     Key? key,
@@ -24,6 +26,8 @@ class TicketOrderSummary extends StatelessWidget {
     required this.onConfirm,
     required this.onCancel,
     this.isProcessing = false,
+    this.tierName,
+    this.tierPrice,
   }) : super(key: key);
 
   static Future<bool?> show(
@@ -33,6 +37,8 @@ class TicketOrderSummary extends StatelessWidget {
     required String paymentMethod,
     required double totalPrice,
     required VoidCallback onConfirm,
+    String? tierName,
+    double? tierPrice,
   }) {
     return showModalBottomSheet<bool>(
       context: context,
@@ -45,6 +51,8 @@ class TicketOrderSummary extends StatelessWidget {
         totalPrice: totalPrice,
         onConfirm: onConfirm,
         onCancel: () => Navigator.pop(context, false),
+        tierName: tierName,
+        tierPrice: tierPrice,
       ),
     );
   }
@@ -78,7 +86,7 @@ class TicketOrderSummary extends StatelessWidget {
               // Container(
               //   padding: EdgeInsets.all(12.w),
               //   decoration: BoxDecoration(
-              //     color: AppTheme.primary.withOpacity(0.1),
+              //     color: AppTheme.primary.withValues(alpha: 0.1),
               //     shape: BoxShape.circle,
               //   ),
               //   child: Iconify(
@@ -190,10 +198,14 @@ class TicketOrderSummary extends StatelessWidget {
           SizedBox(height: 20.h),
 
           // Order Details
-          _buildOrderDetail('Ticket Type', 'General Admission'),
+          _buildOrderDetail('Ticket Type', tierName ?? 'General Admission'),
           _buildOrderDetail(
               'Quantity', '$quantity ticket${quantity > 1 ? 's' : ''}'),
-          _buildOrderDetail('Unit Price', event.formattedPrice),
+          _buildOrderDetail(
+              'Unit Price',
+              tierPrice != null
+                  ? _formatPrice(tierPrice!)
+                  : event.formattedPrice),
           _buildOrderDetail('Payment', _getPaymentMethodDisplay()),
 
           Divider(color: AppTheme.border, height: 24.h),
@@ -254,7 +266,8 @@ class TicketOrderSummary extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12.r),
                     ),
-                    disabledBackgroundColor: AppTheme.primary.withOpacity(0.5),
+                    disabledBackgroundColor:
+                        AppTheme.primary.withValues(alpha: 0.5),
                   ),
                   child: isProcessing
                       ? SizedBox(

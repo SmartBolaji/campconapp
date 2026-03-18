@@ -10,6 +10,7 @@ class FullScreenImageView extends StatefulWidget {
   final bool isLiked;
   final Function onLike;
   final int initialIndex;
+  final bool showLikeButton;
 
   const FullScreenImageView({
     Key? key,
@@ -17,6 +18,7 @@ class FullScreenImageView extends StatefulWidget {
     required this.isLiked,
     required this.onLike,
     required this.initialIndex,
+    this.showLikeButton = true,
   }) : super(key: key);
 
   @override
@@ -114,26 +116,27 @@ class _FullScreenImageViewState extends State<FullScreenImageView> {
                 onPressed: () => Navigator.pop(context),
               ),
               actions: [
-                Container(
-                  margin: const EdgeInsets.only(right: 16),
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.grey.withValues(alpha: 0.2),
-                  ),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        toggleLike();
-                      });
-                      widget.onLike();
-                    },
-                    child: Icon(
-                      isLiked ? Icons.favorite : Icons.favorite_border,
-                      color: isLiked ? AppTheme.error : Colors.white,
+                if (widget.showLikeButton)
+                  Container(
+                    margin: const EdgeInsets.only(right: 16),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.grey.withValues(alpha: 0.2),
+                    ),
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          toggleLike();
+                        });
+                        widget.onLike();
+                      },
+                      child: Icon(
+                        isLiked ? Icons.favorite : Icons.favorite_border,
+                        color: isLiked ? AppTheme.error : Colors.white,
+                      ),
                     ),
                   ),
-                ),
               ],
             )
           : null, // Hide app bar when controls are hidden

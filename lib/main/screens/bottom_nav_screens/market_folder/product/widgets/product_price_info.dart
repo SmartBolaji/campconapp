@@ -53,10 +53,10 @@ class ProductPriceInfo extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
       decoration: BoxDecoration(
-        color: AppTheme.primary.withOpacity(0.1),
+        color: AppTheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8.r),
         border: Border.all(
-          color: AppTheme.primary.withOpacity(0.3),
+          color: AppTheme.primary.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -139,7 +139,7 @@ class ProductPriceInfo extends StatelessWidget {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                 decoration: BoxDecoration(
-                  color: AppTheme.success.withOpacity(0.15),
+                  color: AppTheme.success.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(4.r),
                 ),
                 child: Text(
@@ -163,13 +163,13 @@ class ProductPriceInfo extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       decoration: BoxDecoration(
         color: product.stock! > 0
-            ? AppTheme.primary.withOpacity(0.05)
-            : AppTheme.error.withOpacity(0.05),
+            ? AppTheme.primary.withValues(alpha: 0.05)
+            : AppTheme.error.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(8.r),
         border: Border.all(
           color: product.stock! > 0
-              ? AppTheme.primary.withOpacity(0.3)
-              : AppTheme.error.withOpacity(0.3),
+              ? AppTheme.primary.withValues(alpha: 0.3)
+              : AppTheme.error.withValues(alpha: 0.3),
         ),
       ),
       child: Row(

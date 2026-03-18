@@ -43,7 +43,7 @@ class EventHeader extends StatelessWidget {
           Expanded(
             child: Center(
               child: Text(
-                'Event Details',
+                'Event',
                 style: TextConstants.mediumText.copyWith(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,

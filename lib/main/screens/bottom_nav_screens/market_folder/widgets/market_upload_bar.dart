@@ -1,6 +1,7 @@
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/provider/market_post_provider.dart';
+import 'package:campcon/main/provider/upload_status_mixin.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
@@ -24,7 +25,7 @@ class UploadMarketProgressBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(16.r),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, -4),
               ),
@@ -50,8 +51,7 @@ class UploadMarketProgressBar extends StatelessWidget {
                             color: AppTheme.textPrimary,
                           ),
                         ),
-                        if (provider.uploadStatus ==
-                            MarketUploadStatus.uploading)
+                        if (provider.uploadStatus == UploadStatus.uploading)
                           Text(
                             '${(provider.uploadProgress * 100).toInt()}%',
                             style: TextConstants.smallText.copyWith(
@@ -62,7 +62,7 @@ class UploadMarketProgressBar extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (provider.uploadStatus == MarketUploadStatus.uploading)
+                  if (provider.uploadStatus == UploadStatus.uploading)
                     IconButton(
                       icon: Icon(Icons.close, size: 20.sp),
                       onPressed: provider.cancelUpload,
@@ -70,7 +70,7 @@ class UploadMarketProgressBar extends StatelessWidget {
                     ),
                 ],
               ),
-              if (provider.uploadStatus == MarketUploadStatus.uploading) ...[
+              if (provider.uploadStatus == UploadStatus.uploading) ...[
                 SizedBox(height: 12.h),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4.r),
@@ -89,12 +89,12 @@ class UploadMarketProgressBar extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusIcon(MarketUploadStatus status) {
+  Widget _buildStatusIcon(UploadStatus status) {
     IconData icon;
     Color color;
 
     switch (status) {
-      case MarketUploadStatus.uploading:
+      case UploadStatus.uploading:
         return SizedBox(
           width: 24.w,
           height: 24.h,
@@ -103,19 +103,19 @@ class UploadMarketProgressBar extends StatelessWidget {
             valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
           ),
         );
-      case MarketUploadStatus.processing:
+      case UploadStatus.processing:
         icon = Icons.sync;
         color = AppTheme.primary;
         break;
-      case MarketUploadStatus.success:
+      case UploadStatus.success:
         icon = Icons.check_circle;
         color = AppTheme.success;
         break;
-      case MarketUploadStatus.failed:
+      case UploadStatus.failed:
         icon = Icons.error;
         color = AppTheme.error;
         break;
-      case MarketUploadStatus.cancelled:
+      case UploadStatus.cancelled:
         icon = Icons.cancel;
         color = AppTheme.textSecondary;
         break;

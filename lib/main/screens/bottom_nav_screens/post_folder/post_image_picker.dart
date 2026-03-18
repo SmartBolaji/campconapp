@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/provider/media_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -40,6 +41,86 @@ class _PostImagePickerState extends State<PostImagePicker> {
     _cachedFiles.clear();
     _cachedThumbnails.clear();
     super.dispose();
+  }
+
+  /// Check if device is running Android 13 or higher (API 33+)
+  Future<bool> _isAndroid13OrNewer() async {
+    if (!Platform.isAndroid) return false;
+    try {
+      const channel = MethodChannel('com.campcon.app/android_version');
+      final int sdkInt = await channel.invokeMethod('getSdkVersion') ?? 0;
+      return sdkInt >= 33;
+    } catch (e) {
+      debugPrint("Error checking Android version: $e");
+      // Fallback to checking via image_picker (it handles Android 13+ Photo Picker)
+      return true; // Assume Android 13+ for fallback
+    }
+  }
+
+  /// Use native Android Photo Picker (privacy-friendly, Android 13+)
+  Future<void> _pickImagesWithNativePicker() async {
+    try {
+      final mediaProvider =
+          Provider.of<MediaSelectionProvider>(context, listen: false);
+
+      // Check remaining slots
+      final remainingSlots = 10 -
+          (mediaProvider.selectedImages.length +
+              mediaProvider.capturedImages.length);
+
+      if (remainingSlots <= 0) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Maximum 10 images allowed'),
+              backgroundColor: AppTheme.error,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Use image_picker with multi-image mode
+      // On Android 13+, this triggers the native Photo Picker dialog
+      final List<XFile> pickedFiles = await _imagePicker.pickMultiImage(
+        imageQuality: 85,
+        maxWidth: 1920,
+        maxHeight: 1920,
+        requestFullMetadata: false,
+      );
+
+      if (pickedFiles.isEmpty || !mounted) return;
+
+      // Convert XFile to File objects
+      final files = pickedFiles
+          .map((xFile) => File(xFile.path))
+          .take(remainingSlots)
+          .toList();
+
+      // Add to media provider
+      await mediaProvider.addMultipleFiles(files);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'Added ${files.length} image${files.length > 1 ? 's' : ''}'),
+            backgroundColor: AppTheme.primary,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('❌ Error picking images with native picker: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to pick images'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _fetchAlbums() async {
@@ -191,8 +272,8 @@ class _PostImagePickerState extends State<PostImagePicker> {
       if (file == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Failed to load image'),
+            const SnackBar(
+              content: Text('Failed to load image'),
               backgroundColor: AppTheme.error,
             ),
           );
@@ -211,8 +292,8 @@ class _PostImagePickerState extends State<PostImagePicker> {
       if (!cameraStatus.isGranted) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Camera permission is required'),
+            const SnackBar(
+              content: Text('Camera permission is required'),
               backgroundColor: AppTheme.error,
             ),
           );
@@ -235,8 +316,8 @@ class _PostImagePickerState extends State<PostImagePicker> {
                 mediaProvider.capturedImages.length >=
             10) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Maximum 10 images allowed'),
+            const SnackBar(
+              content: Text('Maximum 10 images allowed'),
               backgroundColor: AppTheme.error,
             ),
           );
@@ -252,8 +333,8 @@ class _PostImagePickerState extends State<PostImagePicker> {
       debugPrint('❌ Error taking photo: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Failed to take photo'),
+          const SnackBar(
+            content: Text('Failed to take photo'),
             backgroundColor: AppTheme.error,
           ),
         );
@@ -320,6 +401,43 @@ class _PostImagePickerState extends State<PostImagePicker> {
 
     return Column(
       children: [
+        // Quick Pick Button (Native Photo Picker for Android 13+)
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+          decoration: BoxDecoration(
+            color: AppTheme.primary.withValues(alpha: 0.1),
+            border: Border(
+              bottom: BorderSide(
+                color: AppTheme.primary.withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                FeatherIcons.zap,
+                size: 18.sp,
+                color: AppTheme.primary,
+              ),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: GestureDetector(
+                  onTap: _pickImagesWithNativePicker,
+                  child: Text(
+                    'Quick Pick',
+                    style: TextStyle(
+                      color: AppTheme.primary,
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
         // Album Dropdown
         if (_albums.isNotEmpty)
           Container(
@@ -335,16 +453,20 @@ class _PostImagePickerState extends State<PostImagePicker> {
             ),
             child: Row(
               children: [
-                Icon(
-                  FeatherIcons.chevronDown,
-                  size: 18.sp,
-                  color: AppTheme.textSecondary,
-                ),
-                SizedBox(width: 8.w),
+                // Icon(
+                //   FeatherIcons.chevronDown,
+                //   size: 18.sp,
+                //   color: AppTheme.textSecondary,
+                // ),
+                // SizedBox(width: 8.w),
                 Expanded(
                   child: DropdownButton<AssetPathEntity>(
                     underline: const SizedBox(),
-                    icon: null,
+                    icon: Icon(
+                      FeatherIcons.chevronDown,
+                      size: 18.sp,
+                      color: AppTheme.textSecondary,
+                    ),
                     style: TextStyle(
                       color: AppTheme.textPrimary,
                       fontSize: 14.sp,
@@ -435,7 +557,7 @@ class _PostImagePickerState extends State<PostImagePicker> {
                         : Container(color: AppTheme.border),
                     if (isSelected)
                       Container(
-                        color: AppTheme.primary.withOpacity(0.5),
+                        color: AppTheme.primary.withValues(alpha: 0.5),
                         child: Center(
                           child: Container(
                             padding: EdgeInsets.all(6.w),
@@ -444,7 +566,7 @@ class _PostImagePickerState extends State<PostImagePicker> {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.3),
+                                  color: Colors.black.withValues(alpha: 0.3),
                                   blurRadius: 4,
                                   offset: const Offset(0, 2),
                                 ),
@@ -528,64 +650,6 @@ class _PostImagePickerState extends State<PostImagePicker> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildSelectedImageTile({
-    required int index,
-    required VoidCallback onRemove,
-    required Widget child,
-  }) {
-    return Container(
-      margin: EdgeInsets.only(right: 8.w),
-      width: 70.w,
-      height: 70.h,
-      child: Stack(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8.r),
-            child: child,
-          ),
-          Positioned(
-            top: 4.w,
-            right: 4.w,
-            child: GestureDetector(
-              onTap: onRemove,
-              child: Container(
-                padding: EdgeInsets.all(4.w),
-                decoration: const BoxDecoration(
-                  color: Colors.black87,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.close,
-                  color: Colors.white,
-                  size: 14.sp,
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 4.w,
-            left: 4.w,
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-              decoration: BoxDecoration(
-                color: Colors.black87,
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-              child: Text(
-                '${index + 1}',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10.sp,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

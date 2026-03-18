@@ -76,6 +76,7 @@ class _UserTypeDialogState extends State<UserTypeDialog>
 
   @override
   Widget build(BuildContext context) {
+    final appColors = context.appColors;
     return ScaleTransition(
       scale: _scaleAnimation,
       child: FadeTransition(
@@ -84,7 +85,7 @@ class _UserTypeDialogState extends State<UserTypeDialog>
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20.r),
           ),
-          backgroundColor: AppTheme.surface,
+          backgroundColor: appColors.surface,
           child: Consumer<AnimatedProvider>(
             builder: (context, provider, child) {
               return AnimatedOpacity(
@@ -108,7 +109,7 @@ class _UserTypeDialogState extends State<UserTypeDialog>
                             borderRadius: BorderRadius.circular(20.r),
                             child: Icon(
                               Icons.close,
-                              color: AppTheme.textPrimary,
+                              color: appColors.textPrimary,
                               size: 20.sp,
                             ),
                           ),
@@ -120,9 +121,9 @@ class _UserTypeDialogState extends State<UserTypeDialog>
                       // Small center text
                       _buildAnimatedText(
                         'Help us curate your feed',
-                        TextConstants.smallText.copyWith(
+                        TextConstants.small(context).copyWith(
                           fontSize: 13.sp,
-                          color: AppTheme.textSecondary,
+                          color: appColors.textSecondary,
                         ),
                         delay: 0,
                       ),
@@ -132,9 +133,9 @@ class _UserTypeDialogState extends State<UserTypeDialog>
                       // Main question (bolder text)
                       _buildAnimatedText(
                         'Are you a student?',
-                        TextConstants.boldText.copyWith(
+                        TextConstants.bold(context).copyWith(
                           fontSize: 22.sp,
-                          color: AppTheme.textPrimary,
+                          color: appColors.textPrimary,
                           fontWeight: FontWeight.bold,
                         ),
                         delay: 100,
@@ -264,6 +265,7 @@ class _AnimatedOptionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appColors = context.appColors;
     return Consumer<AnimatedProvider>(
       builder: (context, provider, child) {
         return GestureDetector(
@@ -278,13 +280,13 @@ class _AnimatedOptionButton extends StatelessWidget {
             curve: Curves.easeInOut,
             padding: EdgeInsets.symmetric(vertical: 16.h),
             decoration: BoxDecoration(
-              color: AppTheme.buttonBorder,
+              color: appColors.buttonBorder,
               borderRadius: BorderRadius.circular(40.r),
               // boxShadow: provider.isButtonPressed
               //     ? []
               //     : [
               //         BoxShadow(
-              //           color: AppTheme.primary.withOpacity(0.15),
+              //           color: AppTheme.primary.withValues(alpha: 0.15),
               //           blurRadius: 12,
               //           offset: const Offset(0, 6),
               //         ),
@@ -297,10 +299,10 @@ class _AnimatedOptionButton extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: TextConstants.mediumText.copyWith(
+                  style: TextConstants.medium(context).copyWith(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimary,
+                    color: appColors.textPrimary,
                   ),
                 ),
               ],

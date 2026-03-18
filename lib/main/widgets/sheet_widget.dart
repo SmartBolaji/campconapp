@@ -24,6 +24,7 @@ class CustomBottomSheet {
     bool enableDrag = true,
     BorderRadius? borderRadius,
   }) async {
+    final appColors = context.appColors;
     return await showGeneralDialog<T>(
       context: context,
       barrierDismissible: isDismissible,
@@ -38,12 +39,12 @@ class CustomBottomSheet {
             child: Container(
               height: MediaQuery.of(context).size.height * height,
               decoration: BoxDecoration(
-                color: backgroundColor ?? AppTheme.surface,
+                color: backgroundColor ?? appColors.surface,
                 borderRadius: borderRadius ??
                     const BorderRadius.vertical(top: Radius.circular(25)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
+                    color: Colors.black.withValues(alpha: 0.2),
                     blurRadius: 10,
                     offset: const Offset(0, -5),
                   ),
@@ -55,7 +56,7 @@ class CustomBottomSheet {
                 child: Column(
                   children: [
                     // Drag handle
-                    if (showDragHandle) _buildDragHandle(),
+                    if (showDragHandle) _buildDragHandle(context),
                     // Content
                     Expanded(child: child),
                   ],
@@ -106,7 +107,7 @@ class CustomBottomSheet {
             onClose: onClose,
           ),
           // Divider
-          Divider(height: 1, color: AppTheme.border),
+          Divider(height: 1, color: context.appColors.border),
           // Content
           Expanded(child: child),
         ],
@@ -143,7 +144,7 @@ class CustomBottomSheet {
               showCloseButton: showCloseButton,
               onClose: onClose,
             ),
-            Divider(height: 1, color: AppTheme.border),
+            Divider(height: 1, color: context.appColors.border),
           ],
           // Scrollable content
           Expanded(
@@ -202,7 +203,7 @@ class CustomBottomSheet {
               showCloseButton: showCloseButton,
               onClose: onClose,
             ),
-            Divider(height: 1, color: AppTheme.border),
+            Divider(height: 1, color: context.appColors.border),
           ],
           Expanded(child: child),
         ],
@@ -216,14 +217,14 @@ class CustomBottomSheet {
   }
 
   // Private helper methods
-  static Widget _buildDragHandle() {
+  static Widget _buildDragHandle(BuildContext context) {
     return Container(
       margin: EdgeInsets.symmetric(vertical: 12.h),
       child: Container(
         width: 40.w,
         height: 4.h,
         decoration: BoxDecoration(
-          color: AppTheme.border,
+          color: context.appColors.border,
           borderRadius: BorderRadius.circular(2.r),
         ),
       ),
@@ -236,6 +237,7 @@ class CustomBottomSheet {
     bool showCloseButton = true,
     VoidCallback? onClose,
   }) {
+    final appColors = context.appColors;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 15.h),
       child: Row(
@@ -248,14 +250,15 @@ class CustomBottomSheet {
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
+                color: appColors.textPrimary,
               ),
               textAlign: TextAlign.center,
             ),
           ),
           if (showCloseButton)
             IconButton(
-              icon: Icon(Icons.close, color: AppTheme.textPrimary, size: 24.sp),
+              icon:
+                  Icon(Icons.close, color: appColors.textPrimary, size: 24.sp),
               onPressed: onClose ?? () => Navigator.of(context).pop(),
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),

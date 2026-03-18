@@ -10,6 +10,8 @@ class UploadProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appColors = context.appColors;
+    final colorScheme = Theme.of(context).colorScheme;
     return Consumer<PostProvider>(
       builder: (context, provider, child) {
         if (!provider.showUploadBar) {
@@ -20,11 +22,11 @@ class UploadProgressBar extends StatelessWidget {
           margin: EdgeInsets.fromLTRB(16.w, 0, 16.w, 80.h),
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: AppTheme.surface,
+            color: appColors.surface,
             borderRadius: BorderRadius.circular(16.r),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, -4),
               ),
@@ -36,7 +38,11 @@ class UploadProgressBar extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  _buildStatusIcon(provider.uploadStatus),
+                  _buildStatusIcon(
+                    provider.uploadStatus,
+                    appColors: appColors,
+                    colorScheme: colorScheme,
+                  ),
                   SizedBox(width: 12.w),
                   Expanded(
                     child: Column(
@@ -44,18 +50,18 @@ class UploadProgressBar extends StatelessWidget {
                       children: [
                         Text(
                           provider.uploadMessage,
-                          style: TextConstants.mediumText.copyWith(
+                          style: TextConstants.medium(context).copyWith(
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.textPrimary,
+                            color: appColors.textPrimary,
                           ),
                         ),
                         if (provider.uploadStatus == UploadStatus.uploading)
                           Text(
                             '${(provider.uploadProgress * 100).toInt()}%',
-                            style: TextConstants.smallText.copyWith(
+                            style: TextConstants.small(context).copyWith(
                               fontSize: 12.sp,
-                              color: AppTheme.textSecondary,
+                              color: appColors.textSecondary,
                             ),
                           ),
                       ],
@@ -65,7 +71,7 @@ class UploadProgressBar extends StatelessWidget {
                     IconButton(
                       icon: Icon(Icons.close, size: 20.sp),
                       onPressed: provider.cancelUpload,
-                      color: AppTheme.textSecondary,
+                      color: appColors.textSecondary,
                     ),
                 ],
               ),
@@ -75,8 +81,9 @@ class UploadProgressBar extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4.r),
                   child: LinearProgressIndicator(
                     value: provider.uploadProgress,
-                    backgroundColor: AppTheme.border,
-                    valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
+                    backgroundColor: appColors.border,
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(colorScheme.primary),
                     minHeight: 6.h,
                   ),
                 ),
@@ -88,7 +95,11 @@ class UploadProgressBar extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusIcon(UploadStatus status) {
+  Widget _buildStatusIcon(
+    UploadStatus status, {
+    required AppColorsExtension appColors,
+    required ColorScheme colorScheme,
+  }) {
     IconData icon;
     Color color;
 
@@ -99,28 +110,28 @@ class UploadProgressBar extends StatelessWidget {
           height: 24.h,
           child: CircularProgressIndicator(
             strokeWidth: 3,
-            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
+            valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
           ),
         );
       case UploadStatus.processing:
         icon = Icons.sync;
-        color = AppTheme.primary;
+        color = colorScheme.primary;
         break;
       case UploadStatus.success:
         icon = Icons.check_circle;
-        color = AppTheme.success;
+        color = AppColors.success;
         break;
       case UploadStatus.failed:
         icon = Icons.error;
-        color = AppTheme.error;
+        color = colorScheme.error;
         break;
       case UploadStatus.cancelled:
         icon = Icons.cancel;
-        color = AppTheme.textSecondary;
+        color = appColors.textSecondary;
         break;
       default:
         icon = Icons.upload;
-        color = AppTheme.primary;
+        color = colorScheme.primary;
     }
 
     return Icon(icon, size: 24.sp, color: color);

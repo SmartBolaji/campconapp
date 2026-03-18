@@ -230,7 +230,7 @@ class _CampusDialogState extends State<CampusDialog>
                   ),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? AppTheme.primary.withOpacity(0.1)
+                        ? AppTheme.primary.withValues(alpha: 0.1)
                         : AppTheme.buttonBorder,
                     borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(
@@ -341,7 +341,7 @@ class _AnimatedContinueButton extends StatelessWidget {
               boxShadow: isEnabled && !provider.isButtonPressed
                   ? [
                       BoxShadow(
-                        color: AppTheme.primary.withOpacity(0.3),
+                        color: AppTheme.primary.withValues(alpha: 0.3),
                         blurRadius: 12,
                         offset: const Offset(0, 6),
                       ),

@@ -3,6 +3,8 @@ import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/order_model.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/buyer_orders_provider.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/market_folder/order_detail_screen.dart';
+import 'package:campcon/main/services/navigation_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
@@ -56,7 +58,7 @@ class _MarketCartScreenState extends State<MarketCartScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: Consumer<BuyerOrdersProvider>(
           builder: (context, provider, child) {
@@ -162,7 +164,7 @@ class _MarketCartScreenState extends State<MarketCartScreen>
   }
 
   Widget _buildError(String error) {
-    print(error);
+    debugPrint(error);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -279,226 +281,238 @@ class _MarketCartScreenState extends State<MarketCartScreen>
   }) {
     final seller = provider.getSeller(order.sellerId);
 
-    return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Column(
-        children: [
-          // Order header with status
-          Container(
-            padding: EdgeInsets.all(12.w),
-            decoration: BoxDecoration(
-              color: AppTheme.background,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(12.r)),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => OrderDetailScreen(order: order, isSeller: false),
+          ),
+        );
+      },
+      child: Container(
+        margin: EdgeInsets.only(bottom: 12.h),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: AppTheme.border),
+        ),
+        child: Column(
+          children: [
+            // Order header with status
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: AppTheme.background,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(12.r)),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Order #${order.id.substring(0, 8).toUpperCase()}',
+                          style: TextConstants.smallText.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        SizedBox(height: 2.h),
+                        Text(
+                          _formatDate(order.createdAt),
+                          style: TextConstants.smallText.copyWith(
+                            fontSize: 11.sp,
+                            color: AppTheme.textLight,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  _buildStatusBadge(order.status),
+                ],
+              ),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+
+            // Order content
+            Padding(
+              padding: EdgeInsets.all(12.w),
+              child: Column(
+                children: [
+                  // Product info
+                  Row(
                     children: [
-                      Text(
-                        'Order #${order.id.substring(0, 8).toUpperCase()}',
-                        style: TextConstants.smallText.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.textPrimary,
+                      // Product image
+                      Container(
+                        width: 60.w,
+                        height: 60.h,
+                        decoration: BoxDecoration(
+                          color: AppTheme.buttonBorder,
+                          borderRadius: BorderRadius.circular(8.r),
+                          image: order.productImage != null
+                              ? DecorationImage(
+                                  image: NetworkImage(order.productImage!),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
+                        ),
+                        child: order.productImage == null
+                            ? Center(
+                                child: Iconify(
+                                  Ph.package,
+                                  size: 24.sp,
+                                  color: AppTheme.textLight,
+                                ),
+                              )
+                            : null,
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              order.productName,
+                              style: TextConstants.mediumText.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.textPrimary,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(height: 4.h),
+                            Text(
+                              'Qty: ${order.quantity} Ã— ${provider.formatCurrency(order.unitPrice)}',
+                              style: TextConstants.smallText.copyWith(
+                                color: AppTheme.textSecondary,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      SizedBox(height: 2.h),
                       Text(
-                        _formatDate(order.createdAt),
-                        style: TextConstants.smallText.copyWith(
-                          fontSize: 11.sp,
-                          color: AppTheme.textLight,
+                        order.formattedTotal,
+                        style: TextConstants.boldText.copyWith(
+                          fontSize: 16.sp,
+                          color: AppTheme.primary,
                         ),
                       ),
                     ],
                   ),
-                ),
-                _buildStatusBadge(order.status),
-              ],
-            ),
-          ),
 
-          // Order content
-          Padding(
-            padding: EdgeInsets.all(12.w),
-            child: Column(
-              children: [
-                // Product info
-                Row(
-                  children: [
-                    // Product image
-                    Container(
-                      width: 60.w,
-                      height: 60.h,
-                      decoration: BoxDecoration(
-                        color: AppTheme.buttonBorder,
-                        borderRadius: BorderRadius.circular(8.r),
-                        image: order.productImage != null
-                            ? DecorationImage(
-                                image: NetworkImage(order.productImage!),
-                                fit: BoxFit.cover,
+                  SizedBox(height: 12.h),
+                  Divider(color: AppTheme.border, height: 1),
+                  SizedBox(height: 12.h),
+
+                  // Seller info
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 18.r,
+                        backgroundColor:
+                            AppTheme.primary.withValues(alpha: 0.1),
+                        backgroundImage: seller?.profileImageUrl != null
+                            ? NetworkImage(seller!.profileImageUrl!)
+                            : null,
+                        child: seller?.profileImageUrl == null
+                            ? Iconify(
+                                Ph.storefront,
+                                size: 18.sp,
+                                color: AppTheme.primary,
                               )
                             : null,
                       ),
-                      child: order.productImage == null
-                          ? Center(
-                              child: Iconify(
-                                Ph.package,
-                                size: 24.sp,
+                      SizedBox(width: 10.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              seller?.name ?? order.sellerName,
+                              style: TextConstants.smallText.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.textPrimary,
+                              ),
+                            ),
+                            Text(
+                              'Seller',
+                              style: TextConstants.smallText.copyWith(
+                                fontSize: 11.sp,
                                 color: AppTheme.textLight,
                               ),
-                            )
-                          : null,
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            order.productName,
-                            style: TextConstants.mediumText.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.textPrimary,
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          SizedBox(height: 4.h),
-                          Text(
-                            'Qty: ${order.quantity} × ${provider.formatCurrency(order.unitPrice)}',
-                            style: TextConstants.smallText.copyWith(
-                              color: AppTheme.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      order.formattedTotal,
-                      style: TextConstants.boldText.copyWith(
-                        fontSize: 16.sp,
-                        color: AppTheme.primary,
-                      ),
-                    ),
-                  ],
-                ),
-
-                SizedBox(height: 12.h),
-                Divider(color: AppTheme.border, height: 1),
-                SizedBox(height: 12.h),
-
-                // Seller info
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 18.r,
-                      backgroundColor: AppTheme.primary.withOpacity(0.1),
-                      backgroundImage: seller?.profileImageUrl != null
-                          ? NetworkImage(seller!.profileImageUrl!)
-                          : null,
-                      child: seller?.profileImageUrl == null
-                          ? Iconify(
-                              Ph.storefront,
-                              size: 18.sp,
-                              color: AppTheme.primary,
-                            )
-                          : null,
-                    ),
-                    SizedBox(width: 10.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            seller?.name ?? order.sellerName,
-                            style: TextConstants.smallText.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.textPrimary,
-                            ),
-                          ),
-                          Text(
-                            'Seller',
-                            style: TextConstants.smallText.copyWith(
-                              fontSize: 11.sp,
-                              color: AppTheme.textLight,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => _openChat(order, seller),
-                      child: Container(
-                        padding: EdgeInsets.all(8.w),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
-                        child: Iconify(
-                          Ph.chat_circle_dots,
-                          size: 20.sp,
-                          color: AppTheme.primary,
+                          ],
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                      GestureDetector(
+                        onTap: () => _openChat(order, seller),
+                        child: Container(
+                          padding: EdgeInsets.all(8.w),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: Iconify(
+                            Ph.chat_circle_dots,
+                            size: 20.sp,
+                            color: AppTheme.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
 
-                SizedBox(height: 12.h),
-
-                // Order progress tracker
-                if (order.isActive) ...[
-                  _buildProgressTracker(order),
                   SizedBox(height: 12.h),
-                ],
 
-                // Order details
-                _buildOrderDetailRow(
-                  icon: Ph.map_pin,
-                  label: 'Pickup',
-                  value: order.pickupLocation,
-                ),
-                SizedBox(height: 6.h),
-                _buildOrderDetailRow(
-                  icon: Ph.credit_card,
-                  label: 'Payment',
-                  value: order.paymentMethod == 'online'
-                      ? 'Pay Online'
-                      : 'Pay on Pickup',
-                ),
+                  // Order progress tracker
+                  if (order.isActive) ...[
+                    _buildProgressTracker(order),
+                    SizedBox(height: 12.h),
+                  ],
 
-                // Cancellation reason if cancelled
-                if (order.isCancelled && order.cancellationReason != null) ...[
+                  // Order details
+                  _buildOrderDetailRow(
+                    icon: Ph.map_pin,
+                    label: 'Pickup',
+                    value: order.pickupLocation,
+                  ),
                   SizedBox(height: 6.h),
                   _buildOrderDetailRow(
-                    icon: Ph.info,
-                    label: 'Reason',
-                    value: order.cancellationReason!,
+                    icon: Ph.credit_card,
+                    label: 'Payment',
+                    value: order.paymentMethod == 'online'
+                        ? 'Pay Online'
+                        : 'Pay on Pickup',
                   ),
-                ],
 
-                // Action buttons
-                if (showActions && order.isActive) ...[
-                  SizedBox(height: 16.h),
-                  _buildBuyerActions(order, provider),
-                ],
+                  // Cancellation reason if cancelled
+                  if (order.isCancelled &&
+                      order.cancellationReason != null) ...[
+                    SizedBox(height: 6.h),
+                    _buildOrderDetailRow(
+                      icon: Ph.info,
+                      label: 'Reason',
+                      value: order.cancellationReason!,
+                    ),
+                  ],
 
-                // Review button for completed orders
-                if (showReview && order.isCompleted) ...[
-                  SizedBox(height: 16.h),
-                  _buildReviewButton(order, provider),
+                  // Action buttons
+                  if (showActions && order.isActive) ...[
+                    SizedBox(height: 16.h),
+                    _buildBuyerActions(order, provider),
+                  ],
+
+                  // Review button for completed orders
+                  if (showReview && order.isCompleted) ...[
+                    SizedBox(height: 16.h),
+                    _buildReviewButton(order, provider),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -522,7 +536,7 @@ class _MarketCartScreenState extends State<MarketCartScreen>
     return Container(
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: AppTheme.primary.withOpacity(0.05),
+        color: AppTheme.primary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(8.r),
       ),
       child: Column(
@@ -594,32 +608,32 @@ class _MarketCartScreenState extends State<MarketCartScreen>
 
     switch (status) {
       case OrderStatus.pending:
-        bgColor = Colors.orange.withOpacity(0.1);
+        bgColor = Colors.orange.withValues(alpha: 0.1);
         textColor = Colors.orange;
         label = 'PENDING';
         break;
       case OrderStatus.confirmed:
-        bgColor = Colors.blue.withOpacity(0.1);
+        bgColor = Colors.blue.withValues(alpha: 0.1);
         textColor = Colors.blue;
         label = 'CONFIRMED';
         break;
       case OrderStatus.processing:
-        bgColor = Colors.purple.withOpacity(0.1);
+        bgColor = Colors.purple.withValues(alpha: 0.1);
         textColor = Colors.purple;
         label = 'PROCESSING';
         break;
       case OrderStatus.ready:
-        bgColor = AppTheme.success.withOpacity(0.1);
+        bgColor = AppTheme.success.withValues(alpha: 0.1);
         textColor = AppTheme.success;
         label = 'READY';
         break;
       case OrderStatus.completed:
-        bgColor = AppTheme.success.withOpacity(0.1);
+        bgColor = AppTheme.success.withValues(alpha: 0.1);
         textColor = AppTheme.success;
         label = 'COMPLETED';
         break;
       case OrderStatus.cancelled:
-        bgColor = AppTheme.error.withOpacity(0.1);
+        bgColor = AppTheme.error.withValues(alpha: 0.1);
         textColor = AppTheme.error;
         label = 'CANCELLED';
         break;
@@ -750,7 +764,7 @@ class _MarketCartScreenState extends State<MarketCartScreen>
       return Container(
         padding: EdgeInsets.all(12.w),
         decoration: BoxDecoration(
-          color: AppTheme.success.withOpacity(0.1),
+          color: AppTheme.success.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8.r),
         ),
         child: Row(
@@ -1100,7 +1114,8 @@ class _MarketCartScreenState extends State<MarketCartScreen>
   }
 
   void _openChat(OrderModel order, dynamic seller) {
-    // TODO: Navigate to chat screen with seller
+    final sellerId = order.sellerId;
+    NavigationHelper.openChat(context, otherUserId: sellerId);
   }
 
   String _formatDate(DateTime date) {

@@ -28,23 +28,6 @@ class EventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Determine border color based on event status
-    Color? borderColor;
-    double borderWidth = 0;
-
-    // Owner badge takes priority
-    if (isOwner) {
-      borderColor = AppTheme.primary;
-      borderWidth = 2;
-    } else if (event.isFree) {
-      borderColor = AppTheme.success;
-      borderWidth = 2;
-    } else if (event.eventDate
-        .isBefore(DateTime.now().add(const Duration(days: 7)))) {
-      borderColor = AppTheme.primary.withOpacity(0.5);
-      borderWidth = 2;
-    }
-
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -60,12 +43,12 @@ class EventCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppTheme.background,
           borderRadius: BorderRadius.circular(12.r),
-          border: borderWidth > 0
-              ? Border.all(
-                  color: borderColor!,
-                  width: borderWidth,
-                )
-              : null,
+          // border: borderWidth > 0
+          //     ? Border.all(
+          //         color: borderColor!,
+          //         width: borderWidth,
+          //       )
+          //     : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -125,7 +108,7 @@ class EventCard extends StatelessWidget {
                           begin: Alignment.topCenter,
                           end: Alignment.center,
                           colors: [
-                            Colors.black.withOpacity(0.3),
+                            Colors.black.withValues(alpha: 0.3),
                             Colors.transparent,
                           ],
                         ),
@@ -148,7 +131,7 @@ class EventCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8.r),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withValues(alpha: 0.2),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -192,7 +175,7 @@ class EventCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8.r),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Colors.black.withValues(alpha: 0.2),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -236,7 +219,8 @@ class EventCard extends StatelessWidget {
                                   ? AppTheme.success
                                   : event.isSoldOut
                                       ? AppTheme.error
-                                      : AppTheme.primary.withOpacity(0.95),
+                                      : AppTheme.primary
+                                          .withValues(alpha: 0.95),
                               borderRadius: BorderRadius.circular(8.r),
                             ),
                             child: event.sellOnCampcon && !event.isFree
@@ -251,8 +235,8 @@ class EventCard extends StatelessWidget {
                                           style:
                                               TextConstants.smallText.copyWith(
                                             fontSize: 10.sp,
-                                            color:
-                                                AppTheme.white.withOpacity(0.9),
+                                            color: AppTheme.white
+                                                .withValues(alpha: 0.9),
                                           ),
                                         ),
                                       ] else
@@ -399,7 +383,7 @@ class EventCard extends StatelessWidget {
       child: Iconify(
         Ph.calendar_blank,
         size: 50.sp,
-        color: AppTheme.textLight.withOpacity(0.5),
+        color: AppTheme.textLight.withValues(alpha: 0.5),
       ),
     );
   }

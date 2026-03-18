@@ -3,14 +3,19 @@ import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/feed_provider.dart';
 import 'package:campcon/main/provider/notify_provider.dart';
+import 'package:campcon/main/provider/post_provider.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/post_comments_screen.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/post_options.dart';
+import 'package:campcon/main/widgets/empty_state_view.dart';
 import 'package:campcon/main/widgets/dialogs/campus_dialog.dart';
 import 'package:campcon/main/widgets/floating_widget.dart';
+import 'package:campcon/main/widgets/shimmer_card.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/post_widget.dart';
 import 'package:campcon/main/widgets/navigate_profile_widget.dart';
+import 'package:campcon/main/widgets/new_posts_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:iconify_flutter/icons/ph.dart';
 import 'package:provider/provider.dart';
 
 class CampusScreen extends StatefulWidget {
@@ -70,10 +75,10 @@ class _CampusScreenState extends State<CampusScreen> {
       builder: (context, feedProvider, child) {
         // Show loading for initial load
         if (feedProvider.isLoadingCampus && feedProvider.campusPosts.isEmpty) {
-          return Center(
-            child: CircularProgressIndicator(
-              color: AppTheme.primary,
-            ),
+          return ShimmerList(
+            itemCount: 4,
+            type: ShimmerCardType.post,
+            padding: EdgeInsets.only(top: 12.h, bottom: 80.h),
           );
         }
 
@@ -130,33 +135,14 @@ class _CampusScreenState extends State<CampusScreen> {
                   child: _buildCampusHeader(campus),
                 ),
                 SliverFillRemaining(
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.school_outlined,
-                          size: 64.sp,
-                          color: AppTheme.textLight,
-                        ),
-                        SizedBox(height: 16.h),
-                        Text(
-                          'No posts yet',
-                          style: TextConstants.boldText.copyWith(
-                            fontSize: 18.sp,
-                            color: AppTheme.textPrimary,
-                          ),
-                        ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          'Be the first to post in your campus!',
-                          style: TextConstants.smallText.copyWith(
-                            fontSize: 14.sp,
-                            color: AppTheme.textLight,
-                          ),
-                        ),
-                      ],
-                    ),
+                  child: EmptyStateView(
+                    icon: Ph.graduation_cap,
+                    title: 'No campus posts yet',
+                    subtitle:
+                        'Be the first to share what is happening around campus.',
+                    buttonText: 'Retry',
+                    onPressed: () =>
+                        feedProvider.retryCampusFeed(currentUserId, campus),
                   ),
                 ),
               ],
@@ -172,6 +158,42 @@ class _CampusScreenState extends State<CampusScreen> {
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
+              // ✅ FLOATING BUTTON: SliverAppBar with styled container
+              if (feedProvider.campusNewPostsCount > 0)
+                SliverAppBar(
+                  backgroundColor: AppTheme.surface,
+                  elevation: 0,
+                  floating: false,
+                  pinned: true,
+                  toolbarHeight: 57.h,
+                  flexibleSpace: Container(
+                    decoration: BoxDecoration(
+                      color: AppTheme.surface,
+                      border: Border(
+                        bottom: BorderSide(
+                          color: AppTheme.border,
+                          width: 0.5,
+                        ),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.03),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: NewPostsButton(
+                        newPostsCount: feedProvider.campusNewPostsCount,
+                        isLoading: feedProvider.isLoadingNewCampus,
+                        onPressed: () =>
+                            feedProvider.loadNewCampusPosts(campus),
+                      ),
+                    ),
+                  ),
+                ),
+
               // Campus Header
               SliverToBoxAdapter(
                 child: _buildCampusHeader(campus),
@@ -183,6 +205,34 @@ class _CampusScreenState extends State<CampusScreen> {
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
+                      if (index >= feedProvider.campusPosts.length) {
+                        return Padding(
+                          padding: EdgeInsets.symmetric(vertical: 14.h),
+                          child: Center(
+                            child: SizedBox(
+                              width: 22.w,
+                              height: 22.w,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.2,
+                                color: AppTheme.primary,
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+
+                      if (index >= feedProvider.campusPosts.length - 3 &&
+                          feedProvider.campusHasMore &&
+                          !feedProvider.isLoadingMoreCampus) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) {
+                            context
+                                .read<FeedProvider>()
+                                .loadMoreCampusFeed(campus);
+                          }
+                        });
+                      }
+
                       final postWithAuthor = feedProvider.campusPosts[index];
                       final post = postWithAuthor.post;
                       final author = postWithAuthor.author;
@@ -238,16 +288,35 @@ class _CampusScreenState extends State<CampusScreen> {
                           }
                         },
                         onComment: () {
-                          Navigator.of(context).push(
+                          Navigator.push(
+                            context,
                             MaterialPageRoute(
-                              builder: (context) => CommentsScreen(
+                              builder: (_) => PostCommentsScreen(
                                 postId: post.postId,
+                                post: post,
                               ),
                             ),
                           );
                         },
-                        onRepost: () {
-                          debugPrint('Repost: ${post.postId}');
+                        onRepost: () async {
+                          try {
+                            await feedProvider.toggleRepost(
+                                post.postId, currentUserId);
+                            if (mounted) {
+                              final state =
+                                  feedProvider.getPostState(post.postId);
+                              showFloatingSnackBar(
+                                context,
+                                state.isReposted
+                                    ? 'Reposted!'
+                                    : 'Repost removed',
+                              );
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              showFloatingSnackBar(context, 'Failed to repost');
+                            }
+                          }
                         },
                         onShare: () {
                           PostOptionsWidget.showShareOptions(
@@ -315,8 +384,18 @@ class _CampusScreenState extends State<CampusScreen> {
                               );
 
                               if (confirm == true && mounted) {
-                                feedProvider.deletePostLocally(post.postId);
-                                showFloatingSnackBar(context, 'Post deleted');
+                                try {
+                                  // Delete from Firestore first
+                                  await Provider.of<PostProvider>(context,
+                                          listen: false)
+                                      .deletePost(post.postId, post.imageUrls);
+                                  // Then remove from local feed
+                                  feedProvider.deletePostLocally(post.postId);
+                                  showFloatingSnackBar(context, 'Post deleted');
+                                } catch (e) {
+                                  showFloatingSnackBar(
+                                      context, 'Failed to delete post');
+                                }
                               }
                             },
                             onShare: () {
@@ -331,7 +410,8 @@ class _CampusScreenState extends State<CampusScreen> {
                         index: index,
                       );
                     },
-                    childCount: feedProvider.campusPosts.length,
+                    childCount: feedProvider.campusPosts.length +
+                        (feedProvider.isLoadingMoreCampus ? 1 : 0),
                   ),
                 ),
               ),
@@ -359,7 +439,7 @@ class _CampusScreenState extends State<CampusScreen> {
           Container(
             padding: EdgeInsets.all(12.w),
             decoration: BoxDecoration(
-              color: AppTheme.primary.withOpacity(0.1),
+              color: AppTheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12.r),
             ),
             child: Icon(

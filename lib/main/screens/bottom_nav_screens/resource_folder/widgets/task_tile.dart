@@ -30,259 +30,178 @@ class TaskTile extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: EdgeInsets.only(bottom: 12.h),
-        padding: EdgeInsets.all(16.w),
+        margin: EdgeInsets.only(bottom: 10.h),
+        padding: EdgeInsets.all(12.w),
         decoration: BoxDecoration(
           color: task.isCompleted ? AppTheme.background : AppTheme.surface,
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
             color: task.isOverdue
-                ? AppTheme.error.withOpacity(0.5)
+                ? AppTheme.error.withValues(alpha: 0.5)
                 : task.isDueToday
-                    ? AppTheme.primary.withOpacity(0.5)
+                    ? AppTheme.primary.withValues(alpha: 0.5)
                     : AppTheme.border,
             width: task.isOverdue || task.isDueToday ? 1.5 : 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
-        child: Row(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Checkbox
-            if (onToggleComplete != null && isMyTask)
-              GestureDetector(
-                onTap: onToggleComplete,
-                child: Container(
-                  width: 24.w,
-                  height: 24.w,
-                  margin: EdgeInsets.only(right: 12.w, top: 2.h),
+            // Header row with priority and checkbox
+            Row(
+              children: [
+                // Priority badge
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                   decoration: BoxDecoration(
-                    color: task.isCompleted
-                        ? AppTheme.primary
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(6.r),
-                    border: Border.all(
-                      color:
-                          task.isCompleted ? AppTheme.primary : AppTheme.border,
-                      width: 2,
-                    ),
+                    color:
+                        _getPriorityColor(task.priority).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4.r),
                   ),
-                  child: task.isCompleted
-                      ? Icon(
-                          Icons.check,
-                          size: 16.sp,
-                          color: Colors.white,
-                        )
-                      : null,
-                ),
-              ),
-
-            // Content
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header row with priority and visibility
-                  Row(
-                    children: [
-                      // Priority badge
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 8.w, vertical: 3.h),
-                        decoration: BoxDecoration(
-                          color:
-                              _getPriorityColor(task.priority).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(4.r),
-                        ),
-                        child: Text(
-                          task.priority,
-                          style: TextConstants.smallText.copyWith(
-                            fontSize: 10.sp,
-                            fontWeight: FontWeight.w600,
-                            color: _getPriorityColor(task.priority),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-
-                      // Visibility badge
-                      if (showVisibilityBadge)
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 8.w, vertical: 3.h),
-                          decoration: BoxDecoration(
-                            color: task.isPersonal
-                                ? AppTheme.textSecondary.withOpacity(0.1)
-                                : AppTheme.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(4.r),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Iconify(
-                                task.isPersonal ? Ph.lock_simple : Ph.globe,
-                                size: 10.sp,
-                                color: task.isPersonal
-                                    ? AppTheme.textSecondary
-                                    : AppTheme.primary,
-                              ),
-                              SizedBox(width: 4.w),
-                              Text(
-                                task.isPersonal ? 'Personal' : 'Public',
-                                style: TextConstants.smallText.copyWith(
-                                  fontSize: 10.sp,
-                                  fontWeight: FontWeight.w500,
-                                  color: task.isPersonal
-                                      ? AppTheme.textSecondary
-                                      : AppTheme.primary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                      const Spacer(),
-
-                      // Overdue or due today indicator
-                      if (task.isOverdue && !task.isCompleted)
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 6.w, vertical: 2.h),
-                          decoration: BoxDecoration(
-                            color: AppTheme.error.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(4.r),
-                          ),
-                          child: Text(
-                            'Overdue',
-                            style: TextConstants.smallText.copyWith(
-                              fontSize: 10.sp,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.error,
-                            ),
-                          ),
-                        )
-                      else if (task.isDueToday && !task.isCompleted)
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 6.w, vertical: 2.h),
-                          decoration: BoxDecoration(
-                            color: AppTheme.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(4.r),
-                          ),
-                          child: Text(
-                            'Due Today',
-                            style: TextConstants.smallText.copyWith(
-                              fontSize: 10.sp,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.primary,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  SizedBox(height: 10.h),
-
-                  // Title
-                  Text(
-                    task.title,
-                    style: TextConstants.mediumText.copyWith(
-                      fontSize: 15.sp,
+                  child: Text(
+                    task.priority,
+                    style: TextConstants.smallText.copyWith(
+                      fontSize: 9.sp,
                       fontWeight: FontWeight.w600,
-                      color: task.isCompleted
-                          ? AppTheme.textLight
-                          : AppTheme.textPrimary,
-                      decoration:
-                          task.isCompleted ? TextDecoration.lineThrough : null,
+                      color: _getPriorityColor(task.priority),
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
+                ),
 
-                  // Description
-                  if (task.description.isNotEmpty) ...[
-                    SizedBox(height: 6.h),
-                    Text(
-                      task.description,
-                      style: TextConstants.smallText.copyWith(
-                        fontSize: 13.sp,
-                        color: AppTheme.textSecondary,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                // Overdue / due today
+                if (task.isOverdue && !task.isCompleted) ...[
+                  SizedBox(width: 6.w),
+                  Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
+                    decoration: BoxDecoration(
+                      color: AppTheme.error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4.r),
                     ),
-                  ],
-
-                  SizedBox(height: 12.h),
-
-                  // Footer with due date and course
-                  Row(
-                    children: [
-                      // Due date
-                      if (task.dueDate != null)
-                        Row(
-                          children: [
-                            Iconify(
-                              Ph.calendar,
-                              size: 14.sp,
-                              color: task.isOverdue && !task.isCompleted
-                                  ? AppTheme.error
-                                  : AppTheme.textLight,
-                            ),
-                            SizedBox(width: 4.w),
-                            Text(
-                              DateFormat('MMM d, yyyy').format(task.dueDate!),
-                              style: TextConstants.smallText.copyWith(
-                                fontSize: 12.sp,
-                                color: task.isOverdue && !task.isCompleted
-                                    ? AppTheme.error
-                                    : AppTheme.textLight,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                      if (task.dueDate != null && task.course != null)
-                        SizedBox(width: 16.w),
-
-                      // Course code
-                      if (task.course != null && task.course!.isNotEmpty)
-                        Row(
-                          children: [
-                            Iconify(
-                              Ph.book_open,
-                              size: 14.sp,
-                              color: AppTheme.textLight,
-                            ),
-                            SizedBox(width: 4.w),
-                            Text(
-                              task.course!,
-                              style: TextConstants.smallText.copyWith(
-                                fontSize: 12.sp,
-                                color: AppTheme.textLight,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                      const Spacer(),
-
-                      // Reminder indicator
-                      if (task.hasReminder)
-                        Iconify(
-                          Ph.bell,
-                          size: 16.sp,
-                          color: AppTheme.primary,
-                        ),
-                    ],
+                    child: Text(
+                      'Overdue',
+                      style: TextConstants.smallText.copyWith(
+                        fontSize: 9.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.error,
+                      ),
+                    ),
+                  ),
+                ] else if (task.isDueToday && !task.isCompleted) ...[
+                  SizedBox(width: 6.w),
+                  Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                    child: Text(
+                      'Today',
+                      style: TextConstants.smallText.copyWith(
+                        fontSize: 9.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.primary,
+                      ),
+                    ),
                   ),
                 ],
+
+                const Spacer(),
+
+                // Checkbox
+                if (onToggleComplete != null && isMyTask)
+                  GestureDetector(
+                    onTap: onToggleComplete,
+                    child: Container(
+                      width: 20.w,
+                      height: 20.w,
+                      decoration: BoxDecoration(
+                        color: task.isCompleted
+                            ? AppTheme.primary
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(5.r),
+                        border: Border.all(
+                          color: task.isCompleted
+                              ? AppTheme.primary
+                              : AppTheme.border,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: task.isCompleted
+                          ? Icon(Icons.check, size: 14.sp, color: Colors.white)
+                          : null,
+                    ),
+                  ),
+              ],
+            ),
+            SizedBox(height: 10.h),
+
+            // Title
+            Text(
+              task.title,
+              style: TextConstants.mediumText.copyWith(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w600,
+                color: task.isCompleted
+                    ? AppTheme.textLight
+                    : AppTheme.textPrimary,
+                decoration:
+                    task.isCompleted ? TextDecoration.lineThrough : null,
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+
+            // Description
+            if (task.description.isNotEmpty) ...[
+              SizedBox(height: 4.h),
+              Text(
+                task.description,
+                style: TextConstants.smallText.copyWith(
+                  fontSize: 12.sp,
+                  color: AppTheme.textSecondary,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+
+            SizedBox(height: 10.h),
+
+            // Footer
+            Row(
+              children: [
+                if (task.dueDate != null) ...[
+                  Iconify(
+                    Ph.calendar,
+                    size: 12.sp,
+                    color: task.isOverdue && !task.isCompleted
+                        ? AppTheme.error
+                        : AppTheme.textLight,
+                  ),
+                  SizedBox(width: 3.w),
+                  Flexible(
+                    child: Text(
+                      DateFormat('MMM d').format(task.dueDate!),
+                      style: TextConstants.smallText.copyWith(
+                        fontSize: 11.sp,
+                        color: task.isOverdue && !task.isCompleted
+                            ? AppTheme.error
+                            : AppTheme.textLight,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+                const Spacer(),
+                if (task.hasReminder)
+                  Iconify(Ph.bell, size: 13.sp, color: AppTheme.primary),
+                if (task.course != null && task.course!.isNotEmpty) ...[
+                  SizedBox(width: 6.w),
+                  Iconify(Ph.book_open, size: 12.sp, color: AppTheme.textLight),
+                ],
+              ],
             ),
           ],
         ),

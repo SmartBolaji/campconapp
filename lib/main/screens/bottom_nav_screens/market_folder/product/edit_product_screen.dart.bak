@@ -1,0 +1,600 @@
+import 'dart:io';
+import 'package:campcon/main/constants/app_colors.dart';
+import 'package:campcon/main/constants/text_constants.dart';
+import 'package:campcon/main/models/product_model.dart';
+import 'package:campcon/main/provider/market_post_provider.dart';
+import 'package:campcon/main/widgets/multi_image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:campcon/main/services/cache.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/ph.dart';
+
+class EditProductScreen extends StatefulWidget {
+  final Product product;
+
+  const EditProductScreen({super.key, required this.product});
+
+  @override
+  State<EditProductScreen> createState() => _EditProductScreenState();
+}
+
+class _EditProductScreenState extends State<EditProductScreen> {
+  late TextEditingController _nameController;
+  late TextEditingController _locationController;
+  late TextEditingController _descriptionController;
+  late TextEditingController _priceController;
+  late TextEditingController _stockController;
+  late TextEditingController _discountController;
+  String? _selectedCategory;
+  bool _hasStock = true;
+  bool _hasDiscount = false;
+  bool _isSaving = false;
+
+  List<String> _existingImageUrls = [];
+  List<File> _newImages = [];
+
+  final List<String> _itemCategories = [
+    'Electronics',
+    'Books',
+    'Clothing',
+    'Furniture',
+    'Sports',
+    'Accessories',
+    'Food & Drinks',
+    'Health & Beauty',
+    'Other',
+  ];
+
+  final List<String> _serviceCategories = [
+    'Tutoring',
+    'Design',
+    'Photography',
+    'Writing',
+    'Delivery',
+    'Tech Support',
+    'Cleaning',
+    'Cooking',
+    'Other',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    final p = widget.product;
+    _nameController = TextEditingController(text: p.name);
+    _locationController = TextEditingController(text: p.location);
+    _descriptionController = TextEditingController(text: p.description);
+    _priceController = TextEditingController(text: p.price.toStringAsFixed(0));
+    _stockController = TextEditingController(text: p.stock?.toString() ?? '');
+    _discountController =
+        TextEditingController(text: p.discount?.toStringAsFixed(0) ?? '');
+    _selectedCategory = p.category;
+    _hasStock = p.stock != null && p.stock! > 0;
+    _hasDiscount = p.discount != null && p.discount! > 0;
+    _existingImageUrls = List<String>.from(p.allImageUrls);
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _locationController.dispose();
+    _descriptionController.dispose();
+    _priceController.dispose();
+    _stockController.dispose();
+    _discountController.dispose();
+    super.dispose();
+  }
+
+  List<String> get _categories =>
+      widget.product.isItem ? _itemCategories : _serviceCategories;
+
+  Future<void> _saveChanges() async {
+    if (_nameController.text.trim().isEmpty ||
+        _locationController.text.trim().isEmpty ||
+        _selectedCategory == null ||
+        _descriptionController.text.trim().isEmpty ||
+        _priceController.text.trim().isEmpty) {
+      _showError('Please fill all required fields');
+      return;
+    }
+
+    final price = double.tryParse(_priceController.text.trim());
+    if (price == null || price <= 0) {
+      _showError('Please enter a valid price');
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    try {
+      final marketProvider =
+          Provider.of<MarketPostProvider>(context, listen: false);
+
+      final data = <String, dynamic>{
+        'name': _nameController.text.trim(),
+        'description': _descriptionController.text.trim(),
+        'price': price,
+        'category': _selectedCategory,
+        'location': _locationController.text.trim(),
+        'imageUrls': _existingImageUrls,
+        'imageUrl':
+            _existingImageUrls.isNotEmpty ? _existingImageUrls.first : null,
+      };
+
+      if (widget.product.isItem) {
+        if (_hasStock) {
+          final stock = int.tryParse(_stockController.text.trim());
+          data['stock'] = stock ?? 0;
+        } else {
+          data['stock'] = null;
+        }
+
+        if (_hasDiscount) {
+          final discount = double.tryParse(_discountController.text.trim());
+          if (discount != null && discount > 0 && discount < 100) {
+            data['discount'] = discount;
+            data['discountedPrice'] = price - (price * discount / 100);
+          }
+        } else {
+          data['discount'] = null;
+          data['discountedPrice'] = null;
+        }
+      }
+
+      final success = await marketProvider.updateProduct(
+        widget.product.id,
+        data,
+        newImages: _newImages.isNotEmpty ? _newImages : null,
+        userId: widget.product.sellerId,
+      );
+
+      if (mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Listing updated successfully!')),
+          );
+          Navigator.pop(context, true);
+        } else {
+          _showError('Failed to update listing');
+        }
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _deleteListing() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.r),
+        ),
+        title: Text('Delete Listing',
+            style: TextStyle(color: AppTheme.textPrimary)),
+        content: Text(
+          'Are you sure you want to delete this listing? This action cannot be undone.',
+          style: TextStyle(color: AppTheme.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child:
+                Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.error),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    final marketProvider =
+        Provider.of<MarketPostProvider>(context, listen: false);
+    final success =
+        await marketProvider.deleteMarketplaceItem(widget.product.id);
+
+    if (mounted) {
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Listing deleted')),
+        );
+        Navigator.pop(context, true);
+        Navigator.pop(context);
+      } else {
+        _showError('Failed to delete listing');
+      }
+    }
+  }
+
+  void _showError(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    }
+  }
+
+  void _removeExistingImage(int index) {
+    setState(() {
+      _existingImageUrls.removeAt(index);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppTheme.surface,
+      appBar: AppBar(
+        backgroundColor: AppTheme.surface,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        leading: IconButton(
+          icon:
+              Iconify(Ph.arrow_left, color: AppTheme.textPrimary, size: 24.sp),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          widget.product.isItem ? 'Edit Item' : 'Edit Service',
+          style: TextConstants.boldText.copyWith(
+            fontSize: 18.sp,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+        centerTitle: false,
+        actions: [
+          IconButton(
+            icon: Iconify(Ph.trash, color: AppTheme.error, size: 22.sp),
+            onPressed: _deleteListing,
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(20.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Existing images
+            if (_existingImageUrls.isNotEmpty) ...[
+              Text(
+                'Current Images',
+                style: TextConstants.mediumText.copyWith(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              SizedBox(height: 8.h),
+              SizedBox(
+                height: 100.h,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _existingImageUrls.length,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: EdgeInsets.only(right: 8.w),
+                      child: Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8.r),
+                            child: CachedNetworkImage(
+                              imageUrl: _existingImageUrls[index],
+                              cacheManager: CustomCacheManager(),
+                              width: 100.w,
+                              height: 100.h,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: GestureDetector(
+                              onTap: () => _removeExistingImage(index),
+                              child: Container(
+                                padding: EdgeInsets.all(4.w),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.6),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                  size: 14.sp,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+              SizedBox(height: 16.h),
+            ],
+
+            // Add new images
+            Text(
+              'Add Images',
+              style: TextConstants.mediumText.copyWith(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+            SizedBox(height: 8.h),
+            MultiImagePicker(
+              images: _newImages,
+              onImagesChanged: (images) {
+                setState(() => _newImages = images);
+              },
+            ),
+            SizedBox(height: 20.h),
+
+            // Name
+            _buildTextField(
+              controller: _nameController,
+              label: 'Name',
+              hint: widget.product.isItem ? 'Product name' : 'Service name',
+            ),
+            SizedBox(height: 16.h),
+
+            // Category
+            _buildCategoryDropdown(),
+            SizedBox(height: 16.h),
+
+            // Description
+            _buildTextField(
+              controller: _descriptionController,
+              label: 'Description',
+              hint: 'Describe your listing...',
+              maxLines: 4,
+            ),
+            SizedBox(height: 16.h),
+
+            // Price
+            _buildTextField(
+              controller: _priceController,
+              label: 'Price (₦)',
+              hint: '0',
+              keyboardType: TextInputType.number,
+            ),
+            SizedBox(height: 16.h),
+
+            // Location
+            _buildTextField(
+              controller: _locationController,
+              label: 'Location',
+              hint: 'Where can buyers pick up?',
+            ),
+
+            // Item-specific: Stock & Discount
+            if (widget.product.isItem) ...[
+              SizedBox(height: 20.h),
+              _buildStockSection(),
+              SizedBox(height: 16.h),
+              _buildDiscountSection(),
+            ],
+
+            SizedBox(height: 32.h),
+
+            // Save button
+            SizedBox(
+              width: double.infinity,
+              height: 50.h,
+              child: ElevatedButton(
+                onPressed: _isSaving ? null : _saveChanges,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: AppTheme.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  disabledBackgroundColor: AppTheme.primary.withValues(alpha: 0.5),
+                ),
+                child: _isSaving
+                    ? SizedBox(
+                        width: 20.sp,
+                        height: 20.sp,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppTheme.white,
+                        ),
+                      )
+                    : Text(
+                        'Save Changes',
+                        style: TextConstants.mediumText.copyWith(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.white,
+                        ),
+                      ),
+              ),
+            ),
+            SizedBox(height: 20.h),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    int maxLines = 1,
+    TextInputType? keyboardType,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextConstants.mediumText.copyWith(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+        SizedBox(height: 8.h),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: AppTheme.border),
+            color: AppTheme.buttonBorder,
+          ),
+          child: TextField(
+            controller: controller,
+            maxLines: maxLines,
+            keyboardType: keyboardType,
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: TextConstants.smallText.copyWith(
+                color: AppTheme.textLight,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16.w,
+                vertical: 12.h,
+              ),
+            ),
+            style: TextConstants.mediumText.copyWith(
+              fontSize: 14.sp,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCategoryDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Category',
+          style: TextConstants.mediumText.copyWith(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+        SizedBox(height: 8.h),
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: AppTheme.border),
+            color: AppTheme.buttonBorder,
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: _categories.contains(_selectedCategory)
+                  ? _selectedCategory
+                  : null,
+              isExpanded: true,
+              hint: Text(
+                'Select category',
+                style: TextConstants.smallText.copyWith(
+                  color: AppTheme.textLight,
+                ),
+              ),
+              dropdownColor: AppTheme.surface,
+              items: _categories
+                  .map((cat) => DropdownMenuItem(
+                        value: cat,
+                        child: Text(
+                          cat,
+                          style: TextConstants.mediumText.copyWith(
+                            fontSize: 14.sp,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                      ))
+                  .toList(),
+              onChanged: (value) => setState(() => _selectedCategory = value),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStockSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              'Track Stock',
+              style: TextConstants.mediumText.copyWith(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+            const Spacer(),
+            Switch(
+              value: _hasStock,
+              onChanged: (val) => setState(() => _hasStock = val),
+              activeColor: AppTheme.primary,
+            ),
+          ],
+        ),
+        if (_hasStock)
+          _buildTextField(
+            controller: _stockController,
+            label: 'Stock Quantity',
+            hint: 'Enter available stock',
+            keyboardType: TextInputType.number,
+          ),
+      ],
+    );
+  }
+
+  Widget _buildDiscountSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              'Discount',
+              style: TextConstants.mediumText.copyWith(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+            const Spacer(),
+            Switch(
+              value: _hasDiscount,
+              onChanged: (val) => setState(() => _hasDiscount = val),
+              activeColor: AppTheme.primary,
+            ),
+          ],
+        ),
+        if (_hasDiscount)
+          _buildTextField(
+            controller: _discountController,
+            label: 'Discount (%)',
+            hint: 'Enter discount percentage',
+            keyboardType: TextInputType.number,
+          ),
+      ],
+    );
+  }
+}

@@ -86,6 +86,7 @@ class _InterestsDialogState extends State<InterestsDialog>
 
   @override
   Widget build(BuildContext context) {
+    final appColors = context.appColors;
     return ScaleTransition(
       scale: _scaleAnimation,
       child: FadeTransition(
@@ -94,7 +95,7 @@ class _InterestsDialogState extends State<InterestsDialog>
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20.r),
           ),
-          backgroundColor: AppTheme.surface,
+          backgroundColor: appColors.surface,
           child: Consumer<AnimatedProvider>(
             builder: (context, provider, child) {
               return AnimatedOpacity(
@@ -121,7 +122,7 @@ class _InterestsDialogState extends State<InterestsDialog>
                             borderRadius: BorderRadius.circular(20.r),
                             child: Icon(
                               Icons.close,
-                              color: AppTheme.textPrimary,
+                              color: appColors.textPrimary,
                               size: 20.sp,
                             ),
                           ),
@@ -132,9 +133,9 @@ class _InterestsDialogState extends State<InterestsDialog>
 
                       _buildAnimatedText(
                         'Help us curate your feed',
-                        TextConstants.smallText.copyWith(
+                        TextConstants.small(context).copyWith(
                           fontSize: 13.sp,
-                          color: AppTheme.textSecondary,
+                          color: appColors.textSecondary,
                         ),
                         delay: 0,
                       ),
@@ -143,9 +144,9 @@ class _InterestsDialogState extends State<InterestsDialog>
 
                       _buildAnimatedText(
                         'What topics are you\ninterested in?',
-                        TextConstants.boldText.copyWith(
+                        TextConstants.bold(context).copyWith(
                           fontSize: 22.sp,
-                          color: AppTheme.textPrimary,
+                          color: appColors.textPrimary,
                           fontWeight: FontWeight.bold,
                         ),
                         delay: 100,
@@ -155,9 +156,9 @@ class _InterestsDialogState extends State<InterestsDialog>
 
                       _buildAnimatedText(
                         'Select at least one',
-                        TextConstants.smallText.copyWith(
+                        TextConstants.small(context).copyWith(
                           fontSize: 12.sp,
-                          color: AppTheme.textSecondary,
+                          color: appColors.textSecondary,
                         ),
                         delay: 150,
                       ),
@@ -255,6 +256,8 @@ class _InterestsDialogState extends State<InterestsDialog>
 
   Widget _buildAnimatedButton(
       {required int delay, required AuthProvider authProvider}) {
+    final appColors = context.appColors;
+    final colorScheme = Theme.of(context).colorScheme;
     return TweenAnimationBuilder<double>(
       duration: Duration(milliseconds: 400 + delay),
       tween: Tween(begin: 0.0, end: 1.0),
@@ -299,13 +302,13 @@ class _InterestsDialogState extends State<InterestsDialog>
                     padding: EdgeInsets.symmetric(vertical: 16.h),
                     decoration: BoxDecoration(
                       color: _isFormValid
-                          ? AppTheme.primary
-                          : AppTheme.buttonBorder,
+                          ? colorScheme.primary
+                          : appColors.buttonBorder,
                       borderRadius: BorderRadius.circular(40.r),
                       // boxShadow: _isFormValid && !provider.isButtonPressed
                       //     ? [
                       //         BoxShadow(
-                      //           color: AppTheme.primary.withOpacity(0.4),
+                      //           color: AppTheme.primary.withValues(alpha: 0.4),
                       //           blurRadius: 16,
                       //           offset: const Offset(0, 8),
                       //         ),
@@ -319,12 +322,12 @@ class _InterestsDialogState extends State<InterestsDialog>
                     child: Center(
                       child: Text(
                         'Continue',
-                        style: TextConstants.mediumText.copyWith(
+                        style: TextConstants.medium(context).copyWith(
                           fontSize: 16.sp,
                           fontWeight: FontWeight.w600,
                           color: _isFormValid
-                              ? AppTheme.textPrimary
-                              : AppTheme.textLight,
+                              ? colorScheme.onPrimary
+                              : appColors.textLight,
                         ),
                       ),
                     ),
@@ -359,6 +362,8 @@ class _InterestChipState extends State<_InterestChip> {
 
   @override
   Widget build(BuildContext context) {
+    final appColors = context.appColors;
+    final colorScheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) {
@@ -374,16 +379,17 @@ class _InterestChipState extends State<_InterestChip> {
           vertical: 10.h,
         ),
         decoration: BoxDecoration(
-          color: widget.isSelected ? AppTheme.primary : AppTheme.buttonBorder,
+          color:
+              widget.isSelected ? colorScheme.primary : appColors.buttonBorder,
           borderRadius: BorderRadius.circular(20.r),
           border: Border.all(
-            color: widget.isSelected ? AppTheme.primary : AppTheme.border,
+            color: widget.isSelected ? colorScheme.primary : appColors.border,
             width: 1.5,
           ),
           boxShadow: widget.isSelected && !_isPressed
               ? [
                   BoxShadow(
-                    color: AppTheme.primary.withOpacity(0.4),
+                    color: colorScheme.primary.withValues(alpha: 0.4),
                     blurRadius: 12,
                     offset: const Offset(0, 6),
                   ),
@@ -393,12 +399,12 @@ class _InterestChipState extends State<_InterestChip> {
         transform: Matrix4.identity()..scale(_isPressed ? 0.90 : 1.0),
         child: Text(
           widget.label,
-          style: TextConstants.smallText.copyWith(
+          style: TextConstants.small(context).copyWith(
             fontSize: 14.sp,
             fontWeight: FontWeight.w500,
             color: widget.isSelected
-                ? AppTheme.textPrimary
-                : AppTheme.textSecondary,
+                ? colorScheme.onPrimary
+                : appColors.textSecondary,
           ),
         ),
       ),

@@ -20,13 +20,38 @@ class EventsScreen extends StatefulWidget {
 }
 
 class _EventsScreenState extends State<EventsScreen> {
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadInitialData();
       _setCurrentUser();
     });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final eventProvider = Provider.of<EventProvider>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final school = authProvider.currentUser?.school ?? '';
+    final position = _scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - 280) {
+      if (eventProvider.hasMore &&
+          !eventProvider.isLoadingMore &&
+          !eventProvider.isLoading) {
+        eventProvider.loadMoreEvents(school);
+      }
+    }
   }
 
   void _setCurrentUser() {
@@ -193,6 +218,7 @@ class _EventsScreenState extends State<EventsScreen> {
           onRefresh: _onRefresh,
           color: AppTheme.primary,
           child: CustomScrollView(
+            controller: _scrollController,
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               // Sort/Filter Bar
@@ -211,6 +237,22 @@ class _EventsScreenState extends State<EventsScreen> {
                 currentUserId,
                 currentUserName,
               ),
+              if (eventProvider.isLoadingMore)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 14.h),
+                    child: Center(
+                      child: SizedBox(
+                        width: 22.w,
+                        height: 22.w,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.2,
+                          color: AppTheme.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         );
@@ -253,7 +295,7 @@ class _EventsScreenState extends State<EventsScreen> {
             itemBuilder: (context, index) {
               // First item is Add Card
               if (index == 0) {
-                return _buildAddEventCard(_calculateImageHeight(0));
+                return _buildAddEventCard(_calculateImageHeight(index));
               }
 
               // Offset by 1 for actual events
@@ -296,7 +338,7 @@ class _EventsScreenState extends State<EventsScreen> {
           SliverToBoxAdapter(
             child: _buildSectionHeader(
               icon: Ph.users_three,
-              title: 'Discover Events',
+              title: 'Explore Events',
               count: otherEvents.length,
               color: AppTheme.textSecondary,
             ),
@@ -315,7 +357,7 @@ class _EventsScreenState extends State<EventsScreen> {
             left: 20.w,
             right: 20.w,
             top: myEvents.isEmpty ? 16.h : 0,
-            bottom: 40.h,
+            bottom: 70.h,
           ),
           sliver: SliverMasonryGrid.count(
             crossAxisCount: 2,
@@ -325,7 +367,7 @@ class _EventsScreenState extends State<EventsScreen> {
             itemBuilder: (context, index) {
               // First item is Add Card (only if no my events)
               if (hasAddCard && index == 0) {
-                return _buildAddEventCard(_calculateImageHeight(0));
+                return _buildAddEventCard(_calculateImageHeight(index));
               }
 
               // Offset by 1 if Add Card is present
@@ -368,13 +410,13 @@ class _EventsScreenState extends State<EventsScreen> {
     required Color color,
   }) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+      padding: EdgeInsets.only(top: 0.h, bottom: 12.h, left: 20, right: 20),
       child: Row(
         children: [
           Container(
             padding: EdgeInsets.all(6.w),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(6.r),
             ),
             child: Iconify(
@@ -392,22 +434,22 @@ class _EventsScreenState extends State<EventsScreen> {
               color: AppTheme.textPrimary,
             ),
           ),
-          SizedBox(width: 8.w),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10.r),
-            ),
-            child: Text(
-              '$count',
-              style: TextConstants.smallText.copyWith(
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w600,
-                color: color,
-              ),
-            ),
-          ),
+          // SizedBox(width: 8.w),
+          // Container(
+          //   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+          //   decoration: BoxDecoration(
+          //     color: color.withValues(alpha: 0.1),
+          //     borderRadius: BorderRadius.circular(10.r),
+          //   ),
+          //   child: Text(
+          //     '$count',
+          //     style: TextConstants.smallText.copyWith(
+          //       fontSize: 12.sp,
+          //       fontWeight: FontWeight.w600,
+          //       color: color,
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );
@@ -417,15 +459,16 @@ class _EventsScreenState extends State<EventsScreen> {
     return GestureDetector(
       onTap: _navigateToCreateEvent,
       child: Container(
-        height: imageHeight + 80.h, // Match event card approximate height
+        height: imageHeight + 85.h, // Match event card approximate height
+        // height: imageHeight + 80.h, // Match event card approximate height
         decoration: BoxDecoration(
           color: AppTheme.background,
           borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(
-            color: AppTheme.primary.withOpacity(0.3),
-            width: 2,
-            strokeAlign: BorderSide.strokeAlignInside,
-          ),
+          // border: Border.all(
+          //   color: AppTheme.primary.withValues(alpha: 0.3),
+          //   width: 2,
+          //   strokeAlign: BorderSide.strokeAlignInside,
+          // ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -433,7 +476,7 @@ class _EventsScreenState extends State<EventsScreen> {
             Container(
               padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.1),
+                color: AppTheme.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -470,10 +513,10 @@ class _EventsScreenState extends State<EventsScreen> {
   }
 
   double _calculateImageHeight(int index) {
-    if (index % 3 == 0) return 120.h;
-    if (index % 3 == 1) return 160.h;
-    if (index % 3 == 2) return 120.h;
-    if (index % 4 == 0) return 180.h;
+    // if (index % 3 == 0) return 120.h;
+    // if (index % 3 == 1) return 160.h;
+    // if (index % 3 == 2) return 120.h;
+    // if (index % 4 == 0) return 180.h;
     return 120.h;
   }
 }

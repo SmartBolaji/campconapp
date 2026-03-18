@@ -76,6 +76,42 @@ class ResourceModel {
       'likes': likes,
     };
   }
+
+  ResourceModel copyWith({
+    String? id,
+    String? title,
+    String? description,
+    String? faculty,
+    String? department,
+    String? level,
+    String? course,
+    String? resourceType,
+    String? fileUrl,
+    String? fileName,
+    bool? isExternalLink,
+    String? uploaderId,
+    DateTime? createdAt,
+    int? downloadCount,
+    int? likes,
+  }) {
+    return ResourceModel(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      faculty: faculty ?? this.faculty,
+      department: department ?? this.department,
+      level: level ?? this.level,
+      course: course ?? this.course,
+      resourceType: resourceType ?? this.resourceType,
+      fileUrl: fileUrl ?? this.fileUrl,
+      fileName: fileName ?? this.fileName,
+      isExternalLink: isExternalLink ?? this.isExternalLink,
+      uploaderId: uploaderId ?? this.uploaderId,
+      createdAt: createdAt ?? this.createdAt,
+      downloadCount: downloadCount ?? this.downloadCount,
+      likes: likes ?? this.likes,
+    );
+  }
 }
 
 class TaskModel {
@@ -142,6 +178,7 @@ class TaskModel {
       'id': id,
       'title': title,
       'description': description,
+      'category': category,
       'faculty': faculty,
       'department': department,
       'level': level,
@@ -167,5 +204,41 @@ class TaskModel {
     return dueDate!.year == now.year &&
         dueDate!.month == now.month &&
         dueDate!.day == now.day;
+  }
+
+  TaskModel copyWith({
+    String? id,
+    String? title,
+    String? description,
+    String? category,
+    String? faculty,
+    String? department,
+    String? level,
+    String? course,
+    String? priority,
+    DateTime? dueDate,
+    bool? hasReminder,
+    bool? isPersonal,
+    String? userId,
+    bool? isCompleted,
+    DateTime? createdAt,
+  }) {
+    return TaskModel(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      category: category ?? this.category,
+      faculty: faculty ?? this.faculty,
+      department: department ?? this.department,
+      level: level ?? this.level,
+      course: course ?? this.course,
+      priority: priority ?? this.priority,
+      dueDate: dueDate ?? this.dueDate,
+      hasReminder: hasReminder ?? this.hasReminder,
+      isPersonal: isPersonal ?? this.isPersonal,
+      userId: userId ?? this.userId,
+      isCompleted: isCompleted ?? this.isCompleted,
+      createdAt: createdAt ?? this.createdAt,
+    );
   }
 }

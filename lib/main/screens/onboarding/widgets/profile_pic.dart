@@ -4,6 +4,8 @@ import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/widgets/sheet_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/ph.dart';
 import 'package:provider/provider.dart';
 
 class ProfilePic extends StatefulWidget {
@@ -78,19 +80,20 @@ class _ProfilePicState extends State<ProfilePic> {
                     height: 120.h,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppTheme.primaryBackground.withOpacity(0.3),
+                      color: AppTheme.primaryBackground.withValues(alpha: 0.3),
                       border: Border.all(
                         color: AppTheme.primary,
                         width: 3,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.primary.withOpacity(0.2),
+                          color: AppTheme.primary.withValues(alpha: 0.2),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
                       ],
                     ),
+                    clipBehavior: Clip.hardEdge,
                     child: authProvider.profileImage != null
                         ? Container(
                             width: 120.w,
@@ -103,10 +106,10 @@ class _ProfilePicState extends State<ProfilePic> {
                               ),
                             ),
                           )
-                        : Icon(
-                            Icons.person,
-                            size: 60.sp,
-                            color: AppTheme.primary.withOpacity(0.6),
+                        : Iconify(
+                            Ph.user,
+                            size: 50.sp,
+                            color: AppTheme.primary,
                           ),
                   ),
 
@@ -195,7 +198,7 @@ class _ImageSourceOption extends StatelessWidget {
               width: 50.w,
               height: 50.h,
               decoration: BoxDecoration(
-                color: AppTheme.primaryBackground.withOpacity(0.3),
+                color: AppTheme.primaryBackground.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(10.r),
               ),
               child: Icon(

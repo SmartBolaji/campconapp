@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:campcon/main/models/order_model.dart';
+import 'package:campcon/main/models/product_model.dart';
 import 'package:campcon/main/models/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +27,20 @@ class SalesProvider extends ChangeNotifier {
   int _totalSales = 0;
   int _pendingCount = 0;
 
+  // Product filter
+  String? _filterProductId;
+  String? _filterProductName;
+
+  // Seller listings
+  List<Product> _sellerListings = [];
+  bool _isLoadingListings = false;
+
+  // Earnings data
+  Map<String, double> _revenueByProduct = {};
+  List<MapEntry<String, double>> _topProducts = [];
+  Map<String, double> _weeklyRevenue = {};
+  Map<String, double> _monthlyRevenue = {};
+
   // State
   bool _isLoading = false;
   bool _isUpdating = false;
@@ -37,10 +52,10 @@ class SalesProvider extends ChangeNotifier {
 
   // Getters
   List<OrderModel> get allOrders => _allOrders;
-  List<OrderModel> get pendingOrders => _pendingOrders;
-  List<OrderModel> get activeOrders => _activeOrders;
-  List<OrderModel> get completedOrders => _completedOrders;
-  List<OrderModel> get cancelledOrders => _cancelledOrders;
+  List<OrderModel> get pendingOrders => _filterOrders(_pendingOrders);
+  List<OrderModel> get activeOrders => _filterOrders(_activeOrders);
+  List<OrderModel> get completedOrders => _filterOrders(_completedOrders);
+  List<OrderModel> get cancelledOrders => _filterOrders(_cancelledOrders);
 
   double get totalRevenue => _totalRevenue;
   double get todayRevenue => _todayRevenue;
@@ -53,6 +68,27 @@ class SalesProvider extends ChangeNotifier {
   int get selectedTabIndex => _selectedTabIndex;
 
   Map<String, UserModel> get buyersCache => _buyersCache;
+
+  // Product filter getters
+  String? get filterProductId => _filterProductId;
+  String? get filterProductName => _filterProductName;
+  bool get hasProductFilter => _filterProductId != null;
+
+  // Seller listings getters
+  List<Product> get sellerListings => _sellerListings;
+  bool get isLoadingListings => _isLoadingListings;
+
+  // Earnings getters
+  Map<String, double> get revenueByProduct => _revenueByProduct;
+  List<MapEntry<String, double>> get topProducts => _topProducts;
+  Map<String, double> get weeklyRevenue => _weeklyRevenue;
+  Map<String, double> get monthlyRevenue => _monthlyRevenue;
+
+  // Filter orders by productId if filter is active
+  List<OrderModel> _filterOrders(List<OrderModel> orders) {
+    if (_filterProductId == null) return orders;
+    return orders.where((o) => o.productId == _filterProductId).toList();
+  }
 
   // Get orders for current tab
   List<OrderModel> get currentTabOrders {
@@ -298,10 +334,158 @@ class SalesProvider extends ChangeNotifier {
     _todayRevenue = 0;
     _totalSales = 0;
     _pendingCount = 0;
+    _filterProductId = null;
+    _filterProductName = null;
+    _sellerListings = [];
+    _revenueByProduct = {};
+    _topProducts = [];
+    _weeklyRevenue = {};
+    _monthlyRevenue = {};
     _isLoading = false;
     _isUpdating = false;
     _error = null;
     _selectedTabIndex = 0;
+  }
+
+  // ── Product Filter ──────────────────────────────────────────────
+
+  void setProductFilter(String productId, String productName) {
+    _filterProductId = productId;
+    _filterProductName = productName;
+    notifyListeners();
+  }
+
+  void clearProductFilter() {
+    _filterProductId = null;
+    _filterProductName = null;
+    notifyListeners();
+  }
+
+  // ── Seller Listings ─────────────────────────────────────────────
+
+  Future<void> fetchSellerListings() async {
+    if (_sellerId == null) return;
+
+    _isLoadingListings = true;
+    notifyListeners();
+
+    try {
+      final snapshot = await _firestore
+          .collection('marketplace')
+          .where('sellerId', isEqualTo: _sellerId)
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      _sellerListings = snapshot.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        return Product.fromJson(data);
+      }).toList();
+
+      _isLoadingListings = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoadingListings = false;
+      notifyListeners();
+      debugPrint('❌ Error fetching seller listings: $e');
+    }
+  }
+
+  Future<void> toggleListingActive(String productId, bool isActive) async {
+    try {
+      await _firestore
+          .collection('marketplace')
+          .doc(productId)
+          .update({'isActive': isActive});
+      // Refresh listings
+      await fetchSellerListings();
+    } catch (e) {
+      debugPrint('❌ Error toggling listing: $e');
+    }
+  }
+
+  Future<bool> deleteListing(String productId) async {
+    try {
+      await _firestore.collection('marketplace').doc(productId).delete();
+      _sellerListings.removeWhere((p) => p.id == productId);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('❌ Error deleting listing: $e');
+      return false;
+    }
+  }
+
+  // ── Earnings Breakdown ──────────────────────────────────────────
+
+  void calculateEarningsBreakdown() {
+    // Revenue by product
+    _revenueByProduct = {};
+    for (var order in _completedOrders) {
+      _revenueByProduct[order.productName] =
+          (_revenueByProduct[order.productName] ?? 0) + order.totalPrice;
+    }
+
+    // Top products sorted by revenue
+    _topProducts = _revenueByProduct.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    // Weekly revenue (last 7 days)
+    _weeklyRevenue = {};
+    final now = DateTime.now();
+    for (int i = 6; i >= 0; i--) {
+      final day = now.subtract(Duration(days: i));
+      final dayKey = '${_weekdayShort(day.weekday)} ${day.day}';
+      final dayStart = DateTime(day.year, day.month, day.day);
+      final dayEnd = dayStart.add(const Duration(days: 1));
+
+      _weeklyRevenue[dayKey] = _completedOrders
+          .where((o) =>
+              o.completedAt != null &&
+              o.completedAt!.isAfter(dayStart) &&
+              o.completedAt!.isBefore(dayEnd))
+          .fold(0, (sum, o) => sum + o.totalPrice);
+    }
+
+    // Monthly revenue (last 6 months)
+    _monthlyRevenue = {};
+    for (int i = 5; i >= 0; i--) {
+      final month = DateTime(now.year, now.month - i, 1);
+      final monthKey = _monthShort(month.month);
+      final nextMonth = DateTime(month.year, month.month + 1, 1);
+
+      _monthlyRevenue[monthKey] = _completedOrders
+          .where((o) =>
+              o.completedAt != null &&
+              o.completedAt!.isAfter(month) &&
+              o.completedAt!.isBefore(nextMonth))
+          .fold(0, (sum, o) => sum + o.totalPrice);
+    }
+
+    notifyListeners();
+  }
+
+  String _weekdayShort(int weekday) {
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return days[weekday - 1];
+  }
+
+  String _monthShort(int month) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
+    return months[((month - 1) % 12)];
   }
 
   @override

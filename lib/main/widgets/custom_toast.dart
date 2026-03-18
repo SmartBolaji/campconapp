@@ -29,7 +29,7 @@ void showCustomToast(
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -69,13 +69,13 @@ void showCustomToast(
 Color _getBackgroundColor(ToastType type) {
   switch (type) {
     case ToastType.success:
-      return AppTheme.success.withValues(alpha: 0.5);
+      return AppTheme.success;
     case ToastType.error:
-      return AppTheme.error.withValues(alpha: 0.5);
+      return AppTheme.error;
     case ToastType.warning:
-      return AppTheme.warning.withValues(alpha: 0.5);
+      return AppTheme.warning;
     case ToastType.info:
-      return AppTheme.info.withValues(alpha: 0.5);
+      return AppTheme.info;
   }
 }
 

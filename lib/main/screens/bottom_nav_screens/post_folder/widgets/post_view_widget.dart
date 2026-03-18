@@ -3,7 +3,9 @@ import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/post_model.dart';
 import 'package:campcon/main/models/user_model.dart';
 import 'package:campcon/main/provider/feed_provider.dart';
+import 'package:campcon/main/provider/poll_provider.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/post_options.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/poll_display_widget.dart';
 import 'package:campcon/main/screens/profile/profile_screen.dart';
 import 'package:campcon/main/widgets/format_time.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/image_widget.dart';
@@ -164,13 +166,14 @@ class _PostViewScreenState extends State<PostViewScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final displayName = widget.author?.name ?? widget.post.username;
     final displayImage = widget.author?.profileImageUrl ?? '';
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: AppTheme.surface,
+        backgroundColor: colorScheme.surface,
         elevation: 0,
-        surfaceTintColor: AppTheme.surface,
+        surfaceTintColor: colorScheme.surface,
         leading: IconButton(
           icon: Iconify(
             Ph.arrow_left,
@@ -247,7 +250,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
                                 vertical: 2.h,
                               ),
                               decoration: BoxDecoration(
-                                color: AppTheme.primary.withOpacity(0.1),
+                                color: AppTheme.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(10.r),
                               ),
                               child: Text(
@@ -355,6 +358,8 @@ class _PostViewScreenState extends State<PostViewScreen> {
     required String displayImage,
     required PostState postState, //  Accept live state
   }) {
+    // Get color scheme for dynamic coloring
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
         color: AppTheme.surface,
@@ -384,10 +389,10 @@ class _PostViewScreenState extends State<PostViewScreen> {
                           )
                         : null,
                     child: displayImage.isEmpty
-                        ? Icon(
-                            Icons.person,
+                        ? Iconify(
+                            Ph.user,
                             size: 20.sp,
-                            color: AppTheme.primary,
+                            color: colorScheme.primary,
                           )
                         : null,
                   ),
@@ -427,7 +432,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
           if (widget.post.content.isNotEmpty)
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Text(
+              child: SelectableText(
                 widget.post.content,
                 style: TextConstants.mediumText.copyWith(
                   fontSize: 15.sp,
@@ -459,6 +464,27 @@ class _PostViewScreenState extends State<PostViewScreen> {
                 onLike: widget.onLike ?? () {},
                 width: screenWidth,
               ),
+          ],
+
+          // Poll widget
+          if (widget.post.poll != null) ...[
+            SizedBox(height: 12.h),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              child: PollDisplayWidget(
+                poll: widget.post.poll!,
+                postId: widget.post.postId,
+                currentUserId: widget.currentUserId,
+                onVote: (optionId) {
+                  context.read<PollProvider>().votePoll(
+                        postId: widget.post.postId,
+                        optionId: optionId,
+                        userId: widget.currentUserId,
+                        currentPoll: widget.post.poll!,
+                      );
+                },
+              ),
+            ),
           ],
 
           SizedBox(height: 16.h),
@@ -675,7 +701,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -683,12 +709,17 @@ class _PostViewScreenState extends State<PostViewScreen> {
       ),
       child: SafeArea(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+          padding: EdgeInsets.symmetric(horizontal: 30.w, vertical: 10.h),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24.r),
+                    border: Border.all(color: AppTheme.border),
+                    color: AppTheme.buttonBorder,
+                  ),
                   constraints: BoxConstraints(maxHeight: 100.h),
                   child: TextField(
                     controller: _commentController,
@@ -724,31 +755,39 @@ class _PostViewScreenState extends State<PostViewScreen> {
                   ),
                 ),
               ),
-              SizedBox(width: 10.w),
+              SizedBox(width: 20.w),
               GestureDetector(
                 onTap: _isPosting ? null : () => _postComment(feedProvider),
                 child: Container(
-                  padding: EdgeInsets.all(12.w),
+                  // padding: EdgeInsets.all(12.w),
                   decoration: BoxDecoration(
-                    color: _commentController.text.trim().isNotEmpty
-                        ? AppTheme.primary
-                        : AppTheme.textLight.withOpacity(0.3),
-                    shape: BoxShape.circle,
-                  ),
+                      // color: _commentController.text.trim().isNotEmpty
+                      //     ? AppTheme.primary
+                      //     : AppTheme.textLight.withValues(alpha: 0.3),
+                      // shape: BoxShape.circle,
+                      ),
                   child: _isPosting
                       ? SizedBox(
                           width: 20.sp,
                           height: 20.sp,
-                          child: CircularProgressIndicator(
+                          child: const CircularProgressIndicator(
                             strokeWidth: 2,
                             color: AppTheme.white,
                           ),
                         )
-                      : Icon(
-                          Icons.send_rounded,
-                          size: 20.sp,
-                          color: AppTheme.white,
+                      : Text(
+                          'Send',
+                          style: TextConstants.boldText.copyWith(
+                            color: AppTheme.primary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14.sp,
+                          ),
                         ),
+                  // Icon(
+                  //     Icons.send_rounded,
+                  //     size: 20.sp,
+                  //     color: AppTheme.white,
+                  //   ),
                 ),
               ),
             ],
@@ -781,7 +820,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Comment deleted'),
+            content: const Text('Comment deleted'),
             behavior: SnackBarBehavior.floating,
             backgroundColor: AppTheme.textPrimary,
           ),

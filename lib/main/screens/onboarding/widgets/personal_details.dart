@@ -52,10 +52,10 @@ class _PersonalDetailsState extends State<PersonalDetails> {
                       return 'Username must be at least 3 characters';
                     }
                     if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value.trim())) {
-                      return 'Username can only contain letters, numbers and underscore';
+                      return 'Only letters, numbers and underscore';
                     }
                     if (authProvider.isUsernameAvailable == false) {
-                      return '';
+                      return 'Username is already taken';
                     }
                     return null;
                   },
@@ -69,6 +69,13 @@ class _PersonalDetailsState extends State<PersonalDetails> {
                                   : authProvider.isUsernameAvailable == false
                                       ? Icons.cancel
                                       : null,
+                  suffixIconColor: authProvider.isCheckingUsername
+                      ? AppTheme.textLight
+                      : authProvider.isUsernameAvailable == true
+                          ? AppTheme.success
+                          : authProvider.isUsernameAvailable == false
+                              ? AppTheme.error
+                              : null,
                   onChanged: (value) async {
                     if (value.trim().length >= 3) {
                       await authProvider
@@ -78,85 +85,11 @@ class _PersonalDetailsState extends State<PersonalDetails> {
                     }
                   },
                 ),
-                SizedBox(height: 8.h),
-
-                // Username availability indicator
-                if (authProvider.usernameController.text.trim().length >= 3)
-                  _buildUsernameStatus(authProvider),
               ],
             ),
           );
         },
       ),
     );
-  }
-
-  Widget _buildUsernameStatus(AuthProvider authProvider) {
-    if (authProvider.isCheckingUsername) {
-      return Row(
-        children: [
-          SizedBox(
-            width: 14.w,
-            height: 14.h,
-            child: const CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.info),
-            ),
-          ),
-          SizedBox(width: 8.w),
-          Text(
-            'Checking availability...',
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: AppTheme.textLight,
-            ),
-          ),
-        ],
-      );
-    }
-
-    if (authProvider.isUsernameAvailable == true) {
-      return Row(
-        children: [
-          Icon(
-            Icons.check_circle,
-            color: AppTheme.success,
-            size: 16.sp,
-          ),
-          SizedBox(width: 8.w),
-          Text(
-            'Username is available',
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: AppTheme.success,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      );
-    }
-
-    if (authProvider.isUsernameAvailable == false) {
-      return Row(
-        children: [
-          Icon(
-            Icons.cancel,
-            color: AppTheme.error,
-            size: 16.sp,
-          ),
-          SizedBox(width: 8.w),
-          Text(
-            'Username is already taken',
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: AppTheme.error,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      );
-    }
-
-    return const SizedBox.shrink();
   }
 }
