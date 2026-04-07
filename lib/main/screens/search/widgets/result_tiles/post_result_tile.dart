@@ -1,6 +1,7 @@
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/post_model.dart';
+import 'package:campcon/main/services/navigation_helper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -11,19 +12,19 @@ import 'package:timeago/timeago.dart' as timeago;
 class PostResultTile extends StatelessWidget {
   final PostModel post;
   final VoidCallback onTap;
-  
+
   const PostResultTile({
     super.key,
     required this.post,
     required this.onTap,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
         onTap();
-        // Navigate to post detail
+        NavigationHelper.openPostView(context, post.postId);
       },
       child: Container(
         padding: EdgeInsets.all(16.w),
@@ -48,7 +49,8 @@ class PostResultTile extends StatelessWidget {
                     color: AppTheme.primaryBackground,
                     image: post.userProfileImage.isNotEmpty
                         ? DecorationImage(
-                            image: CachedNetworkImageProvider(post.userProfileImage),
+                            image: CachedNetworkImageProvider(
+                                post.userProfileImage),
                             fit: BoxFit.cover,
                           )
                         : null,
@@ -90,7 +92,7 @@ class PostResultTile extends StatelessWidget {
               ],
             ),
             SizedBox(height: 12.h),
-            
+
             // Content
             Text(
               post.content,
@@ -102,7 +104,7 @@ class PostResultTile extends StatelessWidget {
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
             ),
-            
+
             // Image preview
             if (post.imageUrls.isNotEmpty) ...[
               SizedBox(height: 12.h),
@@ -119,7 +121,7 @@ class PostResultTile extends StatelessWidget {
                 ),
               ),
             ],
-            
+
             // Stats
             SizedBox(height: 12.h),
             Row(
@@ -136,7 +138,7 @@ class PostResultTile extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _buildStat(String icon, String count) {
     return Row(
       children: [

@@ -122,7 +122,22 @@ class ProfileDrawer extends StatelessWidget {
                     _buildDrawerItem(
                       context: context,
                       icon: Ph.user,
-                      label: 'Profile',
+                      label: 'View Profile',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          PageTransition(
+                            type: PageTransitionType.rightToLeft,
+                            child: ProfileScreen(userId: currentUser.uid),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildDrawerItem(
+                      context: context,
+                      icon: Ph.info,
+                      label: 'Account Information',
                       onTap: () {
                         Navigator.pop(context);
                         Navigator.push(

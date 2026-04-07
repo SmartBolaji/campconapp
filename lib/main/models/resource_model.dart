@@ -36,24 +36,45 @@ class ResourceModel {
   });
 
   factory ResourceModel.fromJson(Map<String, dynamic> json) {
+    // Safely extract string fields
+    String extractString(dynamic value) {
+      if (value is String) return value;
+      if (value is num) return value.toString();
+      return '';
+    }
+
+    // Safely parse DateTime from Timestamp or String
+    DateTime extractDateTime(dynamic value) {
+      if (value is Timestamp) return value.toDate();
+      if (value is String) {
+        try {
+          return DateTime.parse(value);
+        } catch (e) {
+          return DateTime.now();
+        }
+      }
+      return DateTime.now();
+    }
+
     return ResourceModel(
-      id: json['id'] ?? '',
-      title: json['title'] ?? '',
-      description: json['description'] ?? '',
-      faculty: json['faculty'],
-      department: json['department'],
-      level: json['level'],
-      course: json['course'],
-      resourceType: json['resourceType'] ?? 'Other',
-      fileUrl: json['fileUrl'],
-      fileName: json['fileName'],
-      isExternalLink: json['isExternalLink'] ?? false,
-      uploaderId: json['uploaderId'] ?? '',
+      id: extractString(json['id']),
+      title: extractString(json['title']),
+      description: extractString(json['description']),
+      faculty: json['faculty'] is String ? json['faculty'] : null,
+      department: json['department'] is String ? json['department'] : null,
+      level: json['level'] is String ? json['level'] : null,
+      course: json['course'] is String ? json['course'] : null,
+      resourceType: extractString(json['resourceType'] ?? 'Other'),
+      fileUrl: json['fileUrl'] is String ? json['fileUrl'] : null,
+      fileName: json['fileName'] is String ? json['fileName'] : null,
+      isExternalLink:
+          json['isExternalLink'] is bool ? json['isExternalLink'] : false,
+      uploaderId: extractString(json['uploaderId']),
       createdAt: json['createdAt'] != null
-          ? (json['createdAt'] as Timestamp).toDate()
+          ? extractDateTime(json['createdAt'])
           : DateTime.now(),
-      downloadCount: json['downloadCount'] ?? 0,
-      likes: json['likes'] ?? 0,
+      downloadCount: (json['downloadCount'] as num?)?.toInt() ?? 0,
+      likes: (json['likes'] as num?)?.toInt() ?? 0,
     );
   }
 

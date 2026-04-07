@@ -61,11 +61,12 @@ class PollDisplayWidget extends StatelessWidget {
           padding: EdgeInsets.all(12.w),
           decoration: BoxDecoration(
             color: AppTheme.background,
-            // borderRadius: BorderRadius.circular(12.r),
+            borderRadius: BorderRadius.circular(12.r),
             border: Border.all(color: AppTheme.border, width: 1),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               // Poll Question
               Text(
@@ -83,6 +84,7 @@ class PollDisplayWidget extends StatelessWidget {
               ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
+                padding: EdgeInsets.zero,
                 itemCount: currentPoll.options.length,
                 separatorBuilder: (_, __) => SizedBox(height: 8.h),
                 itemBuilder: (context, index) {

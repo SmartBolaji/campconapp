@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/services/cache.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 
@@ -26,7 +27,7 @@ class FullScreenImageView extends StatefulWidget {
 }
 
 class _FullScreenImageViewState extends State<FullScreenImageView> {
-  static const int maxVisibleIndicators = 4;
+  static const int maxVisibleIndicators = 6;
   late PageController _pageController;
   late bool isLiked;
   int _currentIndex = 0;
@@ -80,24 +81,30 @@ class _FullScreenImageViewState extends State<FullScreenImageView> {
 
   Widget _buildMiniDot() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      width: 4,
-      height: 4,
+      margin: EdgeInsets.symmetric(horizontal: 2.w),
+      width: 3.w,
+      height: 3.w,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.grey.withValues(alpha: 0.6),
+        color: AppTheme.textLight.withValues(alpha: 0.4),
       ),
     );
   }
 
   Widget _buildIndicator(int index) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      width: 8,
-      height: 8,
+    final isActive = _currentIndex == index;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      margin: EdgeInsets.symmetric(horizontal: 3.w),
+      width: isActive ? 20.w : 6.w,
+      height: 4.h,
       decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: _currentIndex == index ? Colors.white : Colors.grey,
+        borderRadius: BorderRadius.circular(3.r),
+        color: isActive
+            ? AppTheme.primary
+            : AppTheme.textLight.withValues(alpha: 0.4),
       ),
     );
   }

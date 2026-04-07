@@ -5,7 +5,7 @@ import 'package:campcon/main/provider/upload_status_mixin.dart';
 import 'package:campcon/main/services/backblaze.dart';
 import 'package:campcon/main/models/post_model.dart';
 import 'package:campcon/main/models/poll_model.dart';
-import 'package:campcon/main/services/post_tagging_service.dart';
+import 'package:campcon/main/services/algorithm/post_tagging_service.dart';
 
 // UploadStatus enum is now defined in upload_status_mixin.dart
 // Re-export it for backward compat with any UI that imports it from here.

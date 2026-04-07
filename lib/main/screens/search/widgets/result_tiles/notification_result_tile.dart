@@ -1,6 +1,7 @@
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/notification_model.dart';
+import 'package:campcon/main/services/navigation_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
@@ -22,7 +23,7 @@ class NotificationResultTile extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         onTap();
-        // Handle notification tap
+        _handleNotificationTap(context);
       },
       child: Container(
         padding: EdgeInsets.all(16.w),
@@ -121,6 +122,46 @@ class NotificationResultTile extends StatelessWidget {
       case NotificationType.eventInterested:
       case NotificationType.eventAttending:
         return Ph.calendar_blank;
+    }
+  }
+
+  void _handleNotificationTap(BuildContext context) {
+    switch (notification.type) {
+      case NotificationType.like:
+      case NotificationType.comment:
+      case NotificationType.reply:
+        // Navigate to post
+        if (notification.targetId != null) {
+          NavigationHelper.openPostView(context, notification.targetId!);
+        }
+        break;
+      case NotificationType.follow:
+        // Navigate to user profile
+        if (notification.actorId != null) {
+          NavigationHelper.openProfile(context, notification.actorId!);
+        }
+        break;
+      case NotificationType.mention:
+      case NotificationType.share:
+        // Navigate to post if available
+        if (notification.targetId != null) {
+          NavigationHelper.openPostView(context, notification.targetId!);
+        }
+        break;
+      case NotificationType.marketplacePurchase:
+      case NotificationType.marketplaceInterest:
+        // Navigate to product if available
+        if (notification.targetId != null) {
+          NavigationHelper.openProduct(context, notification.targetId!);
+        }
+        break;
+      case NotificationType.eventInterested:
+      case NotificationType.eventAttending:
+        // Navigate to event if available
+        if (notification.targetId != null) {
+          NavigationHelper.openEvent(context, notification.targetId!);
+        }
+        break;
     }
   }
 }

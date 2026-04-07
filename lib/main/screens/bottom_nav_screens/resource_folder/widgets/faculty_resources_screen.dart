@@ -2,7 +2,10 @@ import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/resource_model.dart';
 import 'package:campcon/main/provider/resource_provider.dart';
+import 'package:campcon/main/provider/search_provider.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/resource_folder/widgets/resource_detail_screen.dart';
+import 'package:campcon/main/screens/search/search_screen.dart';
+import 'package:campcon/main/widgets/action_search_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
@@ -29,7 +32,6 @@ class FacultyResourcesScreen extends StatefulWidget {
 }
 
 class _FacultyResourcesScreenState extends State<FacultyResourcesScreen> {
-  final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -54,7 +56,6 @@ class _FacultyResourcesScreenState extends State<FacultyResourcesScreen> {
 
   @override
   void dispose() {
-    _searchController.dispose();
     _scrollController.dispose();
     try {
       final provider = Provider.of<ResourceProvider>(context, listen: false);
@@ -145,55 +146,18 @@ class _FacultyResourcesScreenState extends State<FacultyResourcesScreen> {
   Widget _buildSearchBar(ResourceProvider provider) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
-        decoration: BoxDecoration(
-          color: AppTheme.buttonBorder,
-          borderRadius: BorderRadius.circular(30.r),
-          border: Border.all(color: AppTheme.border, width: 1),
-        ),
-        child: Row(
-          children: [
-            Iconify(
-              Ph.magnifying_glass,
-              size: 20.sp,
-              color: AppTheme.textLight,
+      child: ActionSearchBar.navigate(
+        hintText: 'Search resources',
+        onTap: () {
+          Navigator.push(
+            context,
+            PageTransition(
+              type: PageTransitionType.fade,
+              duration: const Duration(milliseconds: 200),
+              child: const SearchScreen(context: SearchContext.resources),
             ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: TextField(
-                controller: _searchController,
-                onChanged: (query) => provider.setSearchQuery(query),
-                style: TextConstants.mediumText.copyWith(
-                  fontSize: 15.sp,
-                  color: AppTheme.textPrimary,
-                ),
-                decoration: InputDecoration(
-                  hintText: 'Search resources...',
-                  hintStyle: TextConstants.smallText.copyWith(
-                    fontSize: 15.sp,
-                    color: AppTheme.textLight,
-                  ),
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-            ),
-            if (provider.searchQuery.isNotEmpty)
-              GestureDetector(
-                onTap: () {
-                  _searchController.clear();
-                  provider.setSearchQuery('');
-                },
-                child: Iconify(
-                  Ph.x_circle_fill,
-                  size: 18.sp,
-                  color: AppTheme.textLight,
-                ),
-              ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -852,7 +816,6 @@ class _FacultyResourcesScreenState extends State<FacultyResourcesScreen> {
               SizedBox(height: 16.h),
               GestureDetector(
                 onTap: () {
-                  _searchController.clear();
                   provider.clearFacultyFilters();
                 },
                 child: Container(

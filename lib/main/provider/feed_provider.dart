@@ -4,15 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:campcon/main/models/post_model.dart';
 import 'package:campcon/main/models/user_model.dart';
+import 'package:campcon/main/models/post_with_author_model.dart';
 import 'dart:async';
 import 'dart:collection';
-import 'dart:math';
-import 'package:campcon/main/services/user_engagement_service.dart';
-import 'package:campcon/main/services/post_tagging_service.dart';
+import 'package:campcon/main/services/algorithm/user_engagement_service.dart';
+import 'package:campcon/main/services/algorithm/post_tagging_service.dart';
+import 'package:campcon/main/services/algorithm/post_scoring_service.dart';
 
 class FeedProvider with ChangeNotifier, PostInteractionMixin<PostState> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final UserEngagementService _engagementService = UserEngagementService();
+  final PostScoringService _scoringService = PostScoringService();
 
   // Personalization data
   UserPersonalizationData? _personalizationData;
@@ -278,113 +280,18 @@ class FeedProvider with ChangeNotifier, PostInteractionMixin<PostState> {
     });
   }
 
-  // ✅ NEW: Score and sort posts based on user preferences
+  /// ✅ NEW: Score and sort posts based on user preferences
   // Prioritizes new posts while still rewarding engagement
   List<PostWithAuthor> _scoreAndSortPosts(
     List<PostWithAuthor> posts,
     String currentUserId,
   ) {
-    if (_personalizationData == null) return posts;
-
-    final now = DateTime.now();
-
-    final scoredPosts = posts.map((postWithAuthor) {
-      double score = 0.0;
-      final post = postWithAuthor.post;
-      final author = postWithAuthor.author;
-
-      // 1. RECENCY BOOST (highest priority for new posts)
-      final hoursAgo = now.difference(post.createdAt).inHours;
-      if (hoursAgo < 1) {
-        score += 10.0; // Brand new posts get strong boost
-      } else if (hoursAgo < 3) {
-        score += 8.0;
-      } else if (hoursAgo < 6) {
-        score += 6.0;
-      } else if (hoursAgo < 12) {
-        score += 4.0;
-      } else if (hoursAgo < 24) {
-        score += 2.0;
-      } else if (hoursAgo < 48) {
-        score += 1.0;
-      } else {
-        // Apply exponential decay for posts older than 48 hours
-        final daysOld = hoursAgo / 24.0;
-        score += (1.0 / (1.0 + (daysOld - 2.0))).clamp(0, 1);
-      }
-
-      // 2. Tag matching (contextual relevance)
-      final postTags = post.tags.isNotEmpty
-          ? post.tags
-          : PostTaggingService.extractTags(post.content);
-
-      for (final tag in postTags) {
-        // Match against user interests (weight: 2.5)
-        if (_personalizationData!.interests.contains(tag)) {
-          score += 2.5;
-        }
-        // Match against engaged tags (weight: 1.5)
-        if (_personalizationData!.engagedTags.contains(tag)) {
-          score += 1.5;
-        }
-      }
-
-      // 3. Author engagement
-      if (_personalizationData!.engagedAuthors.contains(post.userId)) {
-        score += 2.0;
-      }
-
-      // 4. Campus matching
-      if (post.campus != null && post.campus == _personalizationData!.campus) {
-        score += 1.5;
-      }
-
-      // 5. School/Department matching
-      if (author != null) {
-        if (author.school != null &&
-            author.school == _personalizationData!.school) {
-          score += 1.0;
-        }
-        if (author.department != null &&
-            author.department == _personalizationData!.department) {
-          score += 0.75;
-        }
-        if (author.level != null &&
-            author.level == _personalizationData!.level) {
-          score += 0.5;
-        }
-      }
-
-      // 6. Engagement boost (logarithmic so huge numbers don't dominate)
-      // Post with 0 engagement = 0, 50 engagement = ~1.7, 100 engagement = ~2.3
-      final engagement = post.likes + post.comments * 2 + post.shares * 3;
-      if (engagement > 0) {
-        score += (1 + log(engagement / 50) / 2).clamp(0, 2.5);
-      }
-
-      // 7. Content matching with search history
-      final contentLower = post.content.toLowerCase();
-      for (final term in _personalizationData!.searchHistory.take(10)) {
-        if (contentLower.contains(term)) {
-          score += 0.5;
-          break; // Only count once
-        }
-      }
-
-      return _ScoredPost(postWithAuthor, score);
-    }).toList();
-
-    // Sort by score (highest first), then by date for equal scores
-    scoredPosts.sort((a, b) {
-      final scoreCompare = b.score.compareTo(a.score);
-      if (scoreCompare != 0) return scoreCompare;
-      return b.post.post.createdAt.compareTo(a.post.post.createdAt);
-    });
-
-    debugPrint(
-        '📊 Personalized feed (recency-first): Top scores: ${scoredPosts.take(5).map((s) => s.score.toStringAsFixed(1)).join(", ")}');
-
-    return scoredPosts.map((s) => s.post).toList();
+    return _scoringService.scoreAndSortPosts(
+      posts,
+      currentUserId,
+      _personalizationData,
+      postStates: _posts,
+    );
   }
 
   // Load Friends feed
@@ -1451,22 +1358,4 @@ class PostState implements PostInteractionState {
     this.isBookmarked = false,
     this.isReposted = false, //  NEW
   });
-}
-
-class PostWithAuthor {
-  final PostModel post;
-  final UserModel? author;
-
-  PostWithAuthor({
-    required this.post,
-    this.author,
-  });
-}
-
-// ✅ Helper class for scoring
-class _ScoredPost {
-  final PostWithAuthor post;
-  final double score;
-
-  _ScoredPost(this.post, this.score);
 }

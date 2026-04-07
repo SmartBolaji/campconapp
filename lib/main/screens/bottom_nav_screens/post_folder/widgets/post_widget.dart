@@ -8,6 +8,7 @@ import 'package:campcon/main/screens/profile/profile_screen.dart';
 import 'package:campcon/main/widgets/format_time.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/image_widget.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/poll_display_widget.dart';
+import 'package:campcon/main/widgets/role_badge.dart';
 import 'package:campcon/main/services/cache.dart'; //  Add this import
 import 'package:cached_network_image/cached_network_image.dart'; //  Add this import
 import 'package:flutter/material.dart';
@@ -149,6 +150,10 @@ class PostWidget extends StatelessWidget {
                                 ),
                               ),
                             ),
+                            if (author != null && author!.role.isNotEmpty) ...[
+                              SizedBox(width: 6.w),
+                              RoleBadge(role: author!.role, size: 14)
+                            ],
                             SizedBox(width: 6.w),
                             Text(
                               '·',
@@ -199,6 +204,7 @@ class PostWidget extends StatelessWidget {
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16.w),
                   child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12.r),
                     child: ImagePageViewWidget(
                       imageUrls: post.imageUrls,
                       showFullScreenButton: false,
@@ -209,15 +215,12 @@ class PostWidget extends StatelessWidget {
                   ),
                 )
               else
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(0),
-                  child: ImagePageViewWidget(
-                    imageUrls: post.imageUrls,
-                    showFullScreenButton: false,
-                    isLiked: postState.isLiked,
-                    onLike: onLike ?? () {},
-                    width: screenWidth,
-                  ),
+                ImagePageViewWidget(
+                  imageUrls: post.imageUrls,
+                  showFullScreenButton: false,
+                  isLiked: postState.isLiked,
+                  onLike: onLike ?? () {},
+                  width: screenWidth,
                 ),
               SizedBox(height: 12.h),
             ],

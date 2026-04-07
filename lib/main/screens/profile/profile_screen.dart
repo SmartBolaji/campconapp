@@ -9,6 +9,7 @@ import 'package:campcon/main/screens/profile/widgets/profile_actions_section.dar
 import 'package:campcon/main/screens/profile/widgets/profile_tabs_section.dart';
 import 'package:campcon/main/screens/profile/widgets/profile_tab_content.dart';
 import 'package:campcon/main/screens/profile/widgets/full_bio_sheet.dart';
+import 'package:campcon/main/widgets/role_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
@@ -300,6 +301,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     SizedBox(width: 4.w),
                     Iconify(Ph.star_fill,
                         size: 14.r, color: const Color(0xFFFFD700)),
+                  ],
+                  if (user.role.isNotEmpty) ...[
+                    SizedBox(width: 6.w),
+                    RoleBadge(role: user.role, size: 12),
                   ],
                 ],
               ),

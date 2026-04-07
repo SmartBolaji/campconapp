@@ -9,7 +9,8 @@ import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/poll
 import 'package:campcon/main/screens/profile/profile_screen.dart';
 import 'package:campcon/main/widgets/format_time.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/image_widget.dart';
-import 'package:campcon/main/services/cache.dart'; //  Add this import
+import 'package:campcon/main/services/cache.dart';
+import 'package:campcon/main/widgets/role_badge.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -218,6 +219,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
                         displayName: displayName,
                         displayImage: displayImage,
                         postState: postState, //  Pass live state
+                        author: widget.author,
                       ),
                     ),
                     SliverToBoxAdapter(
@@ -357,6 +359,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
     required String displayName,
     required String displayImage,
     required PostState postState, //  Accept live state
+    required UserModel? author,
   }) {
     // Get color scheme for dynamic coloring
     final colorScheme = Theme.of(context).colorScheme;
@@ -402,16 +405,24 @@ class _PostViewScreenState extends State<PostViewScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      GestureDetector(
-                        onTap: () => _navigateToProfile(context),
-                        child: Text(
-                          displayName,
-                          style: TextConstants.mediumText.copyWith(
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.textPrimary,
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => _navigateToProfile(context),
+                            child: Text(
+                              displayName,
+                              style: TextConstants.mediumText.copyWith(
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.textPrimary,
+                              ),
+                            ),
                           ),
-                        ),
+                          if (author != null && author.role.isNotEmpty) ...[
+                            SizedBox(width: 6.w),
+                            RoleBadge(role: author.role, size: 14)
+                          ],
+                        ],
                       ),
                       SizedBox(height: 2.h),
                       Text(
@@ -448,21 +459,27 @@ class _PostViewScreenState extends State<PostViewScreen> {
             if (widget.post.imageUrls.length == 1)
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12.r),
+                  child: ImagePageViewWidget(
+                    imageUrls: widget.post.imageUrls,
+                    showFullScreenButton: false,
+                    isLiked: postState.isLiked, //  Live state
+                    onLike: widget.onLike ?? () {},
+                    width: screenWidth - 32.w,
+                  ),
+                ),
+              )
+            else
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12.r),
                 child: ImagePageViewWidget(
                   imageUrls: widget.post.imageUrls,
                   showFullScreenButton: false,
                   isLiked: postState.isLiked, //  Live state
                   onLike: widget.onLike ?? () {},
-                  width: screenWidth - 32.w,
+                  width: screenWidth,
                 ),
-              )
-            else
-              ImagePageViewWidget(
-                imageUrls: widget.post.imageUrls,
-                showFullScreenButton: false,
-                isLiked: postState.isLiked, //  Live state
-                onLike: widget.onLike ?? () {},
-                width: screenWidth,
               ),
           ],
 

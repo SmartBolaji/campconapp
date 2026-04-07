@@ -43,31 +43,49 @@ class PostModel {
   });
 
   factory PostModel.fromMap(Map<String, dynamic> map) {
+    // Safely extract list fields, filtering out non-string values
+    List<String> extractStringList(dynamic value) {
+      if (value == null) return [];
+      if (value is List) {
+        return value.where((item) => item is String).cast<String>().toList();
+      }
+      return [];
+    }
+
+    // Safely extract string fields
+    String extractString(dynamic value) {
+      if (value is String) return value;
+      if (value is num) return value.toString();
+      return '';
+    }
+
     return PostModel(
-      postId: map['postId'] ?? '',
-      userId: map['userId'] ?? '',
-      username: map['username'] ?? '',
-      userProfileImage: map['userProfileImage'] ?? '',
-      content: map['content'] ?? '',
-      imageUrls: List<String>.from(map['imageUrls'] ?? []),
-      likes: map['likes'] ?? 0,
-      comments: map['comments'] ?? 0,
-      shares: map['shares'] ?? 0,
-      likesCount: map['likesCount'] ?? 0,
-      commentsCount: map['commentsCount'] ?? 0,
-      repostsCount: map['repostsCount'] ?? 0,
-      bookmarksCount: map['bookmarksCount'] ?? 0,
+      postId: extractString(map['postId']),
+      userId: extractString(map['userId']),
+      username: extractString(map['username']),
+      userProfileImage: extractString(map['userProfileImage']),
+      content: extractString(map['content']),
+      imageUrls: extractStringList(map['imageUrls']),
+      likes: (map['likes'] as num?)?.toInt() ?? 0,
+      comments: (map['comments'] as num?)?.toInt() ?? 0,
+      shares: (map['shares'] as num?)?.toInt() ?? 0,
+      likesCount: (map['likesCount'] as num?)?.toInt() ?? 0,
+      commentsCount: (map['commentsCount'] as num?)?.toInt() ?? 0,
+      repostsCount: (map['repostsCount'] as num?)?.toInt() ?? 0,
+      bookmarksCount: (map['bookmarksCount'] as num?)?.toInt() ?? 0,
       createdAt: map['createdAt'] is Timestamp
           ? (map['createdAt'] as Timestamp).toDate()
-          : DateTime.parse(
-              map['createdAt'] ?? DateTime.now().toIso8601String()),
+          : DateTime.parse(map['createdAt'] is String
+              ? (map['createdAt'] as String)
+              : DateTime.now().toIso8601String()),
       updatedAt: map['updatedAt'] is Timestamp
           ? (map['updatedAt'] as Timestamp).toDate()
-          : DateTime.parse(
-              map['updatedAt'] ?? DateTime.now().toIso8601String()),
-      campus: map['campus'],
-      tags: List<String>.from(map['tags'] ?? []),
-      poll: map['poll'] != null
+          : DateTime.parse(map['updatedAt'] is String
+              ? (map['updatedAt'] as String)
+              : DateTime.now().toIso8601String()),
+      campus: extractString(map['campus']),
+      tags: extractStringList(map['tags']),
+      poll: map['poll'] != null && map['poll'] is Map
           ? PollModel.fromMap(map['poll'] as Map<String, dynamic>)
           : null,
     );

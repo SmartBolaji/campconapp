@@ -161,6 +161,7 @@ class ImagePageViewWidgetState extends State<ImagePageViewWidget> {
               itemBuilder: (context, index) {
                 return Padding(
                   padding: EdgeInsets.only(
+                    left: index == 0 && widget.imageUrls.length > 1 ? 16.w : 0,
                     right:
                         index == widget.imageUrls.length - 1 ? 0 : imageSpacing,
                   ),
@@ -169,7 +170,7 @@ class ImagePageViewWidgetState extends State<ImagePageViewWidget> {
                     child: Stack(
                       children: [
                         ClipRRect(
-                          // borderRadius: BorderRadius.circular(12.r),
+                          borderRadius: BorderRadius.circular(12.r),
                           child: SizedBox(
                             width: imageWidth,
                             height: imageHeight,
@@ -209,13 +210,64 @@ class ImagePageViewWidgetState extends State<ImagePageViewWidget> {
           SizedBox(height: 8.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(
-              widget.imageUrls.length,
-              (index) => _buildIndicator(index),
-            ),
+            children: _buildLimitedIndicators(),
           ),
         ],
       ],
+    );
+  }
+
+  List<Widget> _buildLimitedIndicators() {
+    final total = widget.imageUrls.length;
+    if (total <= 1) return [];
+
+    const maxVisibleIndicators = 6;
+    int visibleIndicators =
+        total < maxVisibleIndicators ? total : maxVisibleIndicators;
+    int startIndex = (_currentIndex - visibleIndicators ~/ 2)
+        .clamp(0, total - visibleIndicators);
+    int endIndex = (startIndex + visibleIndicators).clamp(0, total);
+
+    List<Widget> indicators = [];
+    if (startIndex > 0) {
+      indicators.add(_buildMiniDot());
+    }
+    for (int i = startIndex; i < endIndex; i++) {
+      indicators.add(_buildIndicatorItem(i));
+    }
+    if (endIndex < total) {
+      indicators.add(_buildMiniDot());
+    }
+    return indicators;
+  }
+
+  Widget _buildMiniDot() {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 2.w),
+      width: 3.w,
+      height: 3.w,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppTheme.textLight.withValues(alpha: 0.4),
+      ),
+    );
+  }
+
+  Widget _buildIndicatorItem(int index) {
+    final isActive = _currentIndex == index;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      margin: EdgeInsets.symmetric(horizontal: 3.w),
+      width: isActive ? 20.w : 6.w,
+      height: 4.h,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(3.r),
+        color: isActive
+            ? AppTheme.primary
+            : AppTheme.textLight.withValues(alpha: 0.4),
+      ),
     );
   }
 
@@ -286,24 +338,6 @@ class ImagePageViewWidgetState extends State<ImagePageViewWidget> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildIndicator(int index) {
-    final isActive = _currentIndex == index;
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-      margin: EdgeInsets.symmetric(horizontal: 3.w),
-      width: isActive ? 20.w : 6.w,
-      height: 4.h,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(3.r),
-        color: isActive
-            ? AppTheme.primary
-            : AppTheme.textLight.withValues(alpha: 0.4),
       ),
     );
   }

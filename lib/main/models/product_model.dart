@@ -96,29 +96,48 @@ class Product {
   }
 
   factory Product.fromJson(Map<String, dynamic> json) {
+    // Safely extract list fields, filtering out non-string values
+    List<String> extractStringList(dynamic value) {
+      if (value == null) return [];
+      if (value is List) {
+        return value
+            .where((item) => item is String)
+            .cast<String>()
+            .toList();
+      }
+      return [];
+    }
+
+    // Safely extract string fields
+    String extractString(dynamic value) {
+      if (value is String) return value;
+      if (value is num) return value.toString();
+      return '';
+    }
+
     return Product(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
-      description: json['description'] ?? '',
-      price: (json['price'] ?? 0).toDouble(),
-      imageUrl: json['imageUrl'],
-      imageUrls: List<String>.from(json['imageUrls'] ?? []),
-      category: json['category'] ?? '',
-      isItem: json['isItem'] ?? true,
-      sellerId: json['sellerId'] ?? '',
-      location: json['location'] ?? '',
+      id: extractString(json['id']),
+      name: extractString(json['name']),
+      description: extractString(json['description']),
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      imageUrl: json['imageUrl'] is String ? json['imageUrl'] : null,
+      imageUrls: extractStringList(json['imageUrls']),
+      category: extractString(json['category']),
+      isItem: json['isItem'] is bool ? json['isItem'] : true,
+      sellerId: extractString(json['sellerId']),
+      location: extractString(json['location']),
       createdAt: json['createdAt'] != null
           ? (json['createdAt'] is Timestamp
               ? (json['createdAt'] as Timestamp).toDate()
               : DateTime.parse(json['createdAt'].toString()))
           : DateTime.now(),
-      stock: json['stock'],
-      discount: json['discount']?.toDouble(),
-      discountedPrice: json['discountedPrice']?.toDouble(),
-      wageType: json['wageType'],
-      views: json['views'],
-      averageRating: json['averageRating']?.toDouble(),
-      reviewCount: json['reviewCount'],
+      stock: json['stock'] is num ? json['stock'] : null,
+      discount: (json['discount'] as num?)?.toDouble(),
+      discountedPrice: (json['discountedPrice'] as num?)?.toDouble(),
+      wageType: json['wageType'] is String ? json['wageType'] : null,
+      views: json['views'] is num ? json['views'] : null,
+      averageRating: (json['averageRating'] as num?)?.toDouble(),
+      reviewCount: json['reviewCount'] is num ? json['reviewCount'] : null,
     );
   }
 

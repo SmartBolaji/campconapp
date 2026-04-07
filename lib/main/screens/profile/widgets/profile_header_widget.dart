@@ -4,6 +4,7 @@ import 'package:campcon/main/models/user_model.dart';
 import 'package:campcon/main/provider/profile_provider.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/new_post.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/post_folder/widgets/full_image_widget.dart';
+import 'package:campcon/main/widgets/role_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
@@ -148,15 +149,26 @@ class ProfileHeaderWidget extends StatelessWidget {
           SizedBox(height: 16.h),
 
           // Name & Username
-          Text(
-            user.name ?? "No Name",
-            style: TextConstants.mediumText.copyWith(
-              fontWeight: FontWeight.bold,
-              fontSize: 20.sp,
-              color: AppTheme.textPrimary,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text(
+                  user.name ?? "No Name",
+                  style: TextConstants.mediumText.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20.sp,
+                    color: AppTheme.textPrimary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (user.role.isNotEmpty) ...[
+                SizedBox(width: 8.w),
+                RoleBadge(role: user.role, size: 14),
+              ],
+            ],
           ),
           SizedBox(height: 4.h),
           Text(

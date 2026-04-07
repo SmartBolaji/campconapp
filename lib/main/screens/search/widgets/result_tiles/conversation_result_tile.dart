@@ -1,5 +1,6 @@
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
+import 'package:campcon/main/services/navigation_helper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -23,11 +24,14 @@ class ConversationResultTile extends StatelessWidget {
     final profileUrl = userData['profileImageUrl'];
     final lastMessage = conversation['lastMessage'] ?? '';
     final unreadCount = conversation['unreadCount'] ?? 0;
+    final otherUserId = conversation['userId'] as String?;
 
     return GestureDetector(
       onTap: () {
         onTap();
-        // Navigate to chat
+        if (otherUserId != null) {
+          NavigationHelper.openChat(context, otherUserId: otherUserId);
+        }
       },
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),

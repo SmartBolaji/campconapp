@@ -1,27 +1,41 @@
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/resource_model.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/resource_folder/widgets/resource_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ph.dart';
+import 'package:page_transition/page_transition.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ResourceResultTile extends StatelessWidget {
   final ResourceModel resource;
   final VoidCallback onTap;
-  
+
   const ResourceResultTile({
     super.key,
     required this.resource,
     required this.onTap,
   });
-  
+
   @override
   Widget build(BuildContext context) {
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
     return GestureDetector(
       onTap: () {
         onTap();
-        // Navigate to resource detail
+        Navigator.push(
+          context,
+          PageTransition(
+            type: PageTransitionType.rightToLeft,
+            child: ResourceDetailScreen(
+              resource: resource,
+              currentUserId: currentUserId,
+            ),
+            duration: const Duration(milliseconds: 300),
+          ),
+        );
       },
       child: Container(
         padding: EdgeInsets.all(16.w),
@@ -47,7 +61,7 @@ class ResourceResultTile extends StatelessWidget {
               ),
             ),
             SizedBox(width: 14.w),
-            
+
             // Info
             Expanded(
               child: Column(
@@ -87,7 +101,7 @@ class ResourceResultTile extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             // Link indicator
             if (resource.isExternalLink)
               Iconify(
@@ -100,7 +114,7 @@ class ResourceResultTile extends StatelessWidget {
       ),
     );
   }
-  
+
   String _getResourceIcon() {
     switch (resource.resourceType.toLowerCase()) {
       case 'lecture notes':
@@ -115,7 +129,7 @@ class ResourceResultTile extends StatelessWidget {
         return Ph.file;
     }
   }
-  
+
   Widget _buildTag(String text) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),

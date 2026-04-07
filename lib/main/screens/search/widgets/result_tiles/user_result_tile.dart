@@ -2,7 +2,7 @@ import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/models/user_model.dart';
 import 'package:campcon/main/screens/profile/profile_screen.dart';
-import 'package:campcon/main/widgets/verified_badge.dart';
+import 'package:campcon/main/widgets/role_badge.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -43,7 +43,7 @@ class UserResultTile extends StatelessWidget {
           ),
         );
       },
-      child: Container(
+      child: SizedBox(
         width: 80.w,
         child: Column(
           children: [
@@ -73,17 +73,31 @@ class UserResultTile extends StatelessWidget {
                   : null,
             ),
             SizedBox(height: 8.h),
-            // Name
-            Text(
-              user.name ?? user.username,
-              style: TextConstants.smallText.copyWith(
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.textPrimary,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
+            // Name with badge
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Text(
+                    user.name ?? user.username,
+                    style: TextConstants.smallText.copyWith(
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                if (user.role.isNotEmpty) ...[
+                  SizedBox(width: 2.w),
+                  RoleBadge(
+                    size: 12.sp,
+                    role: user.role,
+                  ),
+                ],
+              ],
             ),
             // Username
             Text(
@@ -159,11 +173,11 @@ class UserResultTile extends StatelessWidget {
                           color: AppTheme.textPrimary,
                         ),
                       ),
-                      if (user.role == 'verified') ...[
-                        SizedBox(width: 4.w),
-                        VerifyBadge(
+                      if (user.role.isNotEmpty) ...[
+                        SizedBox(width: 6.w),
+                        RoleBadge(
                           size: 14.sp,
-                          role: 'verified',
+                          role: user.role,
                         ),
                       ],
                     ],

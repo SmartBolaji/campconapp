@@ -1,4 +1,4 @@
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserModel {
   final String uid;
@@ -77,47 +77,81 @@ class UserModel {
   String get fullName => name ?? username;
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
+    // Safely extract list fields, filtering out non-string values
+    List<String> extractStringList(dynamic value) {
+      if (value == null) return [];
+      if (value is List) {
+        return value.where((item) => item is String).cast<String>().toList();
+      }
+      return [];
+    }
+
+    // Safely extract string fields
+    String extractString(dynamic value) {
+      if (value is String) return value;
+      if (value is num) return value.toString();
+      return '';
+    }
+
+    // Safely parse DateTime from Timestamp or String
+    DateTime extractDateTime(dynamic value) {
+      if (value is Timestamp) return value.toDate();
+      if (value is String) {
+        try {
+          return DateTime.parse(value);
+        } catch (e) {
+          return DateTime.now();
+        }
+      }
+      return DateTime.now();
+    }
+
     return UserModel(
-      uid: map['uid'] ?? '',
-      email: map['email'] ?? '',
-      name: map['name'],
-      aboutMe: map['aboutMe'],
-      username: map['username'] ?? '',
-      profileImageUrl: map['profileImageUrl'] ?? map['profileImg'],
-      phoneNumber: map['phoneNumber'] ?? '',
+      uid: extractString(map['uid']),
+      email: extractString(map['email']),
+      name: map['name'] is String ? map['name'] : null,
+      aboutMe: map['aboutMe'] is String ? map['aboutMe'] : null,
+      username: extractString(map['username']),
+      profileImageUrl:
+          extractString(map['profileImageUrl'] ?? map['profileImg']),
+      phoneNumber: extractString(map['phoneNumber']),
       createdAt: map['createdAt'] != null
-          ? DateTime.parse(map['createdAt'])
+          ? extractDateTime(map['createdAt'])
           : DateTime.now(),
       updatedAt: map['updatedAt'] != null
-          ? DateTime.parse(map['updatedAt'])
+          ? extractDateTime(map['updatedAt'])
           : DateTime.now(),
-      isStudent: map['isStudent'],
-      school: map['school'],
-      level: map['level'],
-      department: map['department'],
+      isStudent: map['isStudent'] is bool ? map['isStudent'] : null,
+      school: map['school'] is String ? map['school'] : null,
+      level: map['level'] is String ? map['level'] : null,
+      department: map['department'] is String ? map['department'] : null,
       interests:
-          map['interests'] != null ? List<String>.from(map['interests']) : null,
-      bio: map['bio'],
-      profileImage: map['profileImage'] ?? map['profileImg'],
-      followersCount: map['followersCount'] ?? 0,
-      followingCount: map['followingCount'] ?? 0,
-      campus: map['campus'],
-      role: map['role'] ?? 'user',
-      fcmToken: map['fcmToken'],
+          map['interests'] != null ? extractStringList(map['interests']) : null,
+      bio: map['bio'] is String ? map['bio'] : null,
+      profileImage: extractString(map['profileImage'] ?? map['profileImg']),
+      followersCount: (map['followersCount'] as num?)?.toInt() ?? 0,
+      followingCount: (map['followingCount'] as num?)?.toInt() ?? 0,
+      campus: map['campus'] is String ? map['campus'] : null,
+      role: extractString(map['role'] ?? 'user'),
+      fcmToken: map['fcmToken'] is String ? map['fcmToken'] : null,
       // Tags for personalization
-      engagedTags: List<String>.from(map['engagedTags'] ?? []),
-      engagedAuthors: List<String>.from(map['engagedAuthors'] ?? []),
-      searchHistory: List<String>.from(map['searchHistory'] ?? []),
-      viewedCampuses: List<String>.from(map['viewedCampuses'] ?? []),
+      engagedTags: extractStringList(map['engagedTags']),
+      engagedAuthors: extractStringList(map['engagedAuthors']),
+      searchHistory: extractStringList(map['searchHistory']),
+      viewedCampuses: extractStringList(map['viewedCampuses']),
       // Professional
-      isProfessional: map['isProfessional'] ?? false,
-      businessCategory: map['businessCategory'],
-      businessName: map['businessName'],
-      businessDescription: map['businessDescription'],
-      businessHours: map['businessHours'] != null
+      isProfessional:
+          map['isProfessional'] is bool ? map['isProfessional'] : false,
+      businessCategory:
+          map['businessCategory'] is String ? map['businessCategory'] : null,
+      businessName: map['businessName'] is String ? map['businessName'] : null,
+      businessDescription: map['businessDescription'] is String
+          ? map['businessDescription']
+          : null,
+      businessHours: map['businessHours'] is Map
           ? Map<String, dynamic>.from(map['businessHours'])
           : null,
-      contactInfo: map['contactInfo'] != null
+      contactInfo: map['contactInfo'] is Map
           ? Map<String, dynamic>.from(map['contactInfo'])
           : null,
     );
