@@ -115,6 +115,9 @@ class _SignInState extends State<SignIn> {
                               onPressed: () async {
                                 bool success =
                                     await authProvider.forgotPassword();
+
+                                if (!context.mounted) return;
+
                                 if (success) {
                                   showCustomToast(
                                     context,
@@ -144,7 +147,7 @@ class _SignInState extends State<SignIn> {
                             isLoading: authProvider.isLoading,
                             onPressed: authProvider.isLoading
                                 ? () {}
-                                : () => _handleSignIn(context, authProvider),
+                                : () => _handleSignIn(authProvider),
                             backgroundColor: AppTheme.primaryDark,
                             textColor: AppTheme.textPrimary,
                             useWidth: false,
@@ -168,11 +171,14 @@ class _SignInState extends State<SignIn> {
                             onPressed: () async {
                               bool success =
                                   await authProvider.signInWithGoogle();
+
+                              if (!context.mounted) return;
+
                               if (success) {
                                 Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => MainScreen(),
+                                    builder: (context) => const MainScreen(),
                                   ),
                                 );
                               } else {
@@ -187,26 +193,28 @@ class _SignInState extends State<SignIn> {
                               }
                             },
                           ),
-                          SizedBox(height: 15.h),
-                          SocialAuthButton(
-                            text: "Continue with Apple",
-                            icon: Icons.apple,
-                            onPressed: () {
-                              showCustomToast(
-                                context,
-                                'Apple sign-in coming soon!',
-                                type: ToastType.info,
-                              );
-                            },
-                          ),
-                          SizedBox(height: 60.h),
+                          // SizedBox(height: 15.h),
+                          // SocialAuthButton(
+                          //   text: "Continue with Apple",
+                          //   icon: Icons.apple,
+                          //   onPressed: () {
+                          //     showCustomToast(
+                          //       context,
+                          //       'Apple sign-in coming soon!',
+                          //       type: ToastType.info,
+                          //     );
+                          //   },
+                          // ),
+                          SizedBox(height: 30.h),
                           Center(
                             child: GestureDetector(
                               onTap: () {
                                 final navigator =
                                     Navigator.of(context, rootNavigator: true);
                                 navigator.pop();
-                                Future.delayed(Duration.zero, () {
+                                WidgetsBinding.instance
+                                    .addPostFrameCallback((_) {
+                                  if (!navigator.context.mounted) return;
                                   CustomBottomSheet.show(
                                     context: navigator.context,
                                     barrierColor: const Color(0xFFE1AF4B),
@@ -277,8 +285,7 @@ class _SignInState extends State<SignIn> {
     );
   }
 
-  Future<void> _handleSignIn(
-      BuildContext context, AuthProvider authProvider) async {
+  Future<void> _handleSignIn(AuthProvider authProvider) async {
     if (_formKey.currentState!.validate()) {
       authProvider.clearError();
 
@@ -286,13 +293,14 @@ class _SignInState extends State<SignIn> {
       FocusScope.of(context).unfocus();
 
       bool success = await authProvider.signIn();
+
+      if (!mounted) return;
+
       if (success) {
-        if (mounted) {
-          // Use root navigator to pop all routes back to the main app root
-          // This ensures we exit any bottom sheets/dialogs first
-          Navigator.of(context, rootNavigator: true)
-              .popUntil((route) => route.isFirst);
-        }
+        // Use root navigator to pop all routes back to the main app root
+        // This ensures we exit any bottom sheets/dialogs first
+        Navigator.of(context, rootNavigator: true)
+            .popUntil((route) => route.isFirst);
       } else {
         if (authProvider.errorMessage != null &&
             authProvider.errorMessage!.isNotEmpty) {

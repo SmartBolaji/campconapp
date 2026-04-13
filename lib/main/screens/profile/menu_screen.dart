@@ -413,6 +413,8 @@ class MenuScreen extends StatelessWidget {
   }
 
   void _showLogoutDialog(BuildContext context) {
+    final rootNavigator = Navigator.of(context, rootNavigator: true);
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -513,29 +515,25 @@ class MenuScreen extends StatelessWidget {
                     SizedBox(width: 12.w),
                     Expanded(
                       child: Consumer<AuthProvider>(
-                        builder: (context, authProvider, child) {
+                        builder: (consumerContext, authProvider, child) {
                           return ElevatedButton(
                             onPressed: authProvider.isLoading
                                 ? null
                                 : () async {
                                     // Close the dialog first
-                                    Navigator.pop(dialogContext);
+                                    Navigator.of(dialogContext).pop();
 
                                     // Perform logout - this will sign out from Firebase and clear user data
                                     await authProvider.signOut();
 
-                                    // Navigate to onboarding after dialog is closed
-                                    if (context.mounted) {
-                                      // Use pushAndRemoveUntil to clear entire navigation stack
-                                      Navigator.of(context, rootNavigator: true)
-                                          .pushAndRemoveUntil(
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const Onboarding(),
-                                        ),
-                                        (route) => false,
-                                      );
-                                    }
+                                    // Use pushAndRemoveUntil to clear entire navigation stack
+                                    rootNavigator.pushAndRemoveUntil(
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const Onboarding(),
+                                      ),
+                                      (route) => false,
+                                    );
                                   },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppTheme.error,

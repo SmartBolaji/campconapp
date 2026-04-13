@@ -422,7 +422,7 @@ class AuthProvider extends ChangeNotifier {
     } catch (e) {
       setLoading(false);
       debugPrint('Error signing in with Google: $e');
-      setError('Failed to sign in with Google. Please try again.');
+      setError(_getGoogleSignInErrorMessage(e));
       return false;
     }
   }
@@ -436,21 +436,43 @@ class AuthProvider extends ChangeNotifier {
       final result = await _authService.signInWithGoogle(createProfile: false);
 
       if (result != null && result.user != null) {
+        final firebaseUser = result.user!;
+
+        _pendingEmail = firebaseUser.email;
+        _prefillGoogleData(firebaseUser);
+
+        final provisionalUser = UserModel(
+          uid: firebaseUser.uid,
+          email: firebaseUser.email ?? '',
+          name: firebaseUser.displayName,
+          username: (firebaseUser.email?.split('@')[0].toLowerCase() ?? ''),
+          phoneNumber: firebaseUser.phoneNumber ?? '',
+          profileImageUrl: firebaseUser.photoURL,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+
+        _currentUser = provisionalUser;
+
+        await SecureStorageService.saveAuthStatus(
+          userId: provisionalUser.uid,
+          email: provisionalUser.email,
+          userData: provisionalUser.toMap(),
+        );
+
         bool needsSetup =
-            await _authService.needsProfileSetup(result.user!.uid);
+            await _authService.needsProfileSetup(firebaseUser.uid);
 
         if (!needsSetup) {
-          _currentUser = await _authService.getUserData(result.user!.uid);
-
-          if (_currentUser != null) {
+          final existingUser = await _authService.getUserData(firebaseUser.uid);
+          if (existingUser != null) {
+            _currentUser = existingUser;
             await SecureStorageService.saveAuthStatus(
-              userId: _currentUser!.uid,
-              email: _currentUser!.email,
-              userData: _currentUser!.toMap(),
+              userId: existingUser.uid,
+              email: existingUser.email,
+              userData: existingUser.toMap(),
             );
           }
-        } else {
-          _prefillGoogleData(result.user!);
         }
 
         setLoading(false);
@@ -462,7 +484,7 @@ class AuthProvider extends ChangeNotifier {
     } catch (e) {
       setLoading(false);
       debugPrint('Error with Google sign up: $e');
-      setError('Failed to continue with Google. Please try again.');
+      setError(_getGoogleSignInErrorMessage(e));
       return {'success': false, 'needsProfileSetup': false};
     }
   }
@@ -631,15 +653,27 @@ class AuthProvider extends ChangeNotifier {
 
   // Sign out
   Future<void> signOut() async {
+    setLoading(true);
+
     try {
       await _authService.signOut();
-      await SecureStorageService.clearAuthData();
-      _currentUser = null;
-      _clearControllers();
-      notifyListeners();
     } catch (e) {
-      debugPrint('Error signing out: $e');
+      debugPrint('Error signing out remotely: $e');
     }
+
+    try {
+      await SecureStorageService.clearAuthData();
+    } catch (e) {
+      debugPrint('Error clearing local auth data: $e');
+    }
+
+    _currentUser = null;
+    _pendingEmail = null;
+    _isEmailVerified = false;
+    _errorMessage = null;
+    _clearControllers();
+    setLoading(false);
+    notifyListeners();
   }
 
   // Forgot password
@@ -834,6 +868,29 @@ class AuthProvider extends ChangeNotifier {
       }
     }
     return 'An unexpected error occurred.';
+  }
+
+  String _getGoogleSignInErrorMessage(dynamic error) {
+    if (error is FirebaseAuthException) {
+      return _getErrorMessage(error.code);
+    }
+
+    final message = error.toString().toLowerCase();
+
+    if (message.contains('network')) {
+      return 'Network error. Please check your internet connection.';
+    }
+
+    if (message.contains('sign_in_failed') ||
+        message.contains('apiexception: 10')) {
+      return 'Google Sign-In is not configured for this build yet. Add your app SHA-1/SHA-256 in Firebase, download a fresh google-services.json, then rebuild.';
+    }
+
+    if (message.contains('sign_in_canceled') || message.contains('cancelled')) {
+      return 'Google sign-in was canceled.';
+    }
+
+    return 'Failed to continue with Google. Please try again.';
   }
 
   void _clearControllers() {

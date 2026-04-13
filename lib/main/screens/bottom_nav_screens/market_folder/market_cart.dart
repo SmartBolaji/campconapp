@@ -146,6 +146,8 @@ class _MarketCartScreenState extends State<MarketCartScreen>
         unselectedLabelStyle: TextConstants.smallText.copyWith(
           fontSize: 13.sp,
         ),
+        // dividerColor: AppTheme.border,
+        dividerHeight: 0,
         tabs: [
           Tab(text: 'Active (${provider.activeOrders.length})'),
           const Tab(text: 'Completed'),

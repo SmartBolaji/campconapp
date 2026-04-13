@@ -78,6 +78,23 @@ class AuthService {
   // Sign in with Google
   Future<UserCredential?> signInWithGoogle({bool createProfile = true}) async {
     try {
+      if (kIsWeb) {
+        final googleProvider = GoogleAuthProvider();
+        googleProvider.addScope('email');
+
+        UserCredential result = await _auth.signInWithPopup(googleProvider);
+
+        if (createProfile && result.user != null) {
+          bool exists = await _checkUserExists(result.user!.uid);
+          if (!exists) {
+            await _createDefaultProfile(result.user!);
+          }
+        }
+
+        return result;
+      }
+
+      await _googleSignIn.signOut();
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) return null;
 
@@ -243,13 +260,17 @@ class AuthService {
   // Sign out
   Future<void> signOut() async {
     try {
-      await Future.wait([
-        _auth.signOut(),
-        _googleSignIn.signOut(),
-      ]);
+      await _auth.signOut();
     } catch (e) {
-      debugPrint('Error signing out: $e');
-      rethrow;
+      debugPrint('Error signing out from FirebaseAuth: $e');
+    }
+
+    if (!kIsWeb) {
+      try {
+        await _googleSignIn.signOut();
+      } catch (e) {
+        debugPrint('Error signing out from GoogleSignIn: $e');
+      }
     }
   }
 

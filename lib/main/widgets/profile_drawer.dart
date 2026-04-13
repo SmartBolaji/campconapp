@@ -3,7 +3,6 @@ import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/theme_provider.dart';
-import 'package:campcon/main/provider/update_provider.dart';
 import 'package:campcon/main/screens/profile/account_information_screen.dart';
 import 'package:campcon/main/screens/profile/menu_screen.dart';
 import 'package:campcon/main/screens/profile/profile_screen.dart';
@@ -24,6 +23,8 @@ class ProfileDrawer extends StatelessWidget {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, _) {
         final currentUser = authProvider.currentUser;
+        final hasProfileImage =
+            (currentUser?.profileImageUrl ?? '').trim().isNotEmpty;
 
         if (currentUser == null) {
           return const SizedBox.shrink();
@@ -65,19 +66,19 @@ class ProfileDrawer extends StatelessWidget {
                         height: 80.h,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: currentUser.profileImageUrl == null
+                          color: !hasProfileImage
                               ? Theme.of(context).primaryColor.withOpacity(0.1)
                               : null,
-                          image: currentUser.profileImageUrl != null
+                          image: hasProfileImage
                               ? DecorationImage(
                                   image: CachedNetworkImageProvider(
-                                    currentUser.profileImageUrl!,
+                                    currentUser.profileImageUrl!.trim(),
                                   ),
                                   fit: BoxFit.cover,
                                 )
                               : null,
                         ),
-                        child: currentUser.profileImageUrl == null
+                        child: !hasProfileImage
                             ? Center(
                                 child: Iconify(
                                   Ph.user,
@@ -91,7 +92,7 @@ class ProfileDrawer extends StatelessWidget {
 
                       // Name
                       Text(
-                        currentUser.fullName ?? 'User',
+                        currentUser.fullName,
                         style: TextConstants.boldText.copyWith(
                           fontSize: 17.sp,
                           color: context.appColors.textPrimary,
@@ -102,7 +103,7 @@ class ProfileDrawer extends StatelessWidget {
 
                       // Username
                       Text(
-                        '@${currentUser.username ?? 'username'}',
+                        '@${currentUser.username}',
                         style: TextConstants.smallText.copyWith(
                           fontSize: 13.sp,
                           color: context.appColors.textLight,

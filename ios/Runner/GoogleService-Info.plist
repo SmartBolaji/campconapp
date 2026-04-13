@@ -3,17 +3,23 @@
 <plist version="1.0">
 <dict>
 	<key>API_KEY</key>
-	<string>AIzaSyB_kNYjQdvKmDemNlWHwT1p5FcvxUaUhdQ</string>
+	<string>AIzaSyCNFhw6wGLJHOfxpfxJY58e_0-46BMtlX0</string>
 	<key>GCM_SENDER_ID</key>
-	<string>445906960289</string>
+	<string>987673267133</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.example.paytmmatka</string>
+	<string>com.campcon.app</string>
 	<key>PROJECT_ID</key>
-	<string>attendance-app-479e1</string>
+	<string>campcon-806c3</string>
 	<key>STORAGE_BUCKET</key>
-	<string>attendance-app-479e1.appspot.com</string>
+	<string>campcon-806c3.firebasestorage.app</string>
+	<key>CLIENT_ID</key>
+	<string>987673267133-8919919gjr80hkhru0nkq69jomf3jth9.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.987673267133-8919919gjr80hkhru0nkq69jomf3jth9</string>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:987673267133:ios:5a9c17b441c2afbc66e0d4</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -24,7 +30,5 @@
 	<true></true>
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
-	<key>GOOGLE_APP_ID</key>
-	<string>1:445906960289:ios:ded0bb1e7667a4e06815e0</string>
 </dict>
 </plist>

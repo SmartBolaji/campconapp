@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
-import 'package:campcon/main/widgets/profile_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -10,7 +9,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:iconly/iconly.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ph.dart';
-import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 
 class CustomTopBar extends StatelessWidget {
@@ -55,6 +53,8 @@ class CustomTopBar extends StatelessWidget {
         final colorScheme = Theme.of(context).colorScheme;
         final currentUser = authProvider.currentUser;
         final bool isLoggedIn = currentUser != null;
+        final hasProfileImage =
+            (currentUser?.profileImageUrl ?? '').trim().isNotEmpty;
 
         return Stack(
           alignment: Alignment.center,
@@ -85,18 +85,18 @@ class CustomTopBar extends StatelessWidget {
                   child: Container(
                     width: 35.w,
                     height: 35.h,
-                    padding: isLoggedIn && currentUser.profileImageUrl == null
+                    padding: isLoggedIn && !hasProfileImage
                         ? EdgeInsets.all(6.w)
                         : EdgeInsets.zero,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: isLoggedIn && currentUser.profileImageUrl == null
+                      color: isLoggedIn && !hasProfileImage
                           ? appColors.primaryBackground
                           : null,
-                      image: isLoggedIn && currentUser.profileImageUrl != null
+                      image: isLoggedIn && hasProfileImage
                           ? DecorationImage(
                               image: CachedNetworkImageProvider(
-                                  currentUser.profileImageUrl!),
+                                  currentUser?.profileImageUrl?.trim() ?? ''),
                               fit: BoxFit.cover,
                               onError: (exception, stackTrace) => Container(
                                 color: appColors.primaryBackground,
@@ -109,7 +109,7 @@ class CustomTopBar extends StatelessWidget {
                             )
                           : null,
                     ),
-                    child: isLoggedIn && currentUser.profileImageUrl == null
+                    child: isLoggedIn && !hasProfileImage
                         ? Iconify(
                             Ph.user,
                             color: colorScheme.primary,

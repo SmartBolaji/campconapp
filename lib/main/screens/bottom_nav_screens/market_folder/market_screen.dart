@@ -310,18 +310,18 @@ class _MarketScreenState extends State<MarketScreen> {
 
     // Other Products Section
     if (otherProducts.isNotEmpty) {
-      slivers.add(
-        SliverToBoxAdapter(
-          child: _buildSectionHeader(
-            icon: Ph.buildings,
-            title: myProducts.isNotEmpty
-                ? 'Explore More'
-                : (provider.selectedTab == 0 ? 'Explore' : 'Explore'),
-            count: otherProducts.length,
-            color: AppTheme.textSecondary,
-          ),
-        ),
-      );
+      // slivers.add(
+      //   SliverToBoxAdapter(
+      //     child: _buildSectionHeader(
+      //       icon: Ph.buildings,
+      //       title: myProducts.isNotEmpty
+      //           ? 'Explore More'
+      //           : (provider.selectedTab == 0 ? 'Explore' : 'Explore'),
+      //       count: otherProducts.length,
+      //       color: AppTheme.textSecondary,
+      //     ),
+      //   ),
+      // );
 
       slivers.add(
         SliverPadding(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:campcon/main/constants/app_colors.dart';
 import 'package:campcon/main/constants/text_constants.dart';
+import 'package:campcon/main/widgets/dialogs/interests_dialog.dart';
 import 'package:campcon/main/widgets/dialogs/student_details_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:campcon/main/provider/animated_provider.dart';
@@ -186,8 +187,23 @@ class _UserTypeDialogState extends State<UserTypeDialog>
                             onTap: () async {
                               await _controller.reverse();
                               if (mounted) {
-                                widget.onSelection(false);
                                 Navigator.of(context).pop(false);
+
+                                // Show interests dialog for non-students too
+                                final interests = await InterestsDialog.show(
+                                  context,
+                                  onSubmit: (selectedInterests) {
+                                    widget.onSelection(
+                                      false,
+                                      interests: selectedInterests,
+                                    );
+                                  },
+                                );
+
+                                // If user dismisses interests dialog, proceed without interests
+                                if (interests == null && mounted) {
+                                  widget.onSelection(false);
+                                }
                               }
                             },
                           ),

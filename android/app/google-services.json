@@ -22,13 +22,49 @@
           }
         },
         {
-          "client_id": "987673267133-uj2fen09j1pe2ov6jt96g8saafao1vco.apps.googleusercontent.com",
+          "client_id": "987673267133-288k426lp9vqc4o87rh2bfu1410cu32d.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.campcon.app",
-            "certificate_hash": "36834b34f9ba71a84e09c635b4b53aaf67cfb031"
+            "certificate_hash": "1d217de4e5e568a323a3c636563df06b97eb744b"
           }
         },
+        {
+          "client_id": "987673267133-7vqfdmn1m8ihnsig3i1a4r9usjin2i94.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcDgKr1TSbk3cOtbjW2u55uPdlG1v7csA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "987673267133-7vqfdmn1m8ihnsig3i1a4r9usjin2i94.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "987673267133-8919919gjr80hkhru0nkq69jomf3jth9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.campcon.app"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:987673267133:android:1bea2cb2d4fea37b66e0d4",
+        "android_client_info": {
+          "package_name": "com.example.campcon_dashboard"
+        }
+      },
+      "oauth_client": [
         {
           "client_id": "987673267133-7vqfdmn1m8ihnsig3i1a4r9usjin2i94.apps.googleusercontent.com",
           "client_type": 3

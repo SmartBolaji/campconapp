@@ -101,7 +101,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 : "Continue",
                             onPressed: authProvider.isLoading
                                 ? () {}
-                                : () => _handleSendOTP(context, authProvider),
+                                : () => _handleSendOTP(authProvider),
                             backgroundColor: AppTheme.primaryDark,
                             textColor: AppTheme.textPrimary,
                             useWidth: false,
@@ -126,21 +126,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               Map<String, dynamic> result =
                                   await authProvider.createAccountWithGoogle();
 
+                              if (!context.mounted) return;
+
                               if (result['success']) {
                                 if (result['needsProfileSetup']) {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) => const AccountSetup(
-                                          // isGoogleSignUp: true,
-                                          ),
+                                        isGoogleSignUp: true,
+                                      ),
                                     ),
                                   );
                                 } else {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                        builder: (context) => MainScreen()),
+                                        builder: (context) =>
+                                            const MainScreen()),
                                   );
                                 }
                               } else {
@@ -154,26 +157,28 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               }
                             },
                           ),
-                          SizedBox(height: 15.h),
-                          SocialAuthButton(
-                            text: "Continue with Apple",
-                            icon: Icons.apple,
-                            onPressed: () {
-                              showCustomToast(
-                                context,
-                                'Apple sign-in coming soon!',
-                                type: ToastType.info,
-                              );
-                            },
-                          ),
-                          SizedBox(height: 60.h),
+                          // SizedBox(height: 15.h),
+                          // SocialAuthButton(
+                          //   text: "Continue with Apple",
+                          //   icon: Icons.apple,
+                          //   onPressed: () {
+                          //     showCustomToast(
+                          //       context,
+                          //       'Apple sign-in coming soon!',
+                          //       type: ToastType.info,
+                          //     );
+                          //   },
+                          // ),
+                          SizedBox(height: 30.h),
                           Center(
                             child: GestureDetector(
                               onTap: () {
                                 final navigator =
                                     Navigator.of(context, rootNavigator: true);
                                 navigator.pop();
-                                Future.delayed(Duration.zero, () {
+                                WidgetsBinding.instance
+                                    .addPostFrameCallback((_) {
+                                  if (!navigator.context.mounted) return;
                                   CustomBottomSheet.show(
                                     context: navigator.context,
                                     barrierColor: const Color(0xFFE1AF4B),
@@ -241,21 +246,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Future<void> _handleSendOTP(
-      BuildContext context, AuthProvider authProvider) async {
+  Future<void> _handleSendOTP(AuthProvider authProvider) async {
     if (_formKey.currentState!.validate()) {
       authProvider.clearError();
       FocusScope.of(context).unfocus();
 
       bool success = await authProvider.sendEmailOTP();
 
+      if (!mounted) return;
+
       if (success) {
-        if (mounted) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const VerificationScreen()),
-          );
-        }
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const VerificationScreen()),
+        );
       } else {
         if (authProvider.errorMessage != null) {
           showCustomToast(

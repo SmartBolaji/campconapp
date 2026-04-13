@@ -143,8 +143,8 @@ class _BottomNavWidgetState extends State<BottomNavWidget> {
                                     : unreadCount.toString();
 
                                 return Positioned(
-                                  top: -4.h,
-                                  right: -4.w,
+                                  top: -0.h,
+                                  right: 5.w,
                                   child: Container(
                                     padding: EdgeInsets.symmetric(
                                       horizontal:
@@ -159,7 +159,7 @@ class _BottomNavWidgetState extends State<BottomNavWidget> {
                                       displayCount,
                                       style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: 10.sp,
+                                        fontSize: 9.sp,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
