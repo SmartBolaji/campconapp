@@ -67,6 +67,10 @@ class _ProfilePicState extends State<ProfilePic> {
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
+        final googleProfileImageUrl =
+            authProvider.currentUser?.profileImageUrl?.trim() ?? '';
+        final hasGoogleProfileImage = googleProfileImageUrl.isNotEmpty;
+
         return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -106,6 +110,18 @@ class _ProfilePicState extends State<ProfilePic> {
                               ),
                             ),
                           )
+                        : hasGoogleProfileImage
+                            ? Container(
+                                width: 120.w,
+                                height: 120.h,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  image: DecorationImage(
+                                    image: NetworkImage(googleProfileImageUrl),
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              )
                         : Iconify(
                             Ph.user,
                             size: 50.sp,
@@ -140,7 +156,7 @@ class _ProfilePicState extends State<ProfilePic> {
             ),
             SizedBox(height: 20.h),
             Text(
-              authProvider.profileImage != null
+              authProvider.profileImage != null || hasGoogleProfileImage
                   ? "Tap to change photo"
                   : "Set your profile picture",
               style: TextConstants.smallText.copyWith(
