@@ -122,11 +122,11 @@ class _ProfilePicState extends State<ProfilePic> {
                                   ),
                                 ),
                               )
-                        : Iconify(
-                            Ph.user,
-                            size: 50.sp,
-                            color: AppTheme.primary,
-                          ),
+                            : Iconify(
+                                Ph.user,
+                                size: 50.sp,
+                                color: AppTheme.primary,
+                              ),
                   ),
 
                   // Camera icon overlay
