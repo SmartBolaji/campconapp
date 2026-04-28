@@ -12,6 +12,7 @@ class ImagePageViewWidget extends StatefulWidget {
   final bool isLiked;
   final Function onLike;
   final double width;
+  final EdgeInsets horizontalPadding;
 
   const ImagePageViewWidget({
     Key? key,
@@ -20,6 +21,7 @@ class ImagePageViewWidget extends StatefulWidget {
     required this.isLiked,
     required this.onLike,
     required this.width,
+    this.horizontalPadding = EdgeInsets.zero,
   }) : super(key: key);
 
   @override
@@ -92,15 +94,15 @@ class ImagePageViewWidgetState extends State<ImagePageViewWidget> {
     super.dispose();
   }
 
-  // Calculate image width based on number of images
-  double _getImageWidth(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+  // Calculate image width from the layout width provided by the parent.
+  double _getImageWidth() {
+    final availableWidth = widget.width - widget.horizontalPadding.horizontal;
     if (widget.imageUrls.length == 1) {
-      // Single image - use 90% of screen width
-      return screenWidth * 0.9;
+      // Single image - use full available width to align with parent padding.
+      return availableWidth;
     } else {
-      // Multiple images - 70% of screen width so next image is visible
-      return screenWidth * 0.7;
+      // Multiple images - leave a preview of the next image.
+      return availableWidth * 0.75;
     }
   }
 
@@ -126,7 +128,7 @@ class ImagePageViewWidgetState extends State<ImagePageViewWidget> {
       );
     }
 
-    final imageWidth = _getImageWidth(context);
+    final imageWidth = _getImageWidth();
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -157,11 +159,10 @@ class ImagePageViewWidgetState extends State<ImagePageViewWidget> {
               scrollDirection: Axis.horizontal,
               itemCount: widget.imageUrls.length,
               physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.zero,
+              padding: widget.horizontalPadding,
               itemBuilder: (context, index) {
                 return Padding(
                   padding: EdgeInsets.only(
-                    left: index == 0 && widget.imageUrls.length > 1 ? 16.w : 0,
                     right:
                         index == widget.imageUrls.length - 1 ? 0 : imageSpacing,
                   ),

@@ -81,6 +81,8 @@ class PostWidget extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final appColors = context.appColors;
     final colorScheme = Theme.of(context).colorScheme;
+    final contentStartPadding = 16.w + 40.r + 10.w;
+    final trailingContentPadding = 16.w;
 
     final displayName = author?.name ?? post.username;
     final displayImage = author?.profileImageUrl ?? '';
@@ -200,34 +202,26 @@ class PostWidget extends StatelessWidget {
               ),
             ),
             if (hasImages) ...[
-              if (post.imageUrls.length == 1)
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12.r),
-                    child: ImagePageViewWidget(
-                      imageUrls: post.imageUrls,
-                      showFullScreenButton: false,
-                      isLiked: postState.isLiked,
-                      onLike: onLike ?? () {},
-                      width: screenWidth - 32.w,
-                    ),
-                  ),
-                )
-              else
-                ImagePageViewWidget(
-                  imageUrls: post.imageUrls,
-                  showFullScreenButton: false,
-                  isLiked: postState.isLiked,
-                  onLike: onLike ?? () {},
-                  width: screenWidth,
+              ImagePageViewWidget(
+                imageUrls: post.imageUrls,
+                showFullScreenButton: false,
+                isLiked: postState.isLiked,
+                onLike: onLike ?? () {},
+                width: screenWidth,
+                horizontalPadding: EdgeInsets.only(
+                  left: contentStartPadding,
+                  right: trailingContentPadding,
                 ),
+              ),
               SizedBox(height: 12.h),
             ],
             // Poll widget
             if (post.poll != null) ...[
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                padding: EdgeInsets.only(
+                  left: contentStartPadding,
+                  right: trailingContentPadding,
+                ),
                 child: PollDisplayWidget(
                   poll: post.poll!,
                   postId: post.postId,
@@ -245,7 +239,10 @@ class PostWidget extends StatelessWidget {
               SizedBox(height: 12.h),
             ],
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 0.h),
+              padding: EdgeInsets.only(
+                left: contentStartPadding,
+                right: trailingContentPadding,
+              ),
               child: Row(
                 children: [
                   _buildActionButton(

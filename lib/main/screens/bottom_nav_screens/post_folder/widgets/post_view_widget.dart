@@ -456,31 +456,14 @@ class _PostViewScreenState extends State<PostViewScreen> {
           // Images
           if (hasImages) ...[
             SizedBox(height: 12.h),
-            if (widget.post.imageUrls.length == 1)
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12.r),
-                  child: ImagePageViewWidget(
-                    imageUrls: widget.post.imageUrls,
-                    showFullScreenButton: false,
-                    isLiked: postState.isLiked, //  Live state
-                    onLike: widget.onLike ?? () {},
-                    width: screenWidth - 32.w,
-                  ),
-                ),
-              )
-            else
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12.r),
-                child: ImagePageViewWidget(
-                  imageUrls: widget.post.imageUrls,
-                  showFullScreenButton: false,
-                  isLiked: postState.isLiked, //  Live state
-                  onLike: widget.onLike ?? () {},
-                  width: screenWidth,
-                ),
-              ),
+            ImagePageViewWidget(
+              imageUrls: widget.post.imageUrls,
+              showFullScreenButton: false,
+              isLiked: postState.isLiked, //  Live state
+              onLike: widget.onLike ?? () {},
+              width: screenWidth,
+              horizontalPadding: EdgeInsets.symmetric(horizontal: 16.w),
+            ),
           ],
 
           // Poll widget
@@ -776,13 +759,7 @@ class _PostViewScreenState extends State<PostViewScreen> {
               GestureDetector(
                 onTap: _isPosting ? null : () => _postComment(feedProvider),
                 child: Container(
-                  // padding: EdgeInsets.all(12.w),
-                  decoration: BoxDecoration(
-                      // color: _commentController.text.trim().isNotEmpty
-                      //     ? AppTheme.primary
-                      //     : AppTheme.textLight.withValues(alpha: 0.3),
-                      // shape: BoxShape.circle,
-                      ),
+                  decoration: const BoxDecoration(),
                   child: _isPosting
                       ? SizedBox(
                           width: 20.sp,
@@ -800,11 +777,6 @@ class _PostViewScreenState extends State<PostViewScreen> {
                             fontSize: 14.sp,
                           ),
                         ),
-                  // Icon(
-                  //     Icons.send_rounded,
-                  //     size: 20.sp,
-                  //     color: AppTheme.white,
-                  //   ),
                 ),
               ),
             ],
