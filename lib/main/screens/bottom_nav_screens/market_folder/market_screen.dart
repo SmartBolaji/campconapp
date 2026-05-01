@@ -7,6 +7,7 @@ import 'package:campcon/main/screens/bottom_nav_screens/market_folder/product/po
 import 'package:campcon/main/screens/bottom_nav_screens/market_folder/market_cart.dart';
 import 'package:campcon/main/provider/buyer_orders_provider.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/market_folder/product/post_service_screen.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/market_folder/widgets/listing_guide_screen.dart';
 import 'package:campcon/main/screens/search/search_screen.dart';
 import 'package:campcon/main/widgets/custom_top_bar.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/market_folder/widgets/empty_state.dart';
@@ -444,6 +445,8 @@ class _MarketScreenState extends State<MarketScreen> {
   }
 
   void _showPostOptions(BuildContext context) {
+    final parentContext = context;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: AppTheme.surface,
@@ -475,11 +478,17 @@ class _MarketScreenState extends State<MarketScreen> {
                     label: 'List an Item',
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const PostItemScreen(),
-                        ),
+                      ListingGuideScreen.launch(
+                        context: parentContext,
+                        type: ListingGuideType.item,
+                        onContinue: () {
+                          Navigator.push(
+                            parentContext,
+                            MaterialPageRoute(
+                              builder: (context) => const PostItemScreen(),
+                            ),
+                          );
+                        },
                       );
                     },
                   ),
@@ -488,11 +497,17 @@ class _MarketScreenState extends State<MarketScreen> {
                     label: 'List a Service',
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const PostServiceScreen(),
-                        ),
+                      ListingGuideScreen.launch(
+                        context: parentContext,
+                        type: ListingGuideType.service,
+                        onContinue: () {
+                          Navigator.push(
+                            parentContext,
+                            MaterialPageRoute(
+                              builder: (context) => const PostServiceScreen(),
+                            ),
+                          );
+                        },
                       );
                     },
                   ),
