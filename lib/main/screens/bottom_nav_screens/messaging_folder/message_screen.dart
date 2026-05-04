@@ -14,8 +14,8 @@ import 'package:campcon/main/widgets/empty_state_view.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/messaging_folder/message.dart';
 import 'package:campcon/main/widgets/navigation_helper.dart';
 import 'package:campcon/main/widgets/profile_drawer.dart';
+import 'package:campcon/main/widgets/role_badge.dart';
 import 'package:campcon/main/widgets/shimmer_card.dart';
-import 'package:campcon/main/widgets/verified_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconly/iconly.dart';
@@ -352,7 +352,7 @@ class _MessagingScreenState extends State<MessagingScreen> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            VerifyBadge(
+                            RoleBadge(
                               role: role,
                               size: 14.0,
                             ),

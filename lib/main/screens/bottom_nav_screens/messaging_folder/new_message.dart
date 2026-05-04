@@ -5,7 +5,7 @@ import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/messaging_folder/message.dart';
 import 'package:campcon/main/services/cache.dart';
 import 'package:campcon/main/widgets/navigation_helper.dart';
-import 'package:campcon/main/widgets/verified_badge.dart';
+import 'package:campcon/main/widgets/role_badge.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -382,7 +382,7 @@ class _NewMessageScreenState extends State<NewMessageScreen> {
                                 ),
                               ),
                               // Verify Badge
-                              VerifyBadge(
+                              RoleBadge(
                                 role: role,
                                 size: 14.0,
                               ),

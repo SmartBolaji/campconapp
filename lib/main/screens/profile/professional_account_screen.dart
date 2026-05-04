@@ -171,16 +171,22 @@ class _ProfessionalAccountScreenState extends State<ProfessionalAccountScreen> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
+        automaticallyImplyActions: false,
         leading: GestureDetector(
           onTap: _prevStep,
           child: Padding(
-            padding: EdgeInsets.all(12.r),
-            child:
-                Iconify(Ph.arrow_left, size: 24.r, color: AppTheme.textPrimary),
+            padding: EdgeInsets.all(16.r),
+            child: Iconify(Ph.arrow_left,
+                size: 24.sp, color: AppTheme.textPrimary),
           ),
         ),
-        title: Text('Professional Account',
-            style: TextConstants.boldText.copyWith(fontSize: 18.sp)),
+        title: Text(
+          'Professional Account',
+          style: TextConstants.boldText.copyWith(
+            fontSize: 16.sp,
+          ),
+        ),
+        centerTitle: true,
       ),
       body: Column(
         children: [

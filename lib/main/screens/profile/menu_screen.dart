@@ -20,12 +20,20 @@ import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ph.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
+import 'package:campcon/main/provider/admin_provider.dart';
+import 'package:campcon/main/screens/profile/admin/admin_screen.dart';
 
 class MenuScreen extends StatelessWidget {
   const MenuScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final admin = context.watch<AdminProvider>();
+    // ensure admin access is checked for current user (cached inside provider)
+    if (auth.currentUser?.uid != null) {
+      Future.microtask(() => admin.checkAdminAccess(auth.currentUser?.uid));
+    }
     final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -141,6 +149,31 @@ class MenuScreen extends StatelessWidget {
                   ),
 
                   SizedBox(height: 24.h),
+
+                  // Admin Section (only visible to admin users)
+                  if (admin.isAdmin) ...[
+                    _buildSectionHeader('Admin'),
+                    SizedBox(height: 8.h),
+                    _buildSettingsItem(
+                      context: context,
+                      icon: Ph.shield_check,
+                      iconColor: AppTheme.primary,
+                      iconBgColor: AppTheme.primary.withValues(alpha: 0.1),
+                      title: 'Admin Console',
+                      subtitle: 'Manage posts, sellers, listings, pickup apps',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          PageTransition(
+                            type: PageTransitionType.rightToLeft,
+                            child: const AdminScreen(),
+                            duration: const Duration(milliseconds: 300),
+                          ),
+                        );
+                      },
+                    ),
+                    SizedBox(height: 24.h),
+                  ],
 
                   // Marketplace Section
                   _buildSectionHeader('Marketplace'),

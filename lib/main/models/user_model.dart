@@ -36,6 +36,7 @@ class UserModel {
   final String? businessDescription;
   final Map<String, dynamic>? businessHours;
   final Map<String, dynamic>? contactInfo;
+  final String? sellerStatus; // 'pending', 'approved', 'rejected'
 
   UserModel({
     required this.uid,
@@ -71,12 +72,29 @@ class UserModel {
     this.businessDescription,
     this.businessHours,
     this.contactInfo,
+    this.sellerStatus,
   });
 
   // Add getter for fullName
   String get fullName => name ?? username;
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
+    final Map<String, dynamic>? sellerApplication =
+        map['sellerApplication'] is Map
+            ? Map<String, dynamic>.from(map['sellerApplication'])
+            : null;
+    final dynamic sellerCategoryRaw =
+        sellerApplication == null ? null : sellerApplication['sellerCategory'];
+    final dynamic sellerNameRaw =
+        sellerApplication == null ? null : sellerApplication['sellerName'];
+    final dynamic sellerDescriptionRaw = sellerApplication == null
+        ? null
+        : sellerApplication['sellerDescription'];
+    final dynamic sellerHoursRaw =
+        sellerApplication == null ? null : sellerApplication['sellerHours'];
+    final dynamic sellerContactRaw =
+        sellerApplication == null ? null : sellerApplication['contactInfo'];
+
     // Safely extract list fields, filtering out non-string values
     List<String> extractStringList(dynamic value) {
       if (value == null) return [];
@@ -142,18 +160,26 @@ class UserModel {
       // Professional
       isProfessional:
           map['isProfessional'] is bool ? map['isProfessional'] : false,
-      businessCategory:
-          map['businessCategory'] is String ? map['businessCategory'] : null,
-      businessName: map['businessName'] is String ? map['businessName'] : null,
+      businessCategory: map['businessCategory'] is String
+          ? map['businessCategory']
+          : (sellerCategoryRaw is String ? sellerCategoryRaw : null),
+      businessName: map['businessName'] is String
+          ? map['businessName']
+          : (sellerNameRaw is String ? sellerNameRaw : null),
       businessDescription: map['businessDescription'] is String
           ? map['businessDescription']
-          : null,
+          : (sellerDescriptionRaw is String ? sellerDescriptionRaw : null),
       businessHours: map['businessHours'] is Map
           ? Map<String, dynamic>.from(map['businessHours'])
-          : null,
+          : (sellerHoursRaw is Map
+              ? Map<String, dynamic>.from(sellerHoursRaw)
+              : null),
       contactInfo: map['contactInfo'] is Map
           ? Map<String, dynamic>.from(map['contactInfo'])
-          : null,
+          : (sellerContactRaw is Map
+              ? Map<String, dynamic>.from(sellerContactRaw)
+              : null),
+      sellerStatus: map['sellerStatus'] is String ? map['sellerStatus'] : null,
     );
   }
 
@@ -196,6 +222,7 @@ class UserModel {
       'businessDescription': businessDescription,
       'businessHours': businessHours,
       'contactInfo': contactInfo,
+      'sellerStatus': sellerStatus,
     };
   }
 
@@ -237,6 +264,7 @@ class UserModel {
     String? businessDescription,
     Map<String, dynamic>? businessHours,
     Map<String, dynamic>? contactInfo,
+    String? sellerStatus,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -272,6 +300,7 @@ class UserModel {
       businessDescription: businessDescription ?? this.businessDescription,
       businessHours: businessHours ?? this.businessHours,
       contactInfo: contactInfo ?? this.contactInfo,
+      sellerStatus: sellerStatus ?? this.sellerStatus,
     );
   }
 }

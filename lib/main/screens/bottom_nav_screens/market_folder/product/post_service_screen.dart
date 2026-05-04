@@ -7,6 +7,8 @@ import 'package:campcon/main/widgets/multi_image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/market_folder/widgets/listing_guide_screen.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ph.dart';
 
@@ -26,16 +28,28 @@ class _PostServiceScreenState extends State<PostServiceScreen> {
   String _selectedWageType = 'hourly';
 
   final List<String> _categories = [
-    'Tutoring',
-    'Photography',
-    'Design',
-    'Writing',
-    'Delivery',
-    'Repairs',
-    'Cleaning',
-    'Fitness',
+    'Tutoring & Lessons',
+    'Photography & Media',
+    'Design & Creative',
+    'Writing & Editing',
+    'Delivery & Errands',
+    'Repair & Maintenance',
+    'Cleaning & Hospitality',
+    'Wellness & Fitness',
     'Other',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ListingGuideScreen.launch(
+        context: context,
+        type: ListingGuideType.service,
+        onContinue: () {},
+      );
+    });
+  }
 
   final List<WageTypeOption> _wageTypes = [
     WageTypeOption(

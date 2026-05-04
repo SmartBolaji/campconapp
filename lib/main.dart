@@ -17,6 +17,7 @@ import 'package:campcon/main/provider/resource_provider.dart';
 import 'package:campcon/main/provider/resource_post_provider.dart';
 import 'package:campcon/main/provider/notify_provider.dart';
 import 'package:campcon/main/provider/theme_provider.dart';
+import 'package:campcon/main/provider/admin_provider.dart';
 import 'package:campcon/main/screens/bottom_nav_screens/messaging_folder/message_cache.dart';
 import 'package:campcon/main/screens/onboarding/onboarding.dart';
 import 'package:campcon/main/screens/main_screen.dart';
@@ -38,6 +39,8 @@ import 'package:campcon/main/provider/new_post_provider.dart';
 import 'package:campcon/main/provider/poll_provider.dart';
 import 'main/provider/search_provider.dart';
 import 'main/provider/update_provider.dart';
+import 'main/services/algorithm/shorebird.dart';
+import 'package:campcon/main/widgets/shorebird_update_notifier.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -85,6 +88,9 @@ Future<void> main() async {
     debugPrint('❌ Photo manager error: $e');
   }
 
+  final shorebirdService = ShorebirdService();
+  shorebirdService.checkForUpdate();
+
   runApp(
     MultiProvider(
       providers: [
@@ -107,6 +113,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => NotifyProvider()),
         ChangeNotifierProvider(create: (_) => MessageProvider()),
         ChangeNotifierProvider(create: (_) => ProfileProvider()),
+        ChangeNotifierProvider(create: (_) => AdminProvider()),
         ChangeNotifierProvider(create: (_) => SalesProvider()),
         ChangeNotifierProvider(create: (_) => BuyerOrdersProvider()),
         ChangeNotifierProvider(create: (_) => PickupProvider()),
@@ -114,6 +121,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => PollProvider()),
         ChangeNotifierProvider(create: (_) => SearchProvider()),
         ChangeNotifierProvider(create: (_) => UpdateProvider()),
+        ChangeNotifierProvider.value(value: shorebirdService),
       ],
       child: const MyApp(),
     ),
@@ -132,16 +140,18 @@ class MyApp extends StatelessWidget {
       builder: (context, _) {
         return Consumer<ThemeProvider>(
           builder: (context, themeProvider, _) {
-            return MaterialApp(
-              debugShowCheckedModeBanner: false,
-              title: 'Campcon',
-              theme: AppTheme.lightTheme,
-              darkTheme: AppTheme.darkTheme,
-              themeMode: themeProvider.themeMode,
-              home: const AuthenticationWrapper(),
-              localizationsDelegates: const [
-                MonthYearPickerLocalizations.delegate
-              ],
+            return ShorebirdUpdateNotifier(
+              child: MaterialApp(
+                debugShowCheckedModeBanner: false,
+                title: 'Campcon',
+                theme: AppTheme.lightTheme,
+                darkTheme: AppTheme.darkTheme,
+                themeMode: themeProvider.themeMode,
+                home: const AuthenticationWrapper(),
+                localizationsDelegates: const [
+                  MonthYearPickerLocalizations.delegate
+                ],
+              ),
             );
           },
         );

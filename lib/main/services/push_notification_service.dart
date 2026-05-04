@@ -126,7 +126,7 @@ class PushNotificationService {
   }
 
   Future<void> _initLocalNotifications() async {
-    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const android = AndroidInitializationSettings('notification_icon');
     const ios = DarwinInitializationSettings();
     const initSettings = InitializationSettings(android: android, iOS: ios);
 
@@ -199,7 +199,7 @@ class PushNotificationService {
       channelDescription: _channel.description,
       importance: Importance.max,
       priority: Priority.high,
-      icon: '@mipmap/ic_launcher',
+      icon: 'notification_icon',
     );
     const ios = DarwinNotificationDetails();
 

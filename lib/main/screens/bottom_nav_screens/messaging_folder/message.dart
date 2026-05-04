@@ -10,10 +10,10 @@ import 'package:campcon/main/screens/bottom_nav_screens/messaging_folder/message
 import 'package:campcon/main/screens/bottom_nav_screens/messaging_folder/send_notify.dart';
 import 'package:campcon/main/services/cache.dart';
 import 'package:campcon/main/widgets/floating_widget.dart';
-import 'package:campcon/main/widgets/verified_badge.dart';
 import 'package:campcon/main/widgets/navigate_profile.dart';
 import 'package:campcon/main/provider/auth_provider.dart';
 import 'package:campcon/main/provider/message_provider.dart';
+import 'package:campcon/main/widgets/role_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
@@ -439,7 +439,7 @@ class MessageState extends State<Message> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        VerifyBadge(
+                        RoleBadge(
                           role: userData?['role'] ?? '',
                           size: 14.0,
                         )

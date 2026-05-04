@@ -7,6 +7,8 @@ import 'package:campcon/main/widgets/multi_image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:campcon/main/screens/bottom_nav_screens/market_folder/widgets/listing_guide_screen.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ph.dart';
 
@@ -30,16 +32,28 @@ class _PostItemScreenState extends State<PostItemScreen> {
   bool _hasDiscount = false;
 
   final List<String> _categories = [
-    'Electronics',
-    'Books',
-    'Clothing',
-    'Furniture',
-    'Sports',
-    'Accessories',
-    'Food & Drinks',
-    'Health & Beauty',
+    'Clothing & Accessories',
+    'Books & Stationery',
+    'Electronics & Gadgets',
+    'Home & Living',
+    'Food & Beverages',
+    'Beauty & Personal Care',
+    'Sports & Outdoors',
+    'Art & Collectibles',
     'Other',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ListingGuideScreen.launch(
+        context: context,
+        type: ListingGuideType.item,
+        onContinue: () {},
+      );
+    });
+  }
 
   double? get _calculatedDiscountedPrice {
     if (!_hasDiscount) return null;

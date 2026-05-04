@@ -596,6 +596,13 @@ class _NotificationCard extends StatelessWidget {
     required this.onDismiss,
   });
 
+  bool _isValidNetworkImageUrl(String? url) {
+    if (url == null || url.trim().isEmpty) return false;
+    final uri = Uri.tryParse(url.trim());
+    if (uri == null || uri.host.isEmpty) return false;
+    return uri.scheme == 'http' || uri.scheme == 'https';
+  }
+
   void _navigateToProfile(BuildContext context) {
     final initialUserData = UserModel(
       uid: notification.actorId,
@@ -625,6 +632,13 @@ class _NotificationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     //
     final colorScheme = Theme.of(context).colorScheme;
+    final actorImageUrl =
+        _isValidNetworkImageUrl(notification.actorProfileImage)
+            ? notification.actorProfileImage!.trim()
+            : null;
+    final notificationImageUrl = _isValidNetworkImageUrl(notification.imageUrl)
+        ? notification.imageUrl!.trim()
+        : null;
     return Dismissible(
       key: Key(notification.id),
       direction: DismissDirection.endToStart,
@@ -669,12 +683,11 @@ class _NotificationCard extends StatelessWidget {
                 },
                 child: CircleAvatar(
                   radius: 20.r,
-                  backgroundImage: notification.actorProfileImage != null
-                      ? CachedNetworkImageProvider(
-                          notification.actorProfileImage!)
+                  backgroundImage: actorImageUrl != null
+                      ? CachedNetworkImageProvider(actorImageUrl)
                       : null,
                   backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-                  child: notification.actorProfileImage == null
+                  child: actorImageUrl == null
                       ? Iconify(
                           Ph.user,
                           size: 20.sp,
@@ -726,12 +739,12 @@ class _NotificationCard extends StatelessWidget {
               ),
 
               // Notification image (if available)
-              if (notification.imageUrl != null) ...[
+              if (notificationImageUrl != null) ...[
                 SizedBox(width: 12.w),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4.r),
                   child: CachedNetworkImage(
-                    imageUrl: notification.imageUrl!,
+                    imageUrl: notificationImageUrl,
                     width: 40.w,
                     height: 40.w,
                     fit: BoxFit.cover,
